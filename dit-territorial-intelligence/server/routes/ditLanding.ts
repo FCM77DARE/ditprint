@@ -80,9 +80,32 @@ interface IbgeMunicipio {
   };
 }
 
+// ── RESOLUÇÃO HIERÁRQUICA: município → distrito → localidade (OSM) ────────────
 // IBGE `/municipios?nome=` ignora o filtro e devolve a lista inteira. Por isso
 // baixamos a lista completa (uma vez por processo) e filtramos localmente
 // usando normalização accent-insensitive. Aceita "Cidade" ou "Cidade, UF".
+// Distritos (10k+) seguem o mesmo padrão. Para localidades que não constam
+// no IBGE (bairros, terminais, vilas), caímos no Nominatim (OSM) e usamos a
+// `address.municipality` retornada para re-ancorar no IBGE.
+
+export type ResolvedLocationKind = "municipality" | "district" | "locality";
+
+export interface ResolvedLocation {
+  kind: ResolvedLocationKind;
+  name: string;          // nome local (ex: "Cabiúnas")
+  ibgeId: number;        // sempre o id do município pai (para stats downstream)
+  municipality: string;  // município pai (== name quando kind === 'municipality')
+  state: string;         // sigla UF
+  region: string;        // nome da região (Sudeste, Nordeste…)
+  centroid?: { lat: number; lng: number };
+  bbox?: [number, number, number, number];
+}
+
+interface IbgeDistrito {
+  id: number;
+  nome: string;
+  municipio: IbgeMunicipio;
+}
 
 const CAPITAL_IBGE_IDS = new Set<number>([
   1200401, 1302603, 1400100, 1501402, 1600303, 1721000, 2111300, 2211001,
@@ -139,46 +162,195 @@ function parseTerritoryInput(raw: string): { name: string; state: string | null 
   return { name: raw.trim(), state: null };
 }
 
-async function lookupIbge(
-  rawName: string
-): Promise<{ ibgeId: number; name: string; state: string; region: string } | null> {
-  const { name, state: hintState } = parseTerritoryInput(rawName);
-  const list = await loadAllMunicipios();
-  if (!list || list.length === 0) return null;
+let distritosCache: IbgeDistrito[] | null = null;
+let distritosCachePromise: Promise<IbgeDistrito[] | null> | null = null;
 
+async function loadAllDistritos(): Promise<IbgeDistrito[] | null> {
+  if (distritosCache) return distritosCache;
+  if (distritosCachePromise) return distritosCachePromise;
+  distritosCachePromise = (async () => {
+    try {
+      const res = await fetch(
+        "https://servicodados.ibge.gov.br/api/v1/localidades/distritos",
+        {
+          signal: AbortSignal.timeout(20000),
+          headers: { "User-Agent": "DIT-PRINT/1.0" },
+        }
+      );
+      if (!res.ok) return null;
+      const data = (await res.json()) as IbgeDistrito[];
+      distritosCache = data;
+      return data;
+    } catch {
+      return null;
+    } finally {
+      distritosCachePromise = null;
+    }
+  })();
+  return distritosCachePromise;
+}
+
+function pickMatches<T extends { nome: string }>(list: T[], target: string): T[] {
+  let hits = list.filter((x) => normalize(x.nome) === target);
+  if (hits.length === 0) hits = list.filter((x) => normalize(x.nome).startsWith(target));
+  if (hits.length === 0) hits = list.filter((x) => normalize(x.nome).includes(target));
+  return hits;
+}
+
+// ── NOMINATIM (locality fallback) ─────────────────────────────────────────────
+
+interface NominatimAddress {
+  city?: string;
+  town?: string;
+  village?: string;
+  hamlet?: string;
+  suburb?: string;
+  municipality?: string;
+  state?: string;
+  region?: string;
+  "ISO3166-2-lvl4"?: string;
+  country_code?: string;
+}
+
+interface NominatimResult {
+  lat: string;
+  lon: string;
+  display_name: string;
+  name?: string;
+  boundingbox?: [string, string, string, string];
+  address?: NominatimAddress;
+}
+
+async function lookupNominatim(
+  rawName: string,
+  hintState: string | null
+): Promise<NominatimResult | null> {
+  try {
+    const q = hintState ? `${rawName}, ${hintState}, Brasil` : `${rawName}, Brasil`;
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
+      q
+    )}&format=json&limit=3&countrycodes=br&addressdetails=1`;
+    const res = await fetch(url, {
+      signal: AbortSignal.timeout(8000),
+      headers: { "User-Agent": "DIT-PRINT/1.0 (contact@print.com.br)" },
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as NominatimResult[];
+    if (!data?.length) return null;
+    // Prefere hit que tenha município preenchido no endereço
+    const withMun =
+      data.find((d) => d.address?.city || d.address?.municipality || d.address?.town) ?? data[0];
+    return withMun;
+  } catch {
+    return null;
+  }
+}
+
+function buildLocation(
+  kind: ResolvedLocationKind,
+  localName: string,
+  parentMun: IbgeMunicipio,
+  geo?: { centroid: { lat: number; lng: number }; bbox: [number, number, number, number] }
+): ResolvedLocation {
+  return {
+    kind,
+    name: localName,
+    ibgeId: parentMun.id,
+    municipality: parentMun.nome,
+    state: parentMun.microrregiao?.mesorregiao?.UF?.sigla ?? "",
+    region: parentMun.microrregiao?.mesorregiao?.UF?.regiao?.nome ?? "",
+    centroid: geo?.centroid,
+    bbox: geo?.bbox,
+  };
+}
+
+/**
+ * Resolve qualquer entrada (município, distrito ou localidade OSM) para uma
+ * estrutura completa com município pai, UF, região e geometria (centroid+bbox).
+ */
+async function resolveLocation(rawName: string): Promise<ResolvedLocation | null> {
+  const { name, state: hintState } = parseTerritoryInput(rawName);
   const target = normalize(name);
   if (!target) return null;
 
-  // 1. Exact name match (accent/case insensitive)
-  let exact = list.filter((m) => normalize(m.nome) === target);
-
-  // 2. Fallback: starts-with match
-  if (exact.length === 0) {
-    exact = list.filter((m) => normalize(m.nome).startsWith(target));
+  // ── 1) Município ───────────────────────────────────────────────────────────
+  const munList = await loadAllMunicipios();
+  if (munList) {
+    let hits = pickMatches(munList, target);
+    if (hintState) {
+      const sameUf = hits.filter(
+        (m) => m.microrregiao?.mesorregiao?.UF?.sigla === hintState
+      );
+      if (sameUf.length > 0) hits = sameUf;
+    }
+    if (hits.length > 0) {
+      const m = hits.find((x) => CAPITAL_IBGE_IDS.has(x.id)) ?? hits[0];
+      const geo = await lookupGeoBox(m.nome, m.microrregiao?.mesorregiao?.UF?.sigla ?? "");
+      return buildLocation("municipality", m.nome, m, geo ?? undefined);
+    }
   }
 
-  // 3. Fallback: contains
-  if (exact.length === 0) {
-    exact = list.filter((m) => normalize(m.nome).includes(target));
+  // ── 2) Distrito ────────────────────────────────────────────────────────────
+  const distList = await loadAllDistritos();
+  if (distList) {
+    let hits = pickMatches(distList, target);
+    if (hintState) {
+      const sameUf = hits.filter(
+        (d) => d.municipio.microrregiao?.mesorregiao?.UF?.sigla === hintState
+      );
+      if (sameUf.length > 0) hits = sameUf;
+    }
+    if (hits.length > 0) {
+      const d = hits[0];
+      const geo = await lookupGeoBox(
+        d.nome,
+        d.municipio.microrregiao?.mesorregiao?.UF?.sigla ?? ""
+      );
+      return buildLocation("district", d.nome, d.municipio, geo ?? undefined);
+    }
   }
 
-  if (exact.length === 0) return null;
-
-  // Prioriza UF informada pelo usuário
-  if (hintState) {
-    const sameUf = exact.filter(
-      (m) => m.microrregiao?.mesorregiao?.UF?.sigla === hintState
-    );
-    if (sameUf.length > 0) exact = sameUf;
+  // ── 3) Localidade (Nominatim/OSM) ──────────────────────────────────────────
+  const osm = await lookupNominatim(name, hintState);
+  if (osm) {
+    const muniName =
+      osm.address?.city ||
+      osm.address?.municipality ||
+      osm.address?.town ||
+      osm.address?.village ||
+      "";
+    // Re-âncora no IBGE pelo município pai
+    if (muniName && munList) {
+      const muniTarget = normalize(muniName);
+      const muniHits = munList.filter((m) => normalize(m.nome) === muniTarget);
+      const ufFromIso = osm.address?.["ISO3166-2-lvl4"]?.split("-")[1];
+      const m =
+        (ufFromIso &&
+          muniHits.find((x) => x.microrregiao?.mesorregiao?.UF?.sigla === ufFromIso)) ||
+        muniHits[0];
+      if (m) {
+        const lat = parseFloat(osm.lat);
+        const lng = parseFloat(osm.lon);
+        let bbox: [number, number, number, number] | undefined;
+        if (osm.boundingbox && osm.boundingbox.length === 4) {
+          const [south, north, west, east] = osm.boundingbox.map(parseFloat);
+          if ([south, north, west, east].every(Number.isFinite)) {
+            bbox = [west, south, east, north];
+          }
+        }
+        return buildLocation(
+          "locality",
+          osm.name || name,
+          m,
+          Number.isFinite(lat) && Number.isFinite(lng)
+            ? { centroid: { lat, lng }, bbox: bbox ?? [lng - 0.1, lat - 0.1, lng + 0.1, lat + 0.1] }
+            : undefined
+        );
+      }
+    }
   }
 
-  // Entre os restantes, prioriza capital
-  const capital = exact.find((m) => CAPITAL_IBGE_IDS.has(m.id));
-  const m = capital ?? exact[0];
-
-  const state = m.microrregiao?.mesorregiao?.UF?.sigla ?? "";
-  const region = m.microrregiao?.mesorregiao?.UF?.regiao?.nome ?? "";
-  return { ibgeId: m.id, name: m.nome, state, region };
+  return null;
 }
 
 // ── NOMINATIM (centroid + bbox para hotspots OSM) ────────────────────────────
@@ -239,10 +411,16 @@ function makeSlug(name: string): string {
 
 async function findOrCreateTerritory(
   rawName: string,
-  ibge: { ibgeId: number; name: string; state: string; region: string } | null
+  loc: ResolvedLocation | null
 ): Promise<Territory> {
-  const resolvedName = ibge?.name ?? rawName;
-  const slug = makeSlug(resolvedName);
+  // Para distrito/localidade, o slug inclui o município pai para evitar colisão
+  // (ex: "cabiunas--macae", "centro--belo-horizonte").
+  const resolvedName = loc?.name ?? rawName;
+  const slugBase =
+    loc && loc.kind !== "municipality"
+      ? `${makeSlug(loc.name)}--${makeSlug(loc.municipality)}`
+      : makeSlug(resolvedName);
+  const slug = slugBase;
 
   const db = await getDb();
 
@@ -251,8 +429,8 @@ async function findOrCreateTerritory(
       id: 0,
       slug,
       name: resolvedName,
-      region: ibge?.region ?? null,
-      state: ibge?.state ?? null,
+      region: loc?.region ?? null,
+      state: loc?.state ?? null,
       active: true,
       contextData: null,
       onboardingStatus: "ready",
@@ -272,8 +450,8 @@ async function findOrCreateTerritory(
     await db.insert(territories).values({
       slug,
       name: resolvedName,
-      region: ibge?.region ?? undefined,
-      state: ibge?.state ?? undefined,
+      region: loc?.region ?? undefined,
+      state: loc?.state ?? undefined,
       active: true,
       contextData: null,
       onboardingStatus: "ready",
@@ -652,17 +830,30 @@ ditLandingRouter.post("/analyze", async (req: Request, res: Response) => {
   log.info({ territory: territoryClean, ip }, "Iniciando análise DIT com orquestrador real");
 
   try {
-    // 1. IBGE lookup (identifica município real)
-    const ibge = await lookupIbge(territoryClean);
-    log.info({ territory: territoryClean, ibge: ibge?.name ?? "não encontrado" }, "IBGE lookup concluído");
+    // 1. Resolve hierárquico: município → distrito → localidade (OSM)
+    const loc = await resolveLocation(territoryClean);
+    log.info(
+      {
+        territory: territoryClean,
+        kind: loc?.kind ?? "não encontrado",
+        resolved: loc?.name,
+        municipality: loc?.municipality,
+      },
+      "Lookup hierárquico concluído"
+    );
 
-    const resolvedName = ibge?.name ?? territoryClean;
-    const region = ibge
-      ? `${ibge.name}, ${ibge.state} — ${ibge.region}`
+    const resolvedName = loc?.name ?? territoryClean;
+    // Rótulo de região exibido no relatório
+    // município: "Recife, PE — Nordeste"
+    // distrito/localidade: "Cabiúnas (Macaé), RJ — Sudeste"
+    const region = loc
+      ? (loc.kind === "municipality"
+          ? `${loc.name}, ${loc.state} — ${loc.region}`
+          : `${loc.name} (${loc.municipality}), ${loc.state} — ${loc.region}`)
       : territoryClean;
 
     // 2. Find/create territory record no DB
-    const territoryRecord = await findOrCreateTerritory(territoryClean, ibge);
+    const territoryRecord = await findOrCreateTerritory(territoryClean, loc);
     log.info({ territory: resolvedName, id: territoryRecord.id }, "Territory record pronto");
 
     // 3. Run orchestrator — todos os 32 agentes reais
@@ -692,12 +883,17 @@ ditLandingRouter.post("/analyze", async (req: Request, res: Response) => {
     }
 
     // 4. Strategic Layer (recursos, setores, hotspots, casos) em paralelo com LLM
-    const geo = ibge ? await lookupGeoBox(ibge.name, ibge.state) : null;
+    // Para distrito/localidade reutilizamos a geometria do município pai quando
+    // o lookup local não trouxe bbox (mais signal pros agentes OSM).
+    const geo =
+      loc && (loc.centroid && loc.bbox
+        ? { centroid: loc.centroid, bbox: loc.bbox }
+        : await lookupGeoBox(loc.municipality, loc.state));
     const strategicCtx: TerritoryStrategicContext = {
       name: resolvedName,
-      state: ibge?.state ?? "",
-      region: ibge?.region ?? "",
-      ibgeId: ibge?.ibgeId ?? 0,
+      state: loc?.state ?? "",
+      region: loc?.region ?? "",
+      ibgeId: loc?.ibgeId ?? 0,
       centroid: geo?.centroid,
       bbox: geo?.bbox,
     };
@@ -731,20 +927,36 @@ ditLandingRouter.post("/analyze", async (req: Request, res: Response) => {
 
     const [llmReport, strategic] = await Promise.all([llmPromise, strategicPromise]);
 
+    // Metadados de resolução territorial (município/distrito/localidade)
+    const resolution = loc
+      ? {
+          kind: loc.kind,
+          name: loc.name,
+          municipality: loc.municipality,
+          state: loc.state,
+          region: loc.region,
+          ibgeId: loc.ibgeId,
+        }
+      : null;
+
     // Merge: LLM produz o relatório executivo; strategic layer adiciona dados estruturados
+    const baseExtra = {
+      resolution,
+      territoryGeo: geo ? { centroid: geo.centroid, bbox: geo.bbox } : null,
+    };
     const result =
       strategic && typeof llmReport === "object" && llmReport !== null
         ? {
             ...(llmReport as Record<string, unknown>),
+            ...baseExtra,
             sectors: strategic.sectors,
             resources: strategic.resources,
             hotspots: strategic.hotspots,
             strategicCases: strategic.strategicCases,
-            territoryGeo: geo
-              ? { centroid: geo.centroid, bbox: geo.bbox }
-              : null,
           }
-        : llmReport;
+        : typeof llmReport === "object" && llmReport !== null
+          ? { ...(llmReport as Record<string, unknown>), ...baseExtra }
+          : llmReport;
 
     // 6. Cache e retorno
     analysisCache.set(cacheKey, { result, ts: Date.now() });
