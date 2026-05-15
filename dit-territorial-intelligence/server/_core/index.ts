@@ -92,7 +92,19 @@ async function startServer() {
   if (process.env.NODE_ENV === "development") {
     await setupVite(app, server);
   } else {
-    serveStatic(app);
+    // Production: Railway serves API only. The canonical frontend
+    // (land-dit.html) is hosted on Vercel. Redirect non-API requests
+    // there so there's never two divergent frontends in production.
+    const PUBLIC_FRONTEND_URL =
+      process.env.PUBLIC_FRONTEND_URL || "https://dit-print.vercel.app";
+    app.get("/", (_req, res) => res.redirect(302, PUBLIC_FRONTEND_URL + "/"));
+    app.get("/land-dit.html", (_req, res) =>
+      res.redirect(302, PUBLIC_FRONTEND_URL + "/land-dit.html")
+    );
+    app.use((req, res, next) => {
+      if (req.path.startsWith("/api/")) return next();
+      return res.redirect(302, PUBLIC_FRONTEND_URL + req.originalUrl);
+    });
   }
 
   const preferredPort = parseInt(process.env.PORT || "3000");
