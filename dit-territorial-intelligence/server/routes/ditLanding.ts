@@ -80,25 +80,105 @@ interface IbgeMunicipio {
   };
 }
 
-async function lookupIbge(
-  name: string
-): Promise<{ ibgeId: number; name: string; state: string; region: string } | null> {
-  try {
-    const url = `https://servicodados.ibge.gov.br/api/v1/localidades/municipios?nome=${encodeURIComponent(name)}`;
-    const res = await fetch(url, {
-      signal: AbortSignal.timeout(8000),
-      headers: { "User-Agent": "DIT-PRINT/1.0" },
-    });
-    if (!res.ok) return null;
-    const data = (await res.json()) as IbgeMunicipio[];
-    if (!data?.length) return null;
-    const m = data[0];
-    const state = m.microrregiao?.mesorregiao?.UF?.sigla ?? "";
-    const region = m.microrregiao?.mesorregiao?.UF?.regiao?.nome ?? "";
-    return { ibgeId: m.id, name: m.nome, state, region };
-  } catch {
-    return null;
+// IBGE `/municipios?nome=` ignora o filtro e devolve a lista inteira. Por isso
+// baixamos a lista completa (uma vez por processo) e filtramos localmente
+// usando normalização accent-insensitive. Aceita "Cidade" ou "Cidade, UF".
+
+const CAPITAL_IBGE_IDS = new Set<number>([
+  1200401, 1302603, 1400100, 1501402, 1600303, 1721000, 2111300, 2211001,
+  2304400, 2408102, 2507507, 2611606, 2704302, 2800308, 2927408, 3106200,
+  3205309, 3304557, 3550308, 4106902, 4205407, 4314902, 5002704, 5103403,
+  5208707, 5300108,
+]);
+
+let ibgeCache: IbgeMunicipio[] | null = null;
+let ibgeCachePromise: Promise<IbgeMunicipio[] | null> | null = null;
+
+async function loadAllMunicipios(): Promise<IbgeMunicipio[] | null> {
+  if (ibgeCache) return ibgeCache;
+  if (ibgeCachePromise) return ibgeCachePromise;
+  ibgeCachePromise = (async () => {
+    try {
+      const res = await fetch(
+        "https://servicodados.ibge.gov.br/api/v1/localidades/municipios",
+        {
+          signal: AbortSignal.timeout(15000),
+          headers: { "User-Agent": "DIT-PRINT/1.0" },
+        }
+      );
+      if (!res.ok) return null;
+      const data = (await res.json()) as IbgeMunicipio[];
+      ibgeCache = data;
+      return data;
+    } catch {
+      return null;
+    } finally {
+      ibgeCachePromise = null;
+    }
+  })();
+  return ibgeCachePromise;
+}
+
+function normalize(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/['’`´]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function parseTerritoryInput(raw: string): { name: string; state: string | null } {
+  // Aceita "Belo Horizonte, MG", "Belo Horizonte - MG", "Belo Horizonte/MG", "Belo Horizonte (MG)"
+  const m = raw.match(/^(.*?)[\s,/\-(]+([A-Za-z]{2})\)?\s*$/);
+  if (m) {
+    const state = m[2].toUpperCase();
+    if (state.length === 2) return { name: m[1].trim(), state };
   }
+  return { name: raw.trim(), state: null };
+}
+
+async function lookupIbge(
+  rawName: string
+): Promise<{ ibgeId: number; name: string; state: string; region: string } | null> {
+  const { name, state: hintState } = parseTerritoryInput(rawName);
+  const list = await loadAllMunicipios();
+  if (!list || list.length === 0) return null;
+
+  const target = normalize(name);
+  if (!target) return null;
+
+  // 1. Exact name match (accent/case insensitive)
+  let exact = list.filter((m) => normalize(m.nome) === target);
+
+  // 2. Fallback: starts-with match
+  if (exact.length === 0) {
+    exact = list.filter((m) => normalize(m.nome).startsWith(target));
+  }
+
+  // 3. Fallback: contains
+  if (exact.length === 0) {
+    exact = list.filter((m) => normalize(m.nome).includes(target));
+  }
+
+  if (exact.length === 0) return null;
+
+  // Prioriza UF informada pelo usuário
+  if (hintState) {
+    const sameUf = exact.filter(
+      (m) => m.microrregiao?.mesorregiao?.UF?.sigla === hintState
+    );
+    if (sameUf.length > 0) exact = sameUf;
+  }
+
+  // Entre os restantes, prioriza capital
+  const capital = exact.find((m) => CAPITAL_IBGE_IDS.has(m.id));
+  const m = capital ?? exact[0];
+
+  const state = m.microrregiao?.mesorregiao?.UF?.sigla ?? "";
+  const region = m.microrregiao?.mesorregiao?.UF?.regiao?.nome ?? "";
+  return { ibgeId: m.id, name: m.nome, state, region };
 }
 
 // ── NOMINATIM (centroid + bbox para hotspots OSM) ────────────────────────────
