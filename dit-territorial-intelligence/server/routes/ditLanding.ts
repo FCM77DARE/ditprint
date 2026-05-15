@@ -290,18 +290,21 @@ async function resolveLocation(rawName: string): Promise<ResolvedLocation | null
     }
   }
 
-  // ── 2) Distrito ────────────────────────────────────────────────────────────
+  // ── 2) Distrito (EXACT match apenas — evita "Copacabana"→"Copacabana do Norte") ─
   const distList = await loadAllDistritos();
+  let distritoHit: IbgeDistrito | null = null;
   if (distList) {
-    let hits = pickMatches(distList, target);
+    let hits = distList.filter((x) => normalize(x.nome) === target);
     if (hintState) {
       const sameUf = hits.filter(
         (d) => d.municipio.microrregiao?.mesorregiao?.UF?.sigla === hintState
       );
       if (sameUf.length > 0) hits = sameUf;
     }
-    if (hits.length > 0) {
-      const d = hits[0];
+    distritoHit = hits[0] ?? null;
+    // Se UF foi explicitada e bateu distrito, confiamos no IBGE.
+    if (distritoHit && hintState) {
+      const d = distritoHit;
       const geo = await lookupGeoBox(
         d.nome,
         d.municipio.microrregiao?.mesorregiao?.UF?.sigla ?? ""
@@ -348,6 +351,16 @@ async function resolveLocation(rawName: string): Promise<ResolvedLocation | null
         );
       }
     }
+  }
+
+  // ── 4) Último recurso: distrito IBGE sem UF (homônimos em municípios pequenos) ─
+  if (distritoHit) {
+    const d = distritoHit;
+    const geo = await lookupGeoBox(
+      d.nome,
+      d.municipio.microrregiao?.mesorregiao?.UF?.sigla ?? ""
+    );
+    return buildLocation("district", d.nome, d.municipio, geo ?? undefined);
   }
 
   return null;
