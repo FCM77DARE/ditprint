@@ -277,11 +277,11 @@ async function resolveLocation(rawName: string): Promise<ResolvedLocation | null
   const munList = await loadAllMunicipios();
   if (munList) {
     let hits = pickMatches(munList, target);
+    // Se UF foi informada, exigimos UF — sem fallback "wrong-UF".
     if (hintState) {
-      const sameUf = hits.filter(
+      hits = hits.filter(
         (m) => m.microrregiao?.mesorregiao?.UF?.sigla === hintState
       );
-      if (sameUf.length > 0) hits = sameUf;
     }
     if (hits.length > 0) {
       const m = hits.find((x) => CAPITAL_IBGE_IDS.has(x.id)) ?? hits[0];
