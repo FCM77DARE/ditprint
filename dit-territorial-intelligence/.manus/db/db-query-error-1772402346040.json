@@ -1,0 +1,27 @@
+{
+  "query": "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'signals' AND TABLE_SCHEMA = DATABASE(); SELECT DATE_FORMAT(published_at, '%Y-%m') as period, COUNT(*) as count FROM signals GROUP BY DATE_FORMAT(published_at, '%Y-%m') ORDER BY period DESC LIMIT 30;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2aGV9vQqnMXZ7WH.b5ed6992562a --database 43iZsmPphrqUoXjRK5zrxR --execute SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'signals' AND TABLE_SCHEMA = DATABASE(); SELECT DATE_FORMAT(published_at, '%Y-%m') as period, COUNT(*) as count FROM signals GROUP BY DATE_FORMAT(published_at, '%Y-%m') ORDER BY period DESC LIMIT 30;",
+  "returncode": 1,
+  "logs": [
+    "COLUMN_NAME",
+    "id",
+    "territoryId",
+    "source",
+    "relatedIndex",
+    "title",
+    "summary",
+    "url",
+    "publishedAt",
+    "curationStatus",
+    "curationNote",
+    "curatedBy",
+    "curatedAt",
+    "metadata",
+    "createdAt",
+    "imageUrl",
+    "llmAnalysis",
+    "llmImpactScore",
+    "llmSuggestedIndex",
+    "ERROR 1054 (42S22) at line 1: Unknown column 'published_at' in 'group statement'"
+  ]
+}

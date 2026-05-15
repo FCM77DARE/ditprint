@@ -1,0 +1,40 @@
+{
+  "query": "SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE();",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2aGV9vQqnMXZ7WH.b5ed6992562a --database 43iZsmPphrqUoXjRK5zrxR --execute SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE();",
+  "rows": [
+    {
+      "table_name": "__drizzle_migrations"
+    },
+    {
+      "table_name": "users"
+    },
+    {
+      "table_name": "alerts"
+    },
+    {
+      "table_name": "signals"
+    },
+    {
+      "table_name": "stt_scores"
+    },
+    {
+      "table_name": "subscribers"
+    },
+    {
+      "table_name": "dashboard_admins"
+    },
+    {
+      "table_name": "territories"
+    },
+    {
+      "table_name": "collection_snapshots"
+    },
+    {
+      "table_name": "index_history"
+    }
+  ],
+  "messages": [],
+  "stdout": "table_name\n__drizzle_migrations\nusers\nalerts\nsignals\nstt_scores\nsubscribers\ndashboard_admins\nterritories\ncollection_snapshots\nindex_history\n",
+  "stderr": "",
+  "execution_time_ms": 53
+}

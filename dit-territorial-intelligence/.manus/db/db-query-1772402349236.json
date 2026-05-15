@@ -1,0 +1,64 @@
+{
+  "query": "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'signals' AND TABLE_SCHEMA = DATABASE();",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2aGV9vQqnMXZ7WH.b5ed6992562a --database 43iZsmPphrqUoXjRK5zrxR --execute SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'signals' AND TABLE_SCHEMA = DATABASE();",
+  "rows": [
+    {
+      "COLUMN_NAME": "id"
+    },
+    {
+      "COLUMN_NAME": "territoryId"
+    },
+    {
+      "COLUMN_NAME": "source"
+    },
+    {
+      "COLUMN_NAME": "relatedIndex"
+    },
+    {
+      "COLUMN_NAME": "title"
+    },
+    {
+      "COLUMN_NAME": "summary"
+    },
+    {
+      "COLUMN_NAME": "url"
+    },
+    {
+      "COLUMN_NAME": "publishedAt"
+    },
+    {
+      "COLUMN_NAME": "curationStatus"
+    },
+    {
+      "COLUMN_NAME": "curationNote"
+    },
+    {
+      "COLUMN_NAME": "curatedBy"
+    },
+    {
+      "COLUMN_NAME": "curatedAt"
+    },
+    {
+      "COLUMN_NAME": "metadata"
+    },
+    {
+      "COLUMN_NAME": "createdAt"
+    },
+    {
+      "COLUMN_NAME": "imageUrl"
+    },
+    {
+      "COLUMN_NAME": "llmAnalysis"
+    },
+    {
+      "COLUMN_NAME": "llmImpactScore"
+    },
+    {
+      "COLUMN_NAME": "llmSuggestedIndex"
+    }
+  ],
+  "messages": [],
+  "stdout": "COLUMN_NAME\nid\nterritoryId\nsource\nrelatedIndex\ntitle\nsummary\nurl\npublishedAt\ncurationStatus\ncurationNote\ncuratedBy\ncuratedAt\nmetadata\ncreatedAt\nimageUrl\nllmAnalysis\nllmImpactScore\nllmSuggestedIndex\n",
+  "stderr": "",
+  "execution_time_ms": 54
+}

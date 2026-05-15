@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>DIT · Alagoinhas · Dezembro 2025</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{--black:#0A0A0A;--red:#CC2929;--blue:#1A4FA0;--white:#F8F6F1;--offwhite:#EDEAE4;--gray:#6A6A6A;--lightgray:#DEDBD5;--page-w:860px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:#1A1A1A;color:var(--black);font-size:13px;line-height:1.65;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.topbar{position:fixed;top:0;left:0;right:0;z-index:999;background:var(--black);display:flex;align-items:center;justify-content:space-between;padding:10px 32px;border-bottom:3px solid var(--red)}
+.tb-left{display:flex;align-items:center;gap:14px}
+.tb-logo-text{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:.08em;color:var(--white)}
+.tb-logo-text span{color:var(--red)}
+.tb-meta{font-size:10px;color:rgba(255,255,255,.45);letter-spacing:.06em;text-transform:uppercase}
+.tb-right{display:flex;gap:8px}
+.tb-btn{font-family:'Inter',sans-serif;font-size:11px;font-weight:600;padding:7px 18px;border-radius:2px;cursor:pointer;border:none;letter-spacing:.05em;text-transform:uppercase;transition:all .15s}
+.tb-btn-ghost{background:rgba(255,255,255,.08);color:var(--white);border:1px solid rgba(255,255,255,.15)}
+.tb-btn-ghost:hover{background:rgba(255,255,255,.15)}
+.tb-btn-primary{background:var(--red);color:#fff}
+.tb-btn-primary:hover{background:#b01f1f}
+.page-wrap{max-width:var(--page-w);margin:72px auto 48px;background:var(--white);position:relative;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.5)}
+/* COVER */
+.cover{background:var(--black);position:relative;overflow:hidden;min-height:460px;display:flex;flex-direction:column}
+.cover-stripe{height:6px;background:linear-gradient(90deg,var(--red) 0%,var(--red) 50%,var(--blue) 50%,var(--blue) 100%)}
+.cover-inner{padding:52px 60px 48px;flex:1;display:flex;flex-direction:column;position:relative;z-index:1}
+.cover-bg-grid{position:absolute;top:0;right:0;bottom:0;width:60%;opacity:.025;background-image:repeating-linear-gradient(0deg,transparent,transparent 30px,rgba(255,255,255,1) 30px,rgba(255,255,255,1) 31px),repeating-linear-gradient(90deg,transparent,transparent 30px,rgba(255,255,255,1) 30px,rgba(255,255,255,1) 31px)}
+.cover-bg-map{position:absolute;right:0;top:0;bottom:0;width:55%;opacity:.06;background:radial-gradient(ellipse at 70% 40%,rgba(204,41,41,.8) 0%,transparent 60%),radial-gradient(ellipse at 40% 70%,rgba(26,79,160,.6) 0%,transparent 50%)}
+.cover-eyebrow{display:inline-flex;align-items:center;gap:8px;background:rgba(204,41,41,.15);border:1px solid rgba(204,41,41,.4);padding:4px 12px;border-radius:2px;margin-bottom:28px;font-size:9px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--red);align-self:flex-start}
+.cover-title{font-family:'Bebas Neue',sans-serif;font-size:80px;line-height:.9;color:var(--white);letter-spacing:-.5px;margin-bottom:10px}
+.cover-title .hl{color:var(--red)}
+.cover-title .hl2{color:var(--blue)}
+.cover-subtitle{font-size:15px;font-weight:300;color:rgba(255,255,255,.5);letter-spacing:.03em;margin-bottom:36px;max-width:460px;line-height:1.55}
+.cover-scenario{display:inline-flex;align-items:center;gap:10px;margin-bottom:36px}
+.scenario-badge{background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:5px 14px;border-radius:2px;letter-spacing:.14em;text-transform:uppercase}
+.scenario-label{font-size:11px;color:rgba(255,255,255,.5);font-family:'DM Mono',monospace;letter-spacing:.06em}
+.cover-meta-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.08);border-radius:2px;overflow:hidden}
+.cover-meta-item{padding:14px 16px;background:rgba(255,255,255,.04)}
+.cmi-lbl{font-size:8px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:5px}
+.cmi-val{font-size:12px;font-weight:600;color:rgba(255,255,255,.88);line-height:1.3}
+.cmi-val.danger{color:var(--red)}
+.cmi-val.info{color:#5B9BD5}
+.cover-footer{display:flex;align-items:center;justify-content:space-between;padding:20px 60px;background:rgba(255,255,255,.03);border-top:1px solid rgba(255,255,255,.08);position:relative;z-index:1}
+.cover-logo-row{display:flex;align-items:center;gap:16px}
+.cover-divider-v{width:1px;height:32px;background:rgba(255,255,255,.15)}
+.cover-doc-num{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.25);font-family:'DM Mono',monospace}
+/* REPORT BODY */
+.report-body{padding:52px 60px}
+/* SECTION */
+.section{margin-bottom:56px}
+.section-head{display:flex;align-items:center;gap:14px;margin-bottom:24px}
+.sec-num{font-family:'DM Mono',monospace;font-size:10px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:var(--red);white-space:nowrap}
+.sec-rule{flex:1;height:1px;background:var(--lightgray)}
+.sec-rule-blue{flex:1;height:1px;background:var(--blue);opacity:.3}
+/* KPI */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.kpi-row-3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.kpi-row-6{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:20px}
+.kpi{border-top:3px solid var(--lightgray);background:#fff;padding:16px 18px 14px;border-radius:2px}
+.kpi.red{border-top-color:var(--red)}
+.kpi.blue{border-top-color:var(--blue)}
+.kpi.black{border-top-color:var(--black)}
+.kpi.green{border-top-color:#2A6B2A}
+.kpi.amber{border-top-color:#C47A10}
+.kpi-lbl{font-size:8px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--gray);margin-bottom:6px}
+.kpi-val{font-family:'Bebas Neue',sans-serif;font-size:36px;line-height:1;color:var(--black);letter-spacing:-.5px}
+.kpi-val.xl{font-size:48px}
+.kpi-sub{font-size:10px;color:var(--gray);margin-top:5px;line-height:1.4}
+.kpi-badge{display:inline-block;font-size:8px;font-weight:700;padding:2px 7px;border-radius:1px;margin-top:6px;letter-spacing:.06em;text-transform:uppercase}
+.kb-ok{background:#E6F0E6;color:#2A6B2A}
+.kb-risk{background:#FDEAEA;color:#8B1F1F}
+.kb-warn{background:#FDF3E0;color:#7A5A10}
+.kb-info{background:#E5EBF5;color:#1A3A7A}
+.kb-zero{background:#F0EFEC;color:#3A3A3A}
+/* CARD */
+.card{background:#fff;border-radius:2px;padding:22px 24px;margin-bottom:18px}
+.card-head{font-family:'DM Mono',monospace;font-size:10px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--black);margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;padding-bottom:12px;border-bottom:1px solid var(--lightgray)}
+.card-tag{font-family:'Inter',sans-serif;font-size:8px;font-weight:700;padding:2px 8px;border-radius:1px;letter-spacing:.1em;text-transform:uppercase}
+.ct-red{background:#FDEAEA;color:var(--red)}
+.ct-blue{background:#E5EBF5;color:var(--blue)}
+.ct-black{background:#F0EFEC;color:var(--black)}
+.ct-green{background:#E6F0E6;color:#2A6B2A}
+/* TABLES */
+.tbl-wrap{overflow:auto;border-radius:2px;margin-bottom:4px}
+table{width:100%;border-collapse:collapse;font-size:11px}
+thead th{padding:9px 12px;font-size:8px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;background:var(--black);color:rgba(255,255,255,.8);text-align:left;white-space:nowrap}
+tbody td{padding:9px 12px;border-bottom:1px solid var(--offwhite);color:var(--black);vertical-align:top;line-height:1.5}
+tbody tr:nth-child(even) td{background:#FAFAF8}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:#F3F0EA}
+/* BADGES */
+.badge{display:inline-flex;align-items:center;font-size:8px;font-weight:700;padding:2px 8px;border-radius:1px;white-space:nowrap;letter-spacing:.06em;text-transform:uppercase}
+.b-green{background:#E6F0E6;color:#2A6B2A}
+.b-red{background:#FDEAEA;color:#8B1F1F}
+.b-blue{background:#E5EBF5;color:#1A3A7A}
+.b-amber{background:#FDF3E0;color:#7A5A10}
+.b-gray{background:#F0EFEC;color:#5A5A5A}
+.b-black{background:#E8E6E0;color:#0A0A0A}
+/* PROSE */
+.prose{background:#fff;border-radius:2px;margin-bottom:14px;overflow:hidden}
+.prose-hd{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:#F3F0EA;border-bottom:1px solid var(--lightgray);cursor:pointer}
+.prose-hd-title{font-family:'DM Mono',monospace;font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--black)}
+.prose-toggle{width:18px;height:18px;border-radius:1px;background:var(--black);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .2s}
+.prose-toggle.open{transform:rotate(180deg)}
+.prose-toggle svg{width:8px;height:8px;fill:none;stroke:#fff;stroke-width:2.5;stroke-linecap:round}
+.prose-body{padding:20px 22px}
+.prose-body p{font-size:12.5px;color:var(--black);line-height:1.8;margin-bottom:12px}
+.prose-body p:last-child{margin-bottom:0}
+.prose-body ul{padding-left:16px;margin-bottom:12px}
+.prose-body li{font-size:12.5px;color:var(--black);line-height:1.7;margin-bottom:4px}
+.prose-body strong{font-weight:700;color:var(--black)}
+.callout{border-left:4px solid var(--red);background:#F8F2F2;padding:12px 16px;border-radius:0 2px 2px 0;margin:12px 0}
+.callout-blue{border-left-color:var(--blue);background:#F0F3FA}
+.callout p{font-size:12px;color:var(--black);margin:0;font-style:italic;line-height:1.6}
+/* MSG CENTRAL */
+.msg-central{background:var(--black);border-radius:2px;padding:28px 32px 24px;margin-bottom:16px;position:relative;overflow:hidden}
+.msg-central::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--red),var(--blue))}
+.msg-central-lbl{font-family:'DM Mono',monospace;font-size:9px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:14px}
+.msg-central-text{font-size:17px;font-weight:300;color:var(--white);line-height:1.6;font-style:italic;border-left:3px solid var(--red);padding-left:18px}
+.msg-central-note{font-size:9px;color:rgba(255,255,255,.3);margin-top:14px;letter-spacing:.08em;text-transform:uppercase;font-family:'DM Mono',monospace}
+/* PILLARS */
+.pillar{border-radius:2px;padding:16px 18px;margin-bottom:10px;border-left:4px solid var(--black)}
+.pillar.p1{background:#FDF3F3;border-left-color:var(--red)}
+.pillar.p2{background:#F0F3FA;border-left-color:var(--blue)}
+.pillar.p3{background:#FDF8F0;border-left-color:#C47A10}
+.pillar.p4{background:#F0F5F0;border-left-color:#2A6B2A}
+.pillar-lbl{font-size:8px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--gray);margin-bottom:7px}
+.pillar-text{font-size:12px;color:var(--black);line-height:1.65;font-style:italic}
+/* EVIDENCE */
+.evidence{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--offwhite)}
+.evidence:last-child{border-bottom:none}
+.evid-num{font-family:'DM Mono',monospace;font-size:9px;font-weight:500;color:var(--red);flex-shrink:0;padding-top:1px;letter-spacing:.06em;min-width:22px}
+.evid-text{font-size:12px;color:var(--black);line-height:1.6}
+/* TIMELINE */
+.timeline{padding-left:28px;position:relative}
+.timeline::before{content:'';position:absolute;left:8px;top:4px;bottom:4px;width:2px;background:var(--lightgray)}
+.tl-item{position:relative;margin-bottom:22px}
+.tl-dot{position:absolute;left:-28px;top:3px;width:14px;height:14px;border-radius:50%;border:2px solid var(--white)}
+.tl-dot.now{background:var(--red);box-shadow:0 0 0 2px var(--red)}
+.tl-dot.future{background:var(--white);box-shadow:0 0 0 2px var(--lightgray)}
+.tl-dot.done{background:var(--black);box-shadow:0 0 0 2px var(--black)}
+.tl-dot.warn{background:#C47A10;box-shadow:0 0 0 2px #C47A10}
+.tl-date{font-family:'DM Mono',monospace;font-size:8.5px;font-weight:500;color:var(--gray);letter-spacing:.1em;margin-bottom:3px;text-transform:uppercase}
+.tl-title{font-size:13px;font-weight:700;color:var(--black);margin-bottom:3px}
+.tl-body{font-size:11px;color:var(--gray);line-height:1.55}
+/* SWOT */
+.swot-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px;background:var(--lightgray);border-radius:2px;overflow:hidden;margin-bottom:18px}
+.swot-cell{padding:22px;background:var(--white)}
+.swot-cell-head{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:.04em;margin-bottom:14px}
+.swot-s .swot-cell-head{color:var(--black)}
+.swot-w .swot-cell-head{color:var(--red)}
+.swot-o .swot-cell-head{color:var(--blue)}
+.swot-t .swot-cell-head{color:#7A3A00}
+.swot-item{font-size:11.5px;color:var(--black);line-height:1.6;padding:6px 0;border-bottom:1px solid var(--offwhite)}
+.swot-item:last-child{border-bottom:none}
+.swot-item-label{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gray);margin-right:6px}
+/* PROG */
+.prog{margin-bottom:14px}
+.prog-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px}
+.prog-label{font-size:11.5px;color:var(--black);font-weight:600}
+.prog-label small{font-size:9px;font-weight:400;color:var(--gray);margin-left:6px}
+.prog-meta{font-family:'DM Mono',monospace;font-size:11px;color:var(--gray)}
+.prog-bar{height:4px;background:var(--offwhite);border-radius:100px;overflow:hidden}
+.prog-fill{height:100%;border-radius:100px}
+/* LAYOUT */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px}
+.col-6-4{display:grid;grid-template-columns:6fr 4fr;gap:18px;margin-bottom:18px}
+/* SIG */
+.sig-block{background:var(--black);border-radius:2px;padding:28px 32px 24px;position:relative;overflow:hidden;border-top:4px solid var(--red)}
+.sig-title{font-family:'DM Mono',monospace;font-size:10px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:14px}
+.sig-text{font-size:12px;color:rgba(255,255,255,.55);line-height:1.7;margin-bottom:20px;max-width:540px}
+.sig-name{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:.04em;color:var(--white)}
+.sig-role{font-size:11px;color:rgba(255,255,255,.4);margin-top:3px;line-height:1.5}
+.sig-date{font-size:10px;color:rgba(255,255,255,.25);margin-top:10px;font-style:italic;font-family:'DM Mono',monospace}
+/* FOOTER */
+.page-footer{display:flex;align-items:center;justify-content:space-between;padding:14px 60px;background:#F3F0EA;border-top:1px solid var(--lightgray)}
+.pf-brand{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:.06em;color:var(--black)}
+.pf-brand span{color:var(--red)}
+.pf-center{font-family:'DM Mono',monospace;font-size:8px;color:var(--gray);letter-spacing:.1em;text-transform:uppercase}
+.pf-right{font-size:8.5px;color:var(--gray);font-family:'DM Mono',monospace}
+/* ORNAMENT */
+.ornament{display:flex;align-items:center;gap:12px;margin:36px 0 28px}
+.orn-line{flex:1;height:1px;background:var(--lightgray)}
+.orn-diamond{width:8px;height:8px;background:var(--red);transform:rotate(45deg);flex-shrink:0}
+/* ALERT STRIP */
+.alert-strip{background:var(--red);color:#fff;padding:10px 20px;border-radius:2px;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:18px;display:flex;align-items:center;gap:10px}
+.alert-strip::before{content:'⚠';font-size:14px}
+/* DIMENSION RING */
+.dim-ring-wrap{display:flex;align-items:center;justify-content:center;padding:20px 0}
+/* CHART WRAP */
+.chart-wrap{background:#fff;border-radius:2px;padding:24px;margin-bottom:18px}
+.chart-title{font-family:'DM Mono',monospace;font-size:10px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--black);margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid var(--lightgray)}
+/* PRINT */
+@media print{
+  .topbar{display:none}
+  body{background:#fff}
+  .page-wrap{margin:0;max-width:100%;box-shadow:none}
+  .prose-body{display:block!important}
+  @page{margin:0;size:A4}
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="tb-left">
+    <div class="tb-logo-text">PRINT<span>.</span></div>
+    <div style="width:1px;height:20px;background:rgba(255,255,255,.15)"></div>
+    <div class="tb-meta">DIT · Alagoinhas · Dezembro 2025</div>
+  </div>
+  <div class="tb-right">
+    <button class="tb-btn tb-btn-ghost" onclick="window.history.back()">← Voltar</button>
+    <button class="tb-btn tb-btn-primary" onclick="window.print()">Exportar PDF</button>
+  </div>
+</div>
+
+<div class="page-wrap">
+
+  <!-- ══ CAPA ══════════════════════════════════════════════════════════ -->
+  <div class="cover">
+    <div class="cover-stripe"></div>
+    <div class="cover-bg-grid"></div>
+    <div class="cover-bg-map"></div>
+    <div class="cover-inner">
+      <div class="cover-eyebrow">Diagnóstico de Inteligência Territorial · Edição Mensal</div>
+      <div class="cover-title">
+        DIT —<br>
+        <span class="hl">ALAGOINHAS</span><br>
+        <span class="hl2">BAHIA</span>
+      </div>
+      <div class="cover-subtitle">Score de Tensão Territorial consolidado com monitoramento contínuo de 6 dimensões estruturais · Inteligência de risco para decisores de infraestrutura, energia e investimento.</div>
+      <div class="cover-scenario">
+        <span class="scenario-badge">⬆ Cenário Escalada</span>
+        <span class="scenario-label">stt 76.6 / 100 · Alta Complexidade · 6 meses em ascensão</span>
+      </div>
+      <div class="cover-meta-grid">
+        <div class="cover-meta-item">
+          <div class="cmi-lbl">Território</div>
+          <div class="cmi-val">Alagoinhas, BA</div>
+        </div>
+        <div class="cover-meta-item">
+          <div class="cmi-lbl">Período</div>
+          <div class="cmi-val">Dezembro 2025</div>
+        </div>
+        <div class="cover-meta-item">
+          <div class="cmi-lbl">STT Global</div>
+          <div class="cmi-val danger">76.6 / 100</div>
+        </div>
+        <div class="cover-meta-item">
+          <div class="cmi-lbl">Dimensão Crítica</div>
+          <div class="cmi-val danger">D2 · Socioeconômica</div>
+        </div>
+        <div class="cover-meta-item">
+          <div class="cmi-lbl">Vácuo Crítico</div>
+          <div class="cmi-val info">D5 · Governança 0/100</div>
+        </div>
+      </div>
+    </div>
+    <div class="cover-footer">
+      <div class="cover-logo-row">
+        <svg width="80" height="28" viewBox="0 0 80 28">
+          <rect width="80" height="28" rx="2" fill="none"/>
+          <text x="0" y="21" font-family="'Bebas Neue', sans-serif" font-size="24" fill="#F8F6F1" letter-spacing="1">PRINT</text>
+        </svg>
+        <div class="cover-divider-v"></div>
+        <div style="font-size:9px;color:rgba(255,255,255,.35);font-family:'DM Mono',monospace;letter-spacing:.06em;line-height:1.5">Territorial<br>Intelligence™</div>
+        <div class="cover-divider-v"></div>
+        <div style="font-size:9px;color:rgba(255,255,255,.3);line-height:1.5">
+          <div style="font-size:8px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.25)">Fontes</div>
+          <div>CEMADEN · IBAMA · INPE DETER · PNADC</div>
+        </div>
+      </div>
+      <div class="cover-doc-num">DIT-ALA-2025-12 · Rev.01</div>
+    </div>
+  </div>
+
+  <!-- ══ REPORT BODY ════════════════════════════════════════════════════ -->
+  <div class="report-body">
+
+    <!-- ── SEÇÃO 01: SÍNTESE EXECUTIVA ────────────────────────────── -->
+    <div class="section">
+      <div class="section-head">
+        <div class="sec-num">01</div>
+        <div class="sec-rule"></div>
+        <div class="sec-num" style="color:var(--blue)">Síntese Executiva</div>
+        <div class="sec-rule-blue"></div>
+      </div>
+
+      <div class="alert-strip">
+        Atenção · Cenário de Escalada Ativo — STT em ascensão pelo 6º mês consecutivo. Dois vetores críticos em zona vermelha simultâneos.
+      </div>
+
+      <!-- KPIs principais -->
+      <div class="kpi-row">
+        <div class="kpi red">
+          <div class="kpi-lbl">STT Global</div>
+          <div class="kpi-val xl">76.6</div>
+          <div class="kpi-sub">Score de Tensão Territorial · Dez/2025</div>
+          <span class="kpi-badge kb-risk">Alta Complexidade</span>
+        </div>
+        <div class="kpi red">
+          <div class="kpi-lbl">Variação 6 meses</div>
+          <div class="kpi-val">+1.6</div>
+          <div class="kpi-sub">Jul/2025 → Dez/2025 · ascensão constante</div>
+          <span class="kpi-badge kb-risk">Escalada</span>
+        </div>
+        <div class="kpi black">
+          <div class="kpi-lbl">Sinais Monitorados</div>
+          <div class="kpi-val">770+</div>
+          <div class="kpi-sub">Acumulados no banco · todas dimensões</div>
+          <span class="kpi-badge kb-info">Contínuo</span>
+        </div>
+        <div class="kpi">
+          <div class="kpi-lbl">Dimensões em Risco</div>
+          <div class="kpi-val">4 / 6</div>
+          <div class="kpi-sub">D1, D2, D3, D5 acima do limiar crítico</div>
+          <span class="kpi-badge kb-warn">Atenção</span>
+        </div>
+      </div>
+
+      <div class="msg-central">
+        <div class="msg-central-lbl">Diagnóstico Central — Dezembro 2025</div>
+        <div class="msg-central-text">
+          "Alagoinhas apresenta um território sob pressão estrutural crescente: a combinação de máxima tensão socioeconômica (D2=100), pressão ambiental crítica com embargos ativos do IBAMA e desmatamento de 12,5 km² detectado pelo DETER, e um vácuo institucional completo na Governança (D5=0) configura o cenário mais desfavorável para operações e investimentos de longo prazo."
+        </div>
+        <div class="msg-central-note">Análise consolidada por LLM · PRINT Territorial Intelligence™ · Período de referência: Julho–Dezembro 2025</div>
+      </div>
+
+      <div class="kpi-row-3">
+        <div class="kpi red">
+          <div class="kpi-lbl">D2 · Socioeconômica</div>
+          <div class="kpi-val">100</div>
+          <div class="kpi-sub">Tensão máxima · Pobreza, desemprego e informalidade elevados. IDH comprometido.</div>
+          <span class="kpi-badge kb-risk">Máxima Tensão</span>
+        </div>
+        <div class="kpi red">
+          <div class="kpi-lbl">D1 · Socioambiental</div>
+          <div class="kpi-val">92.3</div>
+          <div class="kpi-sub">Embargos IBAMA ativos · Risco CEMADEN · Desmatamento 12,5 km²</div>
+          <span class="kpi-badge kb-risk">Crítico</span>
+        </div>
+        <div class="kpi black">
+          <div class="kpi-lbl">D5 · Governança</div>
+          <div class="kpi-val">0</div>
+          <div class="kpi-sub">Vácuo institucional. Nenhum sinal de articulação ou participação ativa detectado.</div>
+          <span class="kpi-badge kb-zero">Vácuo</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SEÇÃO 02: STT — SCORE E DIMENSÕES ─────────────────────── -->
+    <div class="section">
+      <div class="section-head">
+        <div class="sec-num">02</div>
+        <div class="sec-rule"></div>
+        <div class="sec-num" style="color:var(--blue)">Score de Tensão Territorial — 6 Dimensões</div>
+        <div class="sec-rule-blue"></div>
+      </div>
+
+      <div class="two-col" style="align-items:start">
+        <!-- Gauge SVG -->
+        <div class="chart-wrap">
+          <div class="chart-title">STT Global · Dezembro 2025</div>
+          <div class="dim-ring-wrap">
+            <svg viewBox="0 0 300 300" width="280" height="280">
+              <defs>
+                <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" style="stop-color:#CC2929"/>
+                  <stop offset="100%" style="stop-color:#8B1F1F"/>
+                </linearGradient>
+              </defs>
+              <!-- Track -->
+              <circle cx="150" cy="150" r="120" fill="none" stroke="#DEDBD5" stroke-width="18" stroke-linecap="round"/>
+              <!-- Fill: 76.6% of 2π*120 = 576.9/753.98 -->
+              <circle cx="150" cy="150" r="120" fill="none" stroke="url(#gaugeGrad)" stroke-width="18"
+                stroke-dasharray="577 754" stroke-dashoffset="0" stroke-linecap="round"
+                transform="rotate(-90 150 150)"/>
+              <!-- Inner ring -->
+              <circle cx="150" cy="150" r="98" fill="none" stroke="#F0EFEC" stroke-width="1"/>
+              <!-- Score -->
+              <text x="150" y="138" text-anchor="middle" font-family="'Bebas Neue',sans-serif" font-size="68" fill="#0A0A0A" letter-spacing="-1">76.6</text>
+              <text x="150" y="162" text-anchor="middle" font-family="'DM Mono',monospace" font-size="9" fill="#6A6A6A" font-weight="500" letter-spacing="3">STT / 100</text>
+              <text x="150" y="182" text-anchor="middle" font-family="'Inter',sans-serif" font-size="8.5" fill="#CC2929" font-weight="700" letter-spacing="2">ALTA COMPLEXIDADE</text>
+              <text x="150" y="198" text-anchor="middle" font-family="'DM Mono',monospace" font-size="8" fill="#999" letter-spacing="1">↑ ESCALADA</text>
+              <!-- Ticks -->
+              <line x1="150" y1="32" x2="150" y2="44" stroke="#DEDBD5" stroke-width="2"/>
+              <line x1="268" y1="150" x2="256" y2="150" stroke="#DEDBD5" stroke-width="2"/>
+              <line x1="32" y1="150" x2="44" y2="150" stroke="#DEDBD5" stroke-width="2"/>
+              <text x="150" y="282" text-anchor="middle" font-family="'DM Mono',monospace" font-size="7.5" fill="#AAAAAA">100</text>
+              <text x="275" y="154" font-family="'DM Mono',monospace" font-size="7.5" fill="#AAAAAA">50</text>
+              <text x="18" y="154" text-anchor="end" font-family="'DM Mono',monospace" font-size="7.5" fill="#AAAAAA">50</text>
+            </svg>
+          </div>
+          <div style="text-align:center;margin-top:4px">
+            <span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--gray);letter-spacing:.08em">Peso: D1×0.22 + D2×0.15 + D3×0.15 + D4×0.22 + D5×0.15 + D6×0.11</span>
+          </div>
+        </div>
+
+        <!-- Dimension breakdown -->
+        <div class="chart-wrap">
+          <div class="chart-title">Score por Dimensão · Dez/2025</div>
+          <div id="dim-bars"></div>
+          <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--lightgray)">
+            <div style="font-family:'DM Mono',monospace;font-size:8.5px;color:var(--gray);letter-spacing:.06em;line-height:2">
+              <span style="display:inline-block;width:10px;height:10px;background:#CC2929;border-radius:1px;margin-right:5px;vertical-align:middle"></span>Crítico (&gt;70)
+              &nbsp;&nbsp;
+              <span style="display:inline-block;width:10px;height:10px;background:#C47A10;border-radius:1px;margin-right:5px;vertical-align:middle"></span>Alerta (40–70)
+              &nbsp;&nbsp;
+              <span style="display:inline-block;width:10px;height:10px;background:#1A4FA0;border-radius:1px;margin-right:5px;vertical-align:middle"></span>Moderado (&lt;40)
+              &nbsp;&nbsp;
+              <span style="display:inline-block;width:10px;height:10px;background:#0A0A0A;border-radius:1px;margin-right:5px;vertical-align:middle"></span>Vácuo (0)
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6 Dimension KPIs -->
+      <div class="kpi-row-6">
+        <div class="kpi red" style="padding:12px 14px">
+          <div class="kpi-lbl">D1 · Socioambiental</div>
+          <div class="kpi-val" style="font-size:28px">92.3</div>
+          <div class="kpi-sub" style="font-size:9px">Peso 22%</div>
+          <span class="kpi-badge kb-risk">Crítico</span>
+        </div>
+        <div class="kpi red" style="padding:12px 14px">
+          <div class="kpi-lbl">D2 · Socioeconômica</div>
+          <div class="kpi-val" style="font-size:28px">100</div>
+          <div class="kpi-sub" style="font-size:9px">Peso 15%</div>
+          <span class="kpi-badge kb-risk">Máximo</span>
+        </div>
+        <div class="kpi amber" style="padding:12px 14px;border-top-color:#C47A10">
+          <div class="kpi-lbl">D3 · Infraestrutura</div>
+          <div class="kpi-val" style="font-size:28px">41.1</div>
+          <div class="kpi-sub" style="font-size:9px">Peso 15%</div>
+          <span class="kpi-badge kb-warn">Alerta</span>
+        </div>
+        <div class="kpi amber" style="padding:12px 14px;border-top-color:#C47A10">
+          <div class="kpi-lbl">D4 · Dinâmica Terr.</div>
+          <div class="kpi-val" style="font-size:28px">60.8</div>
+          <div class="kpi-sub" style="font-size:9px">Peso 22%</div>
+          <span class="kpi-badge kb-warn">Alerta</span>
+        </div>
+        <div class="kpi black" style="padding:12px 14px">
+          <div class="kpi-lbl">D5 · Governança</div>
+          <div class="kpi-val" style="font-size:28px">0</div>
+          <div class="kpi-sub" style="font-size:9px">Peso 15%</div>
+          <span class="kpi-badge kb-zero">Vácuo</span>
+        </div>
+        <div class="kpi blue" style="padding:12px 14px;border-top-color:var(--blue)">
+          <div class="kpi-lbl">D6 · Reputação</div>
+          <div class="kpi-val" style="font-size:28px">37.2</div>
+          <div class="kpi-sub" style="font-size:9px">Peso 11%</div>
+          <span class="kpi-badge kb-info">Moderado</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SEÇÃO 03: ANÁLISE POR DIMENSÃO ─────────────────────────── -->
+    <div class="section">
+      <div class="section-head">
+        <div class="sec-num">03</div>
+        <div class="sec-rule"></div>
+        <div class="sec-num" style="color:var(--blue)">Análise por Dimensão</div>
+        <div class="sec-rule-blue"></div>
+      </div>
+
+      <!-- D1 -->
+      <div class="card">
+        <div class="card-head">
+          D1 · Socioambiental — Score 92.3/100
+          <span class="card-tag ct-red">Crítico · Peso 22%</span>
+        </div>
+        <div class="kpi-row-3" style="margin-bottom:14px">
+          <div style="padding:12px;background:var(--offwhite);border-radius:2px">
+            <div style="font-size:8px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--gray);margin-bottom:4px">Desmatamento DETER</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;line-height:1;color:var(--red)">12,5 km²</div>
+            <div style="font-size:9px;color:var(--gray);margin-top:3px">Área com indícios detectados</div>
+          </div>
+          <div style="padding:12px;background:var(--offwhite);border-radius:2px">
+            <div style="font-size:8px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--gray);margin-bottom:4px">Embargos IBAMA</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;line-height:1;color:var(--red)">2+</div>
+            <div style="font-size:9px;color:var(--gray);margin-top:3px">Embargos ativos na área de influência</div>
+          </div>
+          <div style="padding:12px;background:var(--offwhite);border-radius:2px">
+            <div style="font-size:8px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--gray);margin-bottom:4px">Alerta CEMADEN</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;line-height:1;color:var(--red)">Ativo</div>
+            <div style="font-size:9px;color:var(--gray);margin-top:3px">Risco de deslizamento/alagamento</div>
+          </div>
+        </div>
+        <div class="callout">
+          <p><strong>Vetor de maior impacto:</strong> A combinação de embargos IBAMA ativos, desmatamento detectado pelo DETER (12,5 km²) e alertas hidrológicos do CEMADEN cria um ambiente de passivo ambiental acumulado que pode elevar o risco regulatório e de licenciamento para novos projetos na região.</p>
+        </div>
+      </div>
+
+      <!-- D2 -->
+      <div class="card">
+        <div class="card-head">
+          D2 · Socioeconômica — Score 100/100
+          <span class="card-tag ct-red">Tensão Máxima · Peso 15%</span>
+        </div>
+        <div class="pillar p1">
+          <div class="pillar-lbl">Vetor Principal — Renda e Emprego (PNADC)</div>
+          <div class="pillar-text">"Indicadores de desemprego e informalidade elevados para a macrorregião. A combinação com IDH comprometido e alta taxa de pobreza coloca Alagoinhas no extremo superior de tensão socioeconômica, com impacto direto na capacidade de absorção de projetos de desenvolvimento."</div>
+        </div>
+        <div class="pillar p3">
+          <div class="pillar-lbl">Implicação para Investidores</div>
+          <div class="pillar-text">"Alta vulnerabilidade social eleva o risco de passivos sociais em projetos de infraestrutura. A ausência de renda suficiente pressiona a demanda por compensações e pode gerar resistência comunitária às intervenções de grande escala."</div>
+        </div>
+      </div>
+
+      <!-- D3 + D4 side by side -->
+      <div class="two-col">
+        <div class="card" style="margin-bottom:0">
+          <div class="card-head">D3 · Infraestrutura — 41.1 <span class="card-tag ct-black">Alerta</span></div>
+          <div class="prose" style="margin-bottom:0">
+            <div class="prose-hd" onclick="toggleProse(this)">
+              <div class="prose-hd-title">Leitura Analítica</div>
+              <div class="prose-toggle open"><svg viewBox="0 0 10 6"><path d="M1 1l4 4 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            </div>
+            <div class="prose-body">
+              <p>A dimensão de Infraestrutura reflete deficiências críticas em serviços básicos, especialmente saúde — com a <strong>epidemia de dengue declarada</strong> sendo o sinal de maior impacto registrado. O índice de 41.1 indica que o território opera abaixo do limiar adequado para suportar expansão industrial ou habitacional significativa.</p>
+              <ul>
+                <li>Saneamento: cobertura abaixo da média regional</li>
+                <li>Saúde: epidemia de dengue com sobrecarga do sistema</li>
+                <li>Logística: infraestrutura viária com gargalos identificados</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:0">
+          <div class="card-head">D4 · Dinâmica Territorial — 60.8 <span class="card-tag ct-black">Alerta</span></div>
+          <div class="prose" style="margin-bottom:0">
+            <div class="prose-hd" onclick="toggleProse(this)">
+              <div class="prose-hd-title">Leitura Analítica</div>
+              <div class="prose-toggle open"><svg viewBox="0 0 10 6"><path d="M1 1l4 4 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            </div>
+            <div class="prose-body">
+              <p>A dinâmica territorial aponta para <strong>conflitos de uso do solo em escalonamento</strong>, com tensões entre o setor privado e populações locais. O score de 60.8 reflete um ambiente onde novos empreendimentos enfrentam resistência moderada-alta, especialmente em áreas de expansão urbana e zonas periféricas.</p>
+              <ul>
+                <li>Conflitos de uso do solo com histórico ativo</li>
+                <li>Empreendimentos previstos enfrentando disputas</li>
+                <li>Expansão urbana pressionando áreas de risco</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- D5 + D6 side by side -->
+      <div class="two-col">
+        <div class="card" style="margin-bottom:0;border-top:3px solid var(--black)">
+          <div class="card-head">D5 · Governança — 0/100 <span class="card-tag ct-black">Vácuo Institucional</span></div>
+          <div class="callout">
+            <p><strong>Alerta máximo:</strong> Nenhum sinal de articulação institucional, participação social ou gestão pública efetiva foi detectado no período. O score zero não significa ausência de problemas — significa ausência de capacidade de resposta. Este é o fator de risco sistêmico que amplifica todos os outros vetores.</p>
+          </div>
+          <div class="prose">
+            <div class="prose-hd" onclick="toggleProse(this)">
+              <div class="prose-hd-title">Implicações do Vácuo</div>
+              <div class="prose-toggle open"><svg viewBox="0 0 10 6"><path d="M1 1l4 4 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            </div>
+            <div class="prose-body">
+              <ul>
+                <li>Ausência de interlocutor público confiável para negociações</li>
+                <li>TACs e compensações sem fiscalização efetiva</li>
+                <li>Orçamento participativo sem dados ou aplicação rastreável</li>
+                <li>Risco elevado de captura política de conselhos locais</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:0;border-top:3px solid var(--blue)">
+          <div class="card-head">D6 · Reputação — 37.2/100 <span class="card-tag ct-blue">Moderado</span></div>
+          <div class="prose">
+            <div class="prose-hd" onclick="toggleProse(this)">
+              <div class="prose-hd-title">Visibilidade e Percepção</div>
+              <div class="prose-toggle open"><svg viewBox="0 0 10 6"><path d="M1 1l4 4 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            </div>
+            <div class="prose-body">
+              <p>A cobertura midiática sobre <strong>emergências de saúde (dengue) e riscos climáticos</strong> afetou negativamente a percepção pública de Alagoinhas. O volume de buscas e engajamento em redes sociais reflete principalmente conteúdo negativo associado às crises.</p>
+              <p>O baixo interesse científico documentado (núcleos de pesquisa e comitês ativos) aponta para limitada capacidade de produção de conhecimento local — fator que dificulta estudos de viabilidade independentes.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SEÇÃO 04: TENDÊNCIA HISTÓRICA ──────────────────────────── -->
+    <div class="section">
+      <div class="section-head">
+        <div class="sec-num">04</div>
+        <div class="sec-rule"></div>
+        <div class="sec-num" style="color:var(--blue)">Tendência Histórica — Jul a Dez/2025</div>
+        <div class="sec-rule-blue"></div>
+      </div>
+
+      <div class="chart-wrap">
+        <div class="chart-title">Evolução do STT Global — 6 Meses</div>
+        <!-- SVG Line Chart -->
+        <svg viewBox="0 0 740 200" width="100%" style="display:block">
+          <defs>
+            <linearGradient id="lineGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" style="stop-color:#CC2929;stop-opacity:0.15"/>
+              <stop offset="100%" style="stop-color:#CC2929;stop-opacity:0"/>
+            </linearGradient>
+          </defs>
+          <!-- Grid lines -->
+          <line x1="60" y1="20" x2="720" y2="20" stroke="#EDEAE4" stroke-width="1"/>
+          <line x1="60" y1="55" x2="720" y2="55" stroke="#EDEAE4" stroke-width="1"/>
+          <line x1="60" y1="90" x2="720" y2="90" stroke="#EDEAE4" stroke-width="1"/>
+          <line x1="60" y1="125" x2="720" y2="125" stroke="#EDEAE4" stroke-width="1"/>
+          <line x1="60" y1="160" x2="720" y2="160" stroke="#EDEAE4" stroke-width="1"/>
+          <!-- Y axis labels -->
+          <text x="52" y="24" text-anchor="end" font-family="'DM Mono',monospace" font-size="8" fill="#AAAAAA">100</text>
+          <text x="52" y="59" text-anchor="end" font-family="'DM Mono',monospace" font-size="8" fill="#AAAAAA">80</text>
+          <text x="52" y="94" text-anchor="end" font-family="'DM Mono',monospace" font-size="8" fill="#AAAAAA">60</text>
+          <text x="52" y="129" text-anchor="end" font-family="'DM Mono',monospace" font-size="8" fill="#AAAAAA">40</text>
+          <text x="52" y="164" text-anchor="end" font-family="'DM Mono',monospace" font-size="8" fill="#AAAAAA">20</text>
+          <!--
+            Data points (y = 160 - (val/100)*140):
+            Jul: 75.0 → y = 160 - 105 = 55, x=100
+            Aug: 75.4 → y = 160 - 105.56 = 54.4, x=212
+            Sep: 75.8 → y = 160 - 106.12 = 53.9, x=324
+            Oct: 76.0 → y = 160 - 106.4 = 53.6, x=436
+            Nov: 76.4 → y = 160 - 106.96 = 53.0, x=548
+            Dec: 76.6 → y = 160 - 107.24 = 52.8, x=660
+          -->
+          <!-- Area fill -->
+          <polygon points="100,55 212,54.4 324,53.9 436,53.6 548,53 660,52.8 660,160 100,160" fill="url(#lineGrad)"/>
+          <!-- Line -->
+          <polyline points="100,55 212,54.4 324,53.9 436,53.6 548,53 660,52.8" fill="none" stroke="#CC2929" stroke-width="2.5" stroke-linejoin="round"/>
+          <!-- Data points -->
+          <circle cx="100" cy="55" r="5" fill="#fff" stroke="#CC2929" stroke-width="2"/>
+          <circle cx="212" cy="54.4" r="5" fill="#fff" stroke="#CC2929" stroke-width="2"/>
+          <circle cx="324" cy="53.9" r="5" fill="#fff" stroke="#CC2929" stroke-width="2"/>
+          <circle cx="436" cy="53.6" r="5" fill="#fff" stroke="#CC2929" stroke-width="2"/>
+          <circle cx="548" cy="53" r="5" fill="#fff" stroke="#CC2929" stroke-width="2"/>
+          <circle cx="660" cy="52.8" r="8" fill="#CC2929" stroke="#fff" stroke-width="2"/>
+          <!-- Value labels -->
+          <text x="100" y="44" text-anchor="middle" font-family="'DM Mono',monospace" font-size="9.5" fill="#0A0A0A" font-weight="500">75.0</text>
+          <text x="212" y="43.4" text-anchor="middle" font-family="'DM Mono',monospace" font-size="9.5" fill="#0A0A0A" font-weight="500">75.4</text>
+          <text x="324" y="42.9" text-anchor="middle" font-family="'DM Mono',monospace" font-size="9.5" fill="#0A0A0A" font-weight="500">76.0</text>
+          <text x="436" y="42.6" text-anchor="middle" font-family="'DM Mono',monospace" font-size="9.5" fill="#0A0A0A" font-weight="500">76.0</text>
+          <text x="548" y="42" text-anchor="middle" font-family="'DM Mono',monospace" font-size="9.5" fill="#0A0A0A" font-weight="500">76.4</text>
+          <text x="660" y="41" text-anchor="middle" font-family="'Bebas Neue',sans-serif" font-size="14" fill="#CC2929">76.6</text>
+          <!-- X axis labels -->
+          <text x="100" y="178" text-anchor="middle" font-family="'DM Mono',monospace" font-size="8.5" fill="#6A6A6A">JUL/25</text>
+          <text x="212" y="178" text-anchor="middle" font-family="'DM Mono',monospace" font-size="8.5" fill="#6A6A6A">AGO/25</text>
+          <text x="324" y="178" text-anchor="middle" font-family="'DM Mono',monospace" font-size="8.5" fill="#6A6A6A">SET/25</text>
+          <text x="436" y="178" text-anchor="middle" font-family="'DM Mono',monospace" font-size="8.5" fill="#6A6A6A">OUT/25</text>
+          <text x="548" y="178" text-anchor="middle" font-family="'DM Mono',monospace" font-size="8.5" fill="#6A6A6A">NOV/25</text>
+          <text x="660" y="178" text-anchor="middle" font-family="'DM Mono',monospace" font-size="8.5" fill="#CC2929" font-weight="700">DEZ/25</text>
+          <!-- Threshold line -->
+          <line x1="60" y1="55" x2="720" y2="55" stroke="#CC2929" stroke-width="1" stroke-dasharray="4 3" opacity="0.4"/>
+          <text x="724" y="58" font-family="'DM Mono',monospace" font-size="7.5" fill="#CC2929" opacity="0.7">80</text>
+          <!-- Axis -->
+          <line x1="60" y1="160" x2="720" y2="160" stroke="#DEDBD5" stroke-width="1"/>
+          <line x1="60" y1="20" x2="60" y2="160" stroke="#DEDBD5" stroke-width="1"/>
+        </svg>
+        <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--offwhite);display:flex;gap:24px">
+          <div style="font-family:'DM Mono',monospace;font-size:8.5px;color:var(--gray)"><span style="color:var(--red);font-weight:700">+1.6 pts</span> variação acumulada 6 meses</div>
+          <div style="font-family:'DM Mono',monospace;font-size:8.5px;color:var(--gray)"><span style="color:var(--red);font-weight:700">6/6</span> meses em ascensão consecutiva</div>
+          <div style="font-family:'DM Mono',monospace;font-size:8.5px;color:var(--gray)">Dimensão ativada: D2 (3×) e D1 (3×)</div>
+        </div>
+      </div>
+
+      <!-- Tabela histórica -->
+      <div class="card">
+        <div class="card-head">Histórico Detalhado por Dimensão · Jul–Dez 2025 <span class="card-tag ct-red">6 Períodos</span></div>
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Período</th>
+                <th>STT</th>
+                <th>D1 · Socioambiental</th>
+                <th>D2 · Socioeconômica</th>
+                <th>D3 · Infraestrutura</th>
+                <th>D4 · Dinâmica</th>
+                <th>D5 · Governança</th>
+                <th>D6 · Reputação</th>
+                <th>Cenário</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Dez/2025</strong></td>
+                <td><strong style="color:var(--red)">76.6</strong></td>
+                <td><span class="badge b-red">92.3</span></td>
+                <td><span class="badge b-red">100.0</span></td>
+                <td><span class="badge b-amber">41.1</span></td>
+                <td><span class="badge b-amber">60.8</span></td>
+                <td><span class="badge b-black">0.0</span></td>
+                <td><span class="badge b-blue">37.2</span></td>
+                <td><span class="badge b-red">Escalada</span></td>
+              </tr>
+              <tr>
+                <td>Nov/2025</td>
+                <td>76.4</td>
+                <td><span class="badge b-red">91.7</span></td>
+                <td><span class="badge b-red">100.0</span></td>
+                <td><span class="badge b-amber">40.8</span></td>
+                <td><span class="badge b-amber">60.4</span></td>
+                <td><span class="badge b-black">0.0</span></td>
+                <td><span class="badge b-blue">36.9</span></td>
+                <td><span class="badge b-red">Escalada</span></td>
+              </tr>
+              <tr>
+                <td>Out/2025</td>
+                <td>76.0</td>
+                <td><span class="badge b-red">90.9</span></td>
+                <td><span class="badge b-red">100.0</span></td>
+                <td><span class="badge b-amber">40.5</span></td>
+                <td><span class="badge b-amber">59.9</span></td>
+                <td><span class="badge b-black">0.0</span></td>
+                <td><span class="badge b-blue">36.6</span></td>
+                <td><span class="badge b-red">Escalada</span></td>
+              </tr>
+              <tr>
+                <td>Set/2025</td>
+                <td>75.8</td>
+                <td><span class="badge b-red">90.0</span></td>
+                <td><span class="badge b-red">100.0</span></td>
+                <td><span class="badge b-amber">40.1</span></td>
+                <td><span class="badge b-amber">59.3</span></td>
+                <td><span class="badge b-black">0.0</span></td>
+                <td><span class="badge b-blue">36.2</span></td>
+                <td><span class="badge b-red">Escalada</span></td>
+              </tr>
+              <tr>
+                <td>Ago/2025</td>
+                <td>75.4</td>
+                <td><span class="badge b-red">88.9</span></td>
+                <td><span class="badge b-red">100.0</span></td>
+                <td><span class="badge b-amber">39.6</span></td>
+                <td><span class="badge b-amber">58.6</span></td>
+                <td><span class="badge b-black">0.0</span></td>
+                <td><span class="badge b-blue">35.8</span></td>
+                <td><span class="badge b-red">Escalada</span></td>
+              </tr>
+              <tr>
+                <td>Jul/2025</td>
+                <td>75.0</td>
+                <td><span class="badge b-red">87.6</span></td>
+                <td><span class="badge b-red">100.0</span></td>
+                <td><span class="badge b-amber">39.0</span></td>
+                <td><span class="badge b-amber">57.8</span></td>
+                <td><span class="badge b-black">0.0</span></td>
+                <td><span class="badge b-blue">35.3</span></td>
+                <td><span class="badge b-red">Escalada</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SEÇÃO 05: SINAIS CRÍTICOS ──────────────────────────────── -->
+    <div class="section">
+      <div class="section-head">
+        <div class="sec-num">05</div>
+        <div class="sec-rule"></div>
+        <div class="sec-num" style="color:var(--blue)">Sinais Críticos Monitorados</div>
+        <div class="sec-rule-blue"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">Sinais de Alto Impacto · Período Atual <span class="card-tag ct-red">Impacto ≥ 0.75</span></div>
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Fonte</th>
+                <th>Sinal</th>
+                <th>Dimensão</th>
+                <th>Impacto</th>
+                <th>Classificação</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="badge b-black">CEMADEN</span></td>
+                <td><strong>Alerta de Risco Hidrológico</strong><br><span style="color:var(--gray);font-size:10px">Risco de deslizamento/alagamento nas últimas 24h</span></td>
+                <td><span class="badge b-red">D1</span></td>
+                <td><strong style="color:var(--red)">0.87</strong></td>
+                <td><span class="badge b-red">Alerta Imediato</span></td>
+              </tr>
+              <tr>
+                <td><span class="badge b-black">IBAMA</span></td>
+                <td><strong>Novos Embargos Ambientais</strong><br><span style="color:var(--gray);font-size:10px">2 embargos ativos na área de influência</span></td>
+                <td><span class="badge b-red">D1</span></td>
+                <td><strong style="color:var(--red)">0.80</strong></td>
+                <td><span class="badge b-red">Alerta Imediato</span></td>
+              </tr>
+              <tr>
+                <td><span class="badge b-black">INPE DETER</span></td>
+                <td><strong>Desmatamento Detectado</strong><br><span style="color:var(--gray);font-size:10px">Área de 12,5 km² com indícios de degradação</span></td>
+                <td><span class="badge b-red">D1</span></td>
+                <td><strong style="color:#C47A10">0.75</strong></td>
+                <td><span class="badge b-amber">Alto Impacto</span></td>
+              </tr>
+              <tr>
+                <td><span class="badge b-black">PNADC/IBGE</span></td>
+                <td><strong>Atualização Renda e Emprego</strong><br><span style="color:var(--gray);font-size:10px">Indicadores de desemprego e informalidade verificados</span></td>
+                <td><span class="badge b-red">D2</span></td>
+                <td><strong style="color:#C47A10">0.75</strong></td>
+                <td><span class="badge b-amber">Alto Impacto</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">Evidências Consolidadas — Período <span class="card-tag ct-blue">Fontes Oficiais</span></div>
+        <div class="evidence">
+          <div class="evid-num">01</div>
+          <div class="evid-text"><strong>CEMADEN confirmou risco hidrológico ativo</strong> para municípios do território. Impacto 0.87 — o sinal de maior pontuação do período. Indica vulnerabilidade geotécnica que exige avaliação de risco de engenharia para qualquer projeto de infraestrutura física.</div>
+        </div>
+        <div class="evidence">
+          <div class="evid-num">02</div>
+          <div class="evid-text"><strong>IBAMA registrou 2+ embargos ambientais</strong> ativos na área de influência do território. Passivo regulatório que pode impactar o licenciamento de novos empreendimentos e gerar responsabilidade solidária em cadeias de fornecimento.</div>
+        </div>
+        <div class="evidence">
+          <div class="evid-num">03</div>
+          <div class="evid-text"><strong>INPE DETER detectou 12,5 km² de desmatamento/degradação</strong> na região. Área expressiva que pode acionar mecanismos de embargo preventivo e elevar o custo de conformidade ambiental para operadores na região.</div>
+        </div>
+        <div class="evidence">
+          <div class="evid-num">04</div>
+          <div class="evid-text"><strong>D5 Governança com score zero pelo 6º mês consecutivo.</strong> Ausência total de sinais de articulação institucional, participação em conselhos ou aplicação rastreável de orçamento participativo. Configura o maior fator multiplicador de risco do território.</div>
+        </div>
+        <div class="evidence">
+          <div class="evid-num">05</div>
+          <div class="evid-text"><strong>Epidemia de dengue declarada</strong> (sinal recorrente desde Ago/2025). Sobrecarga do sistema de saúde local com impacto direto na D3 (Infraestrutura) e reflexo negativo na D6 (Reputação) pela cobertura midiática negativa.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SEÇÃO 06: SWOT TERRITORIAL ─────────────────────────────── -->
+    <div class="section">
+      <div class="section-head">
+        <div class="sec-num">06</div>
+        <div class="sec-rule"></div>
+        <div class="sec-num" style="color:var(--blue)">Análise SWOT Territorial</div>
+        <div class="sec-rule-blue"></div>
+      </div>
+
+      <div class="swot-grid">
+        <div class="swot-cell swot-s">
+          <div class="swot-cell-head">Forças</div>
+          <div class="swot-item"><span class="swot-item-label">S1</span>Posição geográfica estratégica no Agreste Baiano com acesso multimodal</div>
+          <div class="swot-item"><span class="swot-item-label">S2</span>Histórico como polo regional de serviços e comércio</div>
+          <div class="swot-item"><span class="swot-item-label">S3</span>Proximidade com infraestrutura petroquímica (RLAM) — know-how industrial</div>
+          <div class="swot-item"><span class="swot-item-label">S4</span>Rede ferroviária histórica com potencial de reativação logística</div>
+        </div>
+        <div class="swot-cell swot-w">
+          <div class="swot-cell-head">Fraquezas</div>
+          <div class="swot-item"><span class="swot-item-label">W1</span>Vácuo institucional completo (D5=0) — ausência de liderança pública</div>
+          <div class="swot-item"><span class="swot-item-label">W2</span>Máxima tensão socioeconômica com pobreza e informalidade elevadas</div>
+          <div class="swot-item"><span class="swot-item-label">W3</span>Passivo ambiental acumulado (embargos IBAMA + desmatamento)</div>
+          <div class="swot-item"><span class="swot-item-label">W4</span>Infraestrutura de saúde sobrecarregada com epidemia ativa</div>
+        </div>
+        <div class="swot-cell swot-o">
+          <div class="swot-cell-head">Oportunidades</div>
+          <div class="swot-item"><span class="swot-item-label">O1</span>Demanda reprimida por investimento em saneamento e saúde (PPPs viáveis)</div>
+          <div class="swot-item"><span class="swot-item-label">O2</span>Potencial de regularização ambiental como diferencial competitivo</div>
+          <div class="swot-item"><span class="swot-item-label">O3</span>Janela para atores que constroem capital social — território carece de lideranças</div>
+          <div class="swot-item"><span class="swot-item-label">O4</span>Vocação agrícola com abertura para projetos de bioeconomia</div>
+        </div>
+        <div class="swot-cell swot-t">
+          <div class="swot-cell-head">Ameaças</div>
+          <div class="swot-item"><span class="swot-item-label">A1</span>STT em escalada contínua — risco de cruzar limiar crítico (80+) em 2026</div>
+          <div class="swot-item"><span class="swot-item-label">A2</span>Ausência de governança pode gerar captura política ou poder paralelo</div>
+          <div class="swot-item"><span class="swot-item-label">A3</span>Mudanças climáticas aumentando frequência de alertas CEMADEN</div>
+          <div class="swot-item"><span class="swot-item-label">A4</span>Deterioração da reputação por acumulação de crises não geridas</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SEÇÃO 07: RECOMENDAÇÕES ESTRATÉGICAS ───────────────────── -->
+    <div class="section">
+      <div class="section-head">
+        <div class="sec-num">07</div>
+        <div class="sec-rule"></div>
+        <div class="sec-num" style="color:var(--blue)">Recomendações Estratégicas</div>
+        <div class="sec-rule-blue"></div>
+      </div>
+
+      <div class="msg-central" style="margin-bottom:20px">
+        <div class="msg-central-lbl">Posição PRINT — Dezembro 2025</div>
+        <div class="msg-central-text">
+          "Alagoinhas está no limiar de uma janela de intervenção crítica. A escassez de atores institucionais qualificados cria oportunidade para entrantes que construam capital de relacionamento antes do agravamento do cenário. Aguardar melhora espontânea não é uma estratégia — o D5 em zero e o STT em ascensão indicam ausência de forças de reequilíbrio endógenas."
+        </div>
+        <div class="msg-central-note">Recomendações baseadas em análise de 6 meses de dados reais · Atualização mensal programada</div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">Ações por Prazo e Prioridade <span class="card-tag ct-red">Alta Urgência</span></div>
+        <div class="timeline">
+          <div class="tl-item">
+            <div class="tl-dot now"></div>
+            <div class="tl-date">Imediato — Jan/2026 · Prioridade Máxima</div>
+            <div class="tl-title">Mapeamento de Atores Institucionais e Poder Real</div>
+            <div class="tl-body">Com D5=0, o primeiro movimento é identificar quem efetivamente decide no território. Mapeamento de poder formal e informal — prefeitura, câmara, sindicatos, lideranças comunitárias, poder paralelo. Sem esse mapa, qualquer negociação é cega.</div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-dot now"></div>
+            <div class="tl-date">Curto Prazo — Q1/2026 · Alta Prioridade</div>
+            <div class="tl-title">Due Diligence Ambiental Acelerada</div>
+            <div class="tl-body">Embargos IBAMA ativos e desmatamento detectado exigem levantamento jurídico-ambiental antes de qualquer compromisso. Identificar se os passivos são transferíveis ou se podem contaminar operações adjacentes. Mapear quais propriedades estão afetadas pelos 12,5 km² detectados pelo DETER.</div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-dot warn"></div>
+            <div class="tl-date">Médio Prazo — Q2/2026 · Monitoramento</div>
+            <div class="tl-title">Plano de Mitigação para Risco CEMADEN</div>
+            <div class="tl-body">Alertas hidrológicos recorrentes (0.87 de impacto) indicam vulnerabilidade geotécnica relevante. Contratar avaliação de risco geológico para áreas de interesse. Incluir cláusulas de force majeure e seguros específicos em contratos de operação.</div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-dot future"></div>
+            <div class="tl-date">Longo Prazo — H2/2026 · Estratégico</div>
+            <div class="tl-title">Engajamento para Construção de Governança Local</div>
+            <div class="tl-body">O vácuo em D5 é a maior oportunidade oculta do território. Atores que investirem em capacitação institucional, suporte a conselhos e fortalecimento de lideranças locais ganharão diferencial competitivo irreplicável em médio prazo — e reduzirão o próprio risco operacional.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div>
+          <div class="pillar p1">
+            <div class="pillar-lbl">Alerta de Projeção — Se sem intervenção</div>
+            <div class="pillar-text">"No ritmo atual (+0.27 pts/mês), Alagoinhas alcançará STT=80 em aproximadamente 13 meses (Jan/2027), cruzando o limiar de 'Complexidade Extrema'. A partir desse ponto, o custo de entrada e operação tende a aumentar de forma não-linear."</div>
+          </div>
+          <div class="pillar p2">
+            <div class="pillar-lbl">Indicador de Reversão a Monitorar</div>
+            <div class="pillar-text">"O principal indicador de reversão de cenário será qualquer sinal positivo em D5 (Governança) — articulações, TACs cumpridos, presença em conselhos. Um D5 ≥ 30 em três meses consecutivos indicaria início de estabilização."</div>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:0">
+          <div class="card-head">Fatores de Monitoramento Prioritário</div>
+          <div id="monitor-bars"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SEÇÃO 08: METODOLOGIA ──────────────────────────────────── -->
+    <div class="section">
+      <div class="section-head">
+        <div class="sec-num">08</div>
+        <div class="sec-rule"></div>
+        <div class="sec-num" style="color:var(--blue)">Metodologia e Fontes</div>
+        <div class="sec-rule-blue"></div>
+      </div>
+
+      <div class="two-col">
+        <div class="card" style="margin-bottom:0">
+          <div class="card-head">Fontes de Dados Ativas</div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Fonte</th><th>Dimensão</th><th>Frequência</th></tr></thead>
+              <tbody>
+                <tr><td><strong>CEMADEN</strong></td><td><span class="badge b-red">D1</span></td><td>Tempo real</td></tr>
+                <tr><td><strong>INPE DETER</strong></td><td><span class="badge b-red">D1</span></td><td>Diária</td></tr>
+                <tr><td><strong>IBAMA Dados Abertos</strong></td><td><span class="badge b-red">D1</span></td><td>Diária</td></tr>
+                <tr><td><strong>PNADC / IBGE</strong></td><td><span class="badge b-red">D2</span></td><td>Mensal</td></tr>
+                <tr><td><strong>Google News RSS</strong></td><td><span class="badge b-blue">D6</span></td><td>Contínua</td></tr>
+                <tr><td><strong>Querido Diário</strong></td><td><span class="badge b-amber">D5</span></td><td>Diária</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div>
+          <div class="prose">
+            <div class="prose-hd" onclick="toggleProse(this)">
+              <div class="prose-hd-title">Fórmula STT e Pesos</div>
+              <div class="prose-toggle open"><svg viewBox="0 0 10 6"><path d="M1 1l4 4 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            </div>
+            <div class="prose-body">
+              <p>O <strong>STT (Score de Tensão Territorial)</strong> é calculado diariamente pela fórmula:</p>
+              <p><strong>STT = Σ (Di × Wi)</strong>, onde Σ Wi = 1.0</p>
+              <ul>
+                <li><strong>D1</strong> Socioambiental × 0.22</li>
+                <li><strong>D2</strong> Socioeconômica × 0.15</li>
+                <li><strong>D3</strong> Infraestrutura × 0.15</li>
+                <li><strong>D4</strong> Dinâmica Territorial × 0.22</li>
+                <li><strong>D5</strong> Governança × 0.15</li>
+                <li><strong>D6</strong> Reputação × 0.11</li>
+              </ul>
+              <div class="callout-blue callout">
+                <p>Sinais com impacto ≥ 0.7 geram alertas em tempo real. A consolidação mensal usa LLM para análise qualitativa dos sinais acumulados. A publicação final passa por validação humana da equipe PRINT.</p>
+              </div>
+            </div>
+          </div>
+          <div class="prose" style="margin-top:8px">
+            <div class="prose-hd" onclick="toggleProse(this)">
+              <div class="prose-hd-title">Escala de Classificação</div>
+              <div class="prose-toggle"><svg viewBox="0 0 10 6"><path d="M1 1l4 4 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            </div>
+            <div class="prose-body" style="display:none">
+              <ul>
+                <li><strong>STT 0–39:</strong> Baixa Complexidade · Ambiente favorável</li>
+                <li><strong>STT 40–69:</strong> Média Complexidade · Monitoramento recomendado</li>
+                <li><strong>STT 70–79:</strong> Alta Complexidade · Due diligence ampliada</li>
+                <li><strong>STT 80+:</strong> Complexidade Extrema · Risco operacional elevado</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── ASSINATURA ─────────────────────────────────────────────── -->
+    <div class="ornament">
+      <div class="orn-line"></div>
+      <div class="orn-diamond"></div>
+      <div class="orn-line"></div>
+    </div>
+
+    <div class="sig-block">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:40px">
+        <div>
+          <div class="sig-title">Responsabilidade Técnica</div>
+          <div class="sig-text">
+            Este documento é produzido pela plataforma <strong style="color:rgba(255,255,255,.7)">PRINT Territorial Intelligence™</strong> com base em dados coletados automaticamente de fontes públicas oficiais, processados por algoritmos proprietários e revisados por especialistas. O STT e as análises dimensionais são indicadores de suporte à decisão — não substituem due diligence específica.
+          </div>
+          <div class="sig-name">PRINT Comunicação</div>
+          <div class="sig-role">Inteligência Territorial · DIT — Diagnóstico de Inteligência Territorial</div>
+          <div class="sig-date">Alagoinhas, Bahia · Dezembro de 2025 · Versão 1.0</div>
+        </div>
+        <div style="display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:12px">
+          <div style="font-family:'DM Mono',monospace;font-size:9px;color:rgba(255,255,255,.3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px">Próxima Edição</div>
+          <div style="background:rgba(204,41,41,.15);border:1px solid rgba(204,41,41,.3);border-radius:2px;padding:12px 16px;width:100%">
+            <div style="font-family:'DM Mono',monospace;font-size:8px;color:rgba(255,255,255,.4);letter-spacing:.1em;margin-bottom:6px">JANEIRO / 2026</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.7);line-height:1.5">Relatório mensal com dados atualizados de todas as dimensões e análise de variação de curto prazo.</div>
+          </div>
+          <div style="font-family:'DM Mono',monospace;font-size:8px;color:rgba(255,255,255,.2);margin-top:8px">DIT-ALA-2025-12 · Rev.01 · Confidencial</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /report-body -->
+
+  <!-- FOOTER -->
+  <div class="page-footer">
+    <div class="pf-brand">PRINT<span>.</span></div>
+    <div class="pf-center">DIT · Diagnóstico de Inteligência Territorial · Alagoinhas, BA</div>
+    <div class="pf-right">Dezembro 2025 · Rev.01</div>
+  </div>
+
+</div><!-- /page-wrap -->
+
+<script>
+// Toggle prose blocks
+function toggleProse(hd) {
+  var body = hd.nextElementSibling;
+  var toggle = hd.querySelector('.prose-toggle');
+  var open = body.style.display !== 'none' && body.style.display !== '';
+  body.style.display = open ? 'none' : 'block';
+  toggle.classList.toggle('open', !open);
+}
+
+// Dimension bars
+var dims = [
+  { label: 'D1 · Socioambiental', val: 92.3, weight: '22%', color: '#CC2929' },
+  { label: 'D2 · Socioeconômica', val: 100,  weight: '15%', color: '#CC2929' },
+  { label: 'D3 · Infraestrutura', val: 41.1, weight: '15%', color: '#C47A10' },
+  { label: 'D4 · Dinâmica Territ.', val: 60.8, weight: '22%', color: '#C47A10' },
+  { label: 'D5 · Governança',      val: 0,    weight: '15%', color: '#0A0A0A' },
+  { label: 'D6 · Reputação',       val: 37.2, weight: '11%', color: '#1A4FA0' },
+];
+var pc = document.getElementById('dim-bars');
+dims.forEach(function(d) {
+  pc.innerHTML += '<div class="prog">' +
+    '<div class="prog-top">' +
+      '<span class="prog-label">' + d.label + ' <small>peso ' + d.weight + '</small></span>' +
+      '<span class="prog-meta">' + d.val + '</span>' +
+    '</div>' +
+    '<div class="prog-bar"><div class="prog-fill" style="width:' + d.val + '%;background:' + d.color + '"></div></div>' +
+  '</div>';
+});
+
+// Monitor bars
+var monitors = [
+  { label: 'D5 Governança — sinal de reversão', val: 0, color: '#0A0A0A' },
+  { label: 'D1 Embargos IBAMA — regularização', val: 15, color: '#CC2929' },
+  { label: 'STT Projeção Jan/2027', val: 80, color: '#CC2929' },
+  { label: 'D3 Infraestrutura — investimento público', val: 41, color: '#C47A10' },
+];
+var mc = document.getElementById('monitor-bars');
+monitors.forEach(function(m) {
+  mc.innerHTML += '<div class="prog">' +
+    '<div class="prog-top">' +
+      '<span class="prog-label" style="font-size:10.5px">' + m.label + '</span>' +
+      '<span class="prog-meta">' + m.val + (m.val===0?'':'/100') + '</span>' +
+    '</div>' +
+    '<div class="prog-bar"><div class="prog-fill" style="width:' + (m.val||2) + '%;background:' + m.color + '"></div></div>' +
+  '</div>';
+});
+</script>
+</body>
+</html>

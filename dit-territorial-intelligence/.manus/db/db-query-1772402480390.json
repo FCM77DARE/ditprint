@@ -1,0 +1,110 @@
+{
+  "query": "SELECT period, signalCount, relevantSignalCount FROM index_history WHERE signalCount > 0 ORDER BY period DESC LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2aGV9vQqnMXZ7WH.b5ed6992562a --database 43iZsmPphrqUoXjRK5zrxR --execute SELECT period, signalCount, relevantSignalCount FROM index_history WHERE signalCount > 0 ORDER BY period DESC LIMIT 20;",
+  "rows": [
+    {
+      "period": "2026-03",
+      "signalCount": "1",
+      "relevantSignalCount": "0"
+    },
+    {
+      "period": "2026-02",
+      "signalCount": "5",
+      "relevantSignalCount": "1"
+    },
+    {
+      "period": "2026-02",
+      "signalCount": "10",
+      "relevantSignalCount": "2"
+    },
+    {
+      "period": "2026-01",
+      "signalCount": "1",
+      "relevantSignalCount": "0"
+    },
+    {
+      "period": "2026-01",
+      "signalCount": "8",
+      "relevantSignalCount": "0"
+    },
+    {
+      "period": "2025-12",
+      "signalCount": "3",
+      "relevantSignalCount": "0"
+    },
+    {
+      "period": "2025-11",
+      "signalCount": "4",
+      "relevantSignalCount": "0"
+    },
+    {
+      "period": "2025-10",
+      "signalCount": "2",
+      "relevantSignalCount": "0"
+    },
+    {
+      "period": "2025-10",
+      "signalCount": "7",
+      "relevantSignalCount": "0"
+    },
+    {
+      "period": "2025-09",
+      "signalCount": "5",
+      "relevantSignalCount": "0"
+    },
+    {
+      "period": "2025-09",
+      "signalCount": "3",
+      "relevantSignalCount": "0"
+    },
+    {
+      "period": "2025-08",
+      "signalCount": "2",
+      "relevantSignalCount": "0"
+    },
+    {
+      "period": "2025-08",
+      "signalCount": "1",
+      "relevantSignalCount": "0"
+    },
+    {
+      "period": "2025-07",
+      "signalCount": "2",
+      "relevantSignalCount": "0"
+    },
+    {
+      "period": "2025-06",
+      "signalCount": "9",
+      "relevantSignalCount": "1"
+    },
+    {
+      "period": "2025-05",
+      "signalCount": "5",
+      "relevantSignalCount": "0"
+    },
+    {
+      "period": "2025-02",
+      "signalCount": "1",
+      "relevantSignalCount": "0"
+    },
+    {
+      "period": "2025-01",
+      "signalCount": "1",
+      "relevantSignalCount": "0"
+    },
+    {
+      "period": "2024-11",
+      "signalCount": "2",
+      "relevantSignalCount": "0"
+    },
+    {
+      "period": "2024-08",
+      "signalCount": "2",
+      "relevantSignalCount": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "period\tsignalCount\trelevantSignalCount\n2026-03\t1\t0\n2026-02\t5\t1\n2026-02\t10\t2\n2026-01\t1\t0\n2026-01\t8\t0\n2025-12\t3\t0\n2025-11\t4\t0\n2025-10\t2\t0\n2025-10\t7\t0\n2025-09\t5\t0\n2025-09\t3\t0\n2025-08\t2\t0\n2025-08\t1\t0\n2025-07\t2\t0\n2025-06\t9\t1\n2025-05\t5\t0\n2025-02\t1\t0\n2025-01\t1\t0\n2024-11\t2\t0\n2024-08\t2\t0\n",
+  "stderr": "",
+  "execution_time_ms": 55
+}

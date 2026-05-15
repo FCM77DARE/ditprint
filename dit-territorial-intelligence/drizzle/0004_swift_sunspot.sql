@@ -1,0 +1,1 @@
+ALTER TABLE `signals` MODIFY COLUMN `source` enum('newsapi','dou','ibama','ibama-embargo','ibama-auto-infracao','ibge-censo','ibge-rendimento','inpe-deter','inpe-prodes','ana-hidroweb','ana-outorgas','querido-diario','google-rss','manual') NOT NULL;

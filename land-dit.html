@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DIT — Diagnóstico de Inteligência Territorial</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Nunito:wght@400;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --forest: #2D5340; --forest-deep: #1e3a2d; --sage: #6B9B7C;
+      --offwhite: #F5F1ED; --areia: #D4C9B8; --dourado: #D4A574;
+      --slate: #5B8FA3; --terra: #B84A3A; --grafite: #2C2C2C; --marrom: #6B5346;
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Nunito', sans-serif; background: var(--offwhite); color: var(--grafite); overflow-x: hidden; }
+
+    /* NAV */
+    nav { position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 48px;height:64px;background:rgba(29,59,41,0.94);backdrop-filter:blur(16px);border-bottom:1px solid rgba(212,165,116,0.15); }
+    .nav-logo { display:flex;align-items:center;gap:12px; }
+    .nav-logo-mark { width:30px;height:30px;background:var(--dourado);clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%); }
+    .nav-logo-text { font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--offwhite);letter-spacing:.08em; }
+    .nav-logo-text span { color:var(--dourado); }
+    .nav-badge { font-family:'DM Mono',monospace;font-size:11px;color:var(--areia);letter-spacing:.15em;opacity:.6; }
+
+    /* HERO */
+    .hero { min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 24px 60px;background:var(--forest-deep);position:relative;overflow:hidden; }
+    .hero::before { content:'';position:absolute;inset:0;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600'%3E%3Cg fill='none' stroke='%236B9B7C' stroke-width='1' opacity='0.12'%3E%3Cellipse cx='300' cy='300' rx='280' ry='120'/%3E%3Cellipse cx='300' cy='300' rx='240' ry='100'/%3E%3Cellipse cx='300' cy='300' rx='200' ry='82'/%3E%3Cellipse cx='300' cy='300' rx='160' ry='66'/%3E%3Cellipse cx='80' cy='100' rx='200' ry='80'/%3E%3Cellipse cx='520' cy='480' rx='220' ry='90'/%3E%3C/g%3E%3C/svg%3E");background-size:600px;pointer-events:none; }
+    .hero::after { content:'';position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 30%,rgba(18,38,27,.6) 100%);pointer-events:none; }
+    .hero-content { position:relative;z-index:2;text-align:center;max-width:860px; }
+    .hero-eyebrow { display:inline-flex;align-items:center;gap:10px;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.25em;color:var(--dourado);text-transform:uppercase;margin-bottom:28px;padding:6px 16px;border:1px solid rgba(212,165,116,.3);border-radius:100px; }
+    .hero-eyebrow::before { content:'';width:6px;height:6px;background:var(--dourado);border-radius:50%;animation:pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.8)} }
+    h1.hero-title { font-family:'Bebas Neue',sans-serif;font-size:clamp(52px,9vw,100px);color:var(--offwhite);line-height:.92;letter-spacing:.02em;margin-bottom:24px; }
+    h1.hero-title em { font-style:normal;color:var(--dourado); }
+    .hero-sub { font-size:18px;color:var(--areia);font-weight:500;line-height:1.6;max-width:560px;margin:0 auto 48px;opacity:.85; }
+    .search-wrap { width:100%;max-width:640px; }
+    .search-bar { display:flex;background:rgba(245,241,237,.06);border:1.5px solid rgba(212,165,116,.35);border-radius:12px;overflow:hidden;transition:border-color .2s,box-shadow .2s; }
+    .search-bar:focus-within { border-color:var(--dourado);box-shadow:0 0 0 3px rgba(212,165,116,.15); }
+    .search-bar input { flex:1;background:transparent;border:none;outline:none;padding:18px 20px;font-family:'Nunito',sans-serif;font-size:17px;color:var(--offwhite);font-weight:600; }
+    .search-bar input::placeholder { color:rgba(245,241,237,.4);font-weight:400; }
+    .search-bar button { background:var(--dourado);border:none;padding:0 28px;cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:.1em;color:var(--forest-deep);transition:background .2s;white-space:nowrap; }
+    .search-bar button:hover { background:#e8b882; }
+    .search-hint { margin-top:14px;font-family:'DM Mono',monospace;font-size:11px;color:rgba(245,241,237,.35);letter-spacing:.1em; }
+
+    /* PROOF */
+    .proof { padding:100px 24px;max-width:1200px;margin:0 auto; }
+    .section-label { display:flex;align-items:center;gap:12px;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.25em;color:var(--sage);text-transform:uppercase;margin-bottom:16px; }
+    .section-label::after { content:'';flex:1;height:1px;background:var(--areia); }
+    .proof-title { font-family:'Bebas Neue',sans-serif;font-size:clamp(38px,5vw,56px);color:var(--forest);letter-spacing:.02em;margin-bottom:12px; }
+    .proof-subtitle { font-size:16px;color:var(--marrom);opacity:.8;margin-bottom:56px;max-width:520px; }
+    .proof-grid { display:grid;grid-template-columns:repeat(auto-fit,minmax(440px,1fr));gap:24px; }
+    .dit-card { background:white;border-radius:16px;overflow:hidden;border:1px solid var(--areia);box-shadow:0 4px 24px rgba(45,83,64,.08);transition:transform .2s,box-shadow .2s; }
+    .dit-card:hover { transform:translateY(-4px);box-shadow:0 12px 40px rgba(45,83,64,.14); }
+    .dit-card-header { padding:28px 28px 0;display:flex;align-items:flex-start;justify-content:space-between; }
+    .dit-card-cycle { font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.2em;color:var(--sage);text-transform:uppercase; }
+    .dit-card-name { font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--forest);letter-spacing:.03em;line-height:1; }
+    .dit-card-state { font-size:13px;font-weight:600;color:var(--marrom); }
+    .stt-number { font-family:'Bebas Neue',sans-serif;font-size:56px;line-height:1;color:var(--forest); }
+    .stt-label { font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.15em;color:var(--sage); }
+    .scenario-badge { display:inline-block;margin:16px 28px 0;padding:5px 14px;border-radius:100px;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.12em;font-weight:500; }
+    .scenario-escalada { background:rgba(184,74,58,.1);color:var(--terra);border:1px solid rgba(184,74,58,.2); }
+    .scenario-instavel { background:rgba(212,165,116,.15);color:var(--marrom);border:1px solid rgba(212,165,116,.25); }
+    .scenario-incômoda,.scenario-pressao { background:rgba(91,143,163,.1);color:var(--slate);border:1px solid rgba(91,143,163,.2); }
+    .scenario-estabilidade { background:rgba(107,155,124,.1);color:var(--forest);border:1px solid rgba(107,155,124,.2); }
+    .dim-bars { padding:20px 28px 28px; }
+    .dim-bars-label { font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.15em;color:var(--areia);text-transform:uppercase;margin-bottom:12px; }
+    .dim-bar-row { display:flex;align-items:center;gap:10px;margin-bottom:8px; }
+    .dim-bar-name { font-family:'DM Mono',monospace;font-size:10px;color:var(--grafite);width:90px;flex-shrink:0; }
+    .dim-bar-track { flex:1;height:6px;background:var(--areia);border-radius:100px;overflow:hidden; }
+    .dim-bar-fill { height:100%;border-radius:100px; }
+    .dim-bar-score { font-family:'DM Mono',monospace;font-size:10px;color:var(--grafite);width:36px;text-align:right;font-weight:500; }
+    .dit-card-insight { background:var(--forest);padding:16px 28px;display:flex;align-items:center;gap:12px; }
+    .dit-card-insight-text { font-size:13px;color:rgba(245,241,237,.85);line-height:1.5;font-weight:600; }
+
+    /* HOW */
+    .how { background:var(--forest);padding:100px 24px;position:relative;overflow:hidden; }
+    .how::before { content:'';position:absolute;inset:0;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600'%3E%3Cg fill='none' stroke='%236B9B7C' stroke-width='1' opacity='0.08'%3E%3Cellipse cx='300' cy='300' rx='280' ry='120'/%3E%3Cellipse cx='300' cy='300' rx='220' ry='90'/%3E%3C/g%3E%3C/svg%3E");background-size:500px;opacity:.5; }
+    .how-inner { max-width:1000px;margin:0 auto;position:relative;z-index:1; }
+    .how .section-label { color:var(--dourado); }
+    .how .section-label::after { background:rgba(212,165,116,.2); }
+    .how .proof-title { color:var(--offwhite); }
+    .how .proof-subtitle { color:var(--areia);opacity:.7; }
+    .steps { display:grid;grid-template-columns:repeat(3,1fr);gap:32px;margin-top:56px; }
+    .step { padding:36px 28px;background:rgba(245,241,237,.04);border:1px solid rgba(212,165,116,.12);border-radius:16px; }
+    .step-num { font-family:'Bebas Neue',sans-serif;font-size:72px;color:rgba(212,165,116,.2);line-height:1;margin-bottom:8px; }
+    .step-title { font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--offwhite);letter-spacing:.04em;margin-bottom:12px; }
+    .step-desc { font-size:14px;color:var(--areia);line-height:1.65;opacity:.8; }
+    .step-highlight { margin-top:16px;padding:10px 14px;background:rgba(212,165,116,.1);border-left:3px solid var(--dourado);border-radius:0 6px 6px 0;font-family:'DM Mono',monospace;font-size:12px;color:var(--dourado);font-style:italic; }
+    footer { padding:40px 48px;background:var(--forest-deep);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px; }
+    .footer-brand { font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--offwhite);letter-spacing:.08em;opacity:.6; }
+    .footer-copy { font-family:'DM Mono',monospace;font-size:11px;color:var(--areia);opacity:.4; }
+
+    /* MODAL */
+    .modal-overlay { display:none;position:fixed;inset:0;z-index:200;background:rgba(18,38,27,.87);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:24px; }
+    .modal-overlay.active { display:flex; }
+    .modal { background:var(--offwhite);border-radius:20px;width:100%;max-width:480px;overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,.4);animation:slideUp .3s ease; }
+    @keyframes slideUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+    .modal-header { background:var(--forest);padding:24px 28px 20px; }
+    .modal-territory-label { font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.2em;color:var(--sage);text-transform:uppercase;margin-bottom:6px; }
+    .modal-territory-name { font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--offwhite);letter-spacing:.04em; }
+    .modal-product-line { display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding-top:12px;border-top:1px solid rgba(245,241,237,.1); }
+    .modal-product-name { font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--areia);letter-spacing:.08em; }
+    .modal-price { font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--dourado); }
+    .modal-price-label { font-family:'DM Mono',monospace;font-size:10px;color:var(--areia);opacity:.6;letter-spacing:.1em; }
+    .modal-body { padding:28px; }
+    .qr-container { display:flex;justify-content:center;margin-bottom:20px; }
+    .qr-wrap { padding:12px;background:white;border-radius:12px;border:2px solid var(--areia); }
+    .pix-key-row { display:flex;background:white;border:1px solid var(--areia);border-radius:8px;overflow:hidden;margin-bottom:20px; }
+    .pix-key-text { flex:1;padding:10px 14px;font-family:'DM Mono',monospace;font-size:11px;color:var(--grafite);overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+    .pix-key-copy { padding:10px 16px;background:var(--forest);border:none;cursor:pointer;font-family:'DM Mono',monospace;font-size:11px;color:var(--offwhite);letter-spacing:.05em;transition:background .2s;white-space:nowrap; }
+    .pix-key-copy:hover { background:var(--sage); }
+    .modal-warning { background:var(--forest-deep);border-radius:10px;padding:14px 18px;margin-bottom:24px;font-size:14px;color:var(--areia);line-height:1.55;border-left:3px solid var(--dourado); }
+    .modal-warning strong { color:var(--dourado); }
+    .modal-actions { display:flex;gap:12px; }
+    .btn-confirm { flex:1;padding:14px;background:var(--forest);color:var(--offwhite);border:none;border-radius:10px;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:.08em;cursor:pointer;transition:background .2s; }
+    .btn-confirm:hover { background:var(--sage); }
+    .btn-cancel { padding:14px 20px;background:transparent;color:var(--grafite);border:1.5px solid var(--areia);border-radius:10px;font-family:'Nunito',sans-serif;font-size:14px;font-weight:700;cursor:pointer; }
+    .btn-cancel:hover { border-color:var(--marrom);color:var(--marrom); }
+
+    /* LOADING OVERLAY */
+    .loading-overlay { display:none;position:fixed;inset:0;z-index:300;background:rgba(18,38,27,.95);backdrop-filter:blur(12px);align-items:center;justify-content:center; }
+    .loading-overlay.active { display:flex; }
+    .loading-box { width:100%;max-width:520px;padding:0 24px;text-align:center; }
+    .loading-territory { font-family:'Bebas Neue',sans-serif;font-size:clamp(32px,6vw,56px);color:var(--offwhite);letter-spacing:.04em;line-height:1;margin-bottom:8px; }
+    .loading-subtitle { font-family:'DM Mono',monospace;font-size:12px;letter-spacing:.2em;color:var(--sage);text-transform:uppercase;margin-bottom:48px; }
+    .loading-steps { display:flex;flex-direction:column;gap:0;margin-bottom:36px;text-align:left; }
+    .loading-step { display:flex;align-items:flex-start;gap:16px;padding:14px 0;border-bottom:1px solid rgba(245,241,237,.06);transition:all .4s ease; }
+    .loading-step:last-child { border-bottom:none; }
+    .ls-icon { width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;transition:all .4s ease; }
+    .ls-icon.pending { background:rgba(245,241,237,.06);color:rgba(245,241,237,.3); }
+    .ls-icon.running { background:rgba(212,165,116,.15);color:var(--dourado);animation:spin-slow 2s linear infinite; }
+    .ls-icon.done { background:rgba(107,155,124,.2);color:var(--sage); }
+    @keyframes spin-slow { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+    .ls-text { flex:1; }
+    .ls-title { font-family:'DM Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px;transition:color .4s; }
+    .ls-title.pending { color:rgba(245,241,237,.3); }
+    .ls-title.running { color:var(--dourado); }
+    .ls-title.done { color:var(--sage); }
+    .ls-detail { font-size:12px;line-height:1.4;transition:color .4s; }
+    .ls-detail.pending { color:rgba(245,241,237,.15); }
+    .ls-detail.running { color:rgba(245,241,237,.6); }
+    .ls-detail.done { color:rgba(107,155,124,.7); }
+    .loading-progress-wrap { background:rgba(245,241,237,.07);border-radius:100px;height:4px;overflow:hidden;margin-bottom:20px; }
+    .loading-progress-bar { height:100%;border-radius:100px;background:linear-gradient(90deg,var(--sage),var(--dourado));transition:width 1s ease;width:0%; }
+    .loading-time { font-family:'DM Mono',monospace;font-size:11px;color:rgba(245,241,237,.3);letter-spacing:.1em; }
+
+    /* RESULT */
+    #result-section { display:none;background:#fff; }
+    #result-section.active { display:block; }
+    .result-hero { background:var(--forest-deep);padding:80px 24px 60px;position:relative;overflow:hidden; }
+    .result-hero::before { content:'';position:absolute;inset:0;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600'%3E%3Cg fill='none' stroke='%236B9B7C' stroke-width='1' opacity='0.1'%3E%3Cellipse cx='300' cy='300' rx='280' ry='120'/%3E%3Cellipse cx='300' cy='300' rx='220' ry='90'/%3E%3Cellipse cx='300' cy='300' rx='160' ry='60'/%3E%3C/g%3E%3C/svg%3E");background-size:600px;pointer-events:none; }
+    .result-hero-inner { max-width:1100px;margin:0 auto;position:relative;z-index:1;display:grid;grid-template-columns:1fr auto;gap:40px;align-items:center; }
+    .result-meta { font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.2em;color:var(--sage);text-transform:uppercase;margin-bottom:10px; }
+    .result-name { font-family:'Bebas Neue',sans-serif;font-size:clamp(48px,7vw,88px);color:var(--offwhite);line-height:.9;letter-spacing:.02em;margin-bottom:12px; }
+    .result-region { font-size:16px;color:var(--areia);font-weight:600;opacity:.7;margin-bottom:24px; }
+    .result-scenario-pill { display:inline-block;padding:7px 20px;border-radius:100px;font-family:'DM Mono',monospace;font-size:12px;letter-spacing:.12em;font-weight:500; }
+    .gauge-wrap { text-align:center;min-width:200px; }
+    .gauge-stt { font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--sage);letter-spacing:.15em;margin-top:12px; }
+    .result-body { max-width:1100px;margin:0 auto;padding:64px 24px; }
+    .exec-summary { background:var(--offwhite);border:1px solid var(--areia);border-radius:16px;padding:36px;margin-bottom:48px;border-left:4px solid var(--dourado); }
+    .exec-summary-label { font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.25em;color:var(--sage);text-transform:uppercase;margin-bottom:12px; }
+    .exec-summary-text { font-size:16px;line-height:1.75;color:var(--grafite); }
+    .exec-summary-text p + p { margin-top:12px; }
+    .result-section-title { font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--forest);letter-spacing:.04em;margin-bottom:20px;display:flex;align-items:center;gap:14px; }
+    .result-section-title::after { content:'';flex:1;height:1px;background:var(--areia); }
+    .signals-section,.dims-section,.forecast-section,.rec-section,.strategic-section { margin-bottom:56px; }
+    /* Strategic — Casos */
+    .cases-grid { display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:12px; }
+    .case-card { background:white;border:1px solid var(--areia);border-radius:14px;padding:24px;position:relative;overflow:hidden; }
+    .case-card::before { content:'';position:absolute;top:0;left:0;width:4px;height:100%;background:var(--terra); }
+    .case-card.estrategico::before { background:var(--terra); }
+    .case-card.potencial::before { background:var(--dourado); }
+    .case-card.latente::before { background:var(--marrom); }
+    .case-card.nao-aplicavel::before { background:var(--areia);opacity:.5; }
+    .case-label { font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.2em;color:var(--sage);text-transform:uppercase;margin-bottom:6px; }
+    .case-title { font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--forest);letter-spacing:.04em;margin-bottom:8px; }
+    .case-relevance { display:inline-block;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.15em;padding:4px 10px;border-radius:4px;background:rgba(184,74,58,.1);color:var(--terra);margin-bottom:14px;text-transform:uppercase; }
+    .case-thesis { font-size:13px;line-height:1.65;color:var(--grafite);margin-bottom:14px; }
+    .case-evidence { display:flex;flex-direction:column;gap:6px;margin-bottom:14px; }
+    .case-evidence li { font-size:12px;line-height:1.5;color:var(--grafite);opacity:.8;list-style:none;padding-left:14px;position:relative; }
+    .case-evidence li::before { content:'■';position:absolute;left:0;color:var(--dourado);font-size:7px;top:5px; }
+    .case-potential { background:rgba(45,83,64,.06);border-radius:8px;padding:12px;font-size:12px;line-height:1.55;color:var(--forest);margin-bottom:10px; }
+    .case-risks { display:flex;flex-direction:column;gap:4px; }
+    .case-risks li { font-size:11px;line-height:1.5;color:var(--terra);list-style:none;padding-left:14px;position:relative; }
+    .case-risks li::before { content:'⚠';position:absolute;left:0;font-size:10px; }
+    /* Strategic — Recursos */
+    .resources-grid { display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:12px; }
+    .res-card { background:white;border:1px solid var(--areia);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:6px; }
+    .res-head { display:flex;justify-content:space-between;align-items:center;gap:8px; }
+    .res-name { font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--forest);letter-spacing:.03em; }
+    .res-abundance { font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.15em;padding:3px 8px;border-radius:3px;text-transform:uppercase; }
+    .res-abundance.abundante { background:rgba(45,83,64,.12);color:var(--forest); }
+    .res-abundance.presente { background:rgba(212,165,116,.15);color:var(--marrom); }
+    .res-abundance.limitado { background:rgba(184,74,58,.1);color:var(--terra); }
+    .res-abundance.ausente { background:rgba(0,0,0,.05);color:var(--grafite);opacity:.6; }
+    .res-category { font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.15em;color:var(--sage);text-transform:uppercase; }
+    .res-notes { font-size:12px;line-height:1.5;color:var(--grafite);opacity:.85; }
+    /* Strategic — Setores */
+    .sectors-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px; }
+    .sec-card { background:white;border:1px solid var(--areia);border-radius:10px;padding:16px; }
+    .sec-id { font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.2em;color:var(--sage); }
+    .sec-name { font-family:'Bebas Neue',sans-serif;font-size:17px;color:var(--forest);letter-spacing:.03em;margin:4px 0 8px; }
+    .sec-maturity { display:inline-block;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.15em;padding:3px 8px;border-radius:3px;text-transform:uppercase;margin-bottom:10px; }
+    .sec-maturity.alta { background:rgba(45,83,64,.15);color:var(--forest); }
+    .sec-maturity.dev { background:rgba(212,165,116,.18);color:var(--marrom); }
+    .sec-maturity.latente { background:rgba(184,74,58,.1);color:var(--terra); }
+    .sec-maturity.inex { background:rgba(0,0,0,.05);color:var(--grafite);opacity:.6; }
+    .sec-insight { font-size:12px;line-height:1.55;color:var(--grafite); }
+    /* Strategic — Hotspots map */
+    .hotspots-wrap { background:white;border:1px solid var(--areia);border-radius:14px;padding:20px;margin-top:12px; }
+    .hotspots-svg { width:100%;height:340px;background:#f8f5f0;border-radius:8px;display:block; }
+    .hs-legend { display:flex;gap:18px;flex-wrap:wrap;margin-top:14px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;color:var(--grafite); }
+    .hs-legend-dot { display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle; }
+    .hs-list { margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:8px;max-height:280px;overflow-y:auto; }
+    .hs-item { display:flex;gap:10px;padding:8px 10px;background:rgba(0,0,0,.02);border-radius:6px;font-size:12px;line-height:1.4; }
+    .hs-marker { width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px; }
+    .hs-meta { font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;color:var(--sage);text-transform:uppercase;display:block;margin-top:2px; }
+    .signals-table { width:100%;border-collapse:collapse;border-radius:12px;overflow:hidden;border:1px solid var(--areia); }
+    .signals-table thead { background:var(--forest); }
+    .signals-table thead th { padding:12px 16px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.15em;color:var(--areia);text-transform:uppercase;text-align:left;font-weight:500; }
+    .signals-table tbody tr { border-bottom:1px solid var(--areia);background:white; }
+    .signals-table tbody tr:last-child { border-bottom:none; }
+    .signals-table tbody tr:hover { background:var(--offwhite); }
+    .signals-table td { padding:12px 16px;font-size:13px;color:var(--grafite); }
+    .signal-source { font-family:'DM Mono',monospace;font-size:11px;color:var(--slate);font-weight:500; }
+    .signal-dim-tag { display:inline-block;padding:2px 8px;border-radius:4px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;font-weight:600; }
+    .tag-d1 { background:rgba(184,74,58,.12);color:var(--terra); }
+    .tag-d2 { background:rgba(212,165,116,.15);color:var(--marrom); }
+    .tag-d3 { background:rgba(91,143,163,.12);color:var(--slate); }
+    .tag-d4 { background:rgba(45,83,64,.12);color:var(--forest); }
+    .tag-d5 { background:rgba(107,155,124,.12);color:var(--sage); }
+    .tag-d6 { background:rgba(107,83,70,.1);color:var(--marrom); }
+    .impact-bar-wrap { display:flex;align-items:center;gap:8px; }
+    .impact-bar-track { flex:1;height:5px;background:var(--areia);border-radius:100px;overflow:hidden; }
+    .impact-bar-fill { height:100%;border-radius:100px; }
+    .impact-val { font-family:'DM Mono',monospace;font-size:11px;font-weight:600; }
+    .impact-high { color:var(--terra); }
+    .impact-med { color:var(--dourado); }
+    .impact-low { color:var(--slate); }
+    .signal-status { font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;padding:3px 8px;border-radius:4px; }
+    .status-critico { background:rgba(184,74,58,.12);color:var(--terra); }
+    .status-alerta { background:rgba(212,165,116,.15);color:var(--marrom); }
+    .status-monitoramento { background:rgba(91,143,163,.1);color:var(--slate); }
+    .dims-grid { display:grid;grid-template-columns:repeat(2,1fr);gap:20px; }
+    .dim-full-card { border:1px solid var(--areia);border-radius:16px;overflow:hidden;background:white; }
+    .dim-full-top { padding:24px 24px 20px; }
+    .dim-full-header { display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px; }
+    .dim-full-code { font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.2em;color:var(--sage);margin-bottom:3px; }
+    .dim-full-name { font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:.04em; }
+    .dim-score-display { text-align:right; }
+    .dim-lock-wrap { display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 12px;background:rgba(0,0,0,.04);border-radius:10px;border:1px dashed rgba(0,0,0,.1); }
+    .dim-lock-icon { font-size:20px;line-height:1; }
+    .dim-lock-label { font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;color:var(--marrom);text-transform:uppercase;white-space:nowrap; }
+    .dim-track-locked { height:6px;background:var(--areia);border-radius:100px;overflow:hidden;margin-bottom:16px;position:relative; }
+    .dim-track-locked::after { content:'';position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent,transparent 8px,rgba(255,255,255,.5) 8px,rgba(255,255,255,.5) 10px);backdrop-filter:blur(1px); }
+    .dim-track-locked-fill { height:100%;border-radius:100px;width:55%;opacity:.35; }
+    .dim-complexity-row { display:flex;align-items:center;gap:8px;margin-bottom:14px; }
+    .dim-cplx-badge { font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.1em;padding:3px 10px;border-radius:100px;font-weight:700; }
+    .dim-sub-indicators { display:flex;flex-direction:column;gap:8px; }
+    .dim-sub-row { display:flex;align-items:center;gap:10px; }
+    .dim-sub-label { font-size:12px;color:var(--grafite);flex:1;opacity:.8; }
+    .dim-sub-mini { width:80px;height:4px;background:var(--areia);border-radius:100px;overflow:hidden; }
+    .dim-sub-mini-fill { height:100%;border-radius:100px; }
+    .dim-sub-val { font-family:'DM Mono',monospace;font-size:11px;font-weight:600;width:36px;text-align:right; }
+    .dim-upsell { display:flex;align-items:center;gap:10px;margin-top:12px;padding:10px 14px;background:rgba(212,165,116,.08);border:1px solid rgba(212,165,116,.25);border-radius:8px; }
+    .dim-upsell-text { font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.08em;color:var(--marrom);flex:1; }
+    .dim-upsell-btn { font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;color:var(--dourado);white-space:nowrap;font-weight:700; }
+    .dim-full-bottom { padding:16px 24px;border-top:1px solid var(--areia); }
+    .dim-full-insight { font-size:13px;line-height:1.6;margin-bottom:10px; }
+    .dim-signal-chip { display:inline-block;margin:2px;padding:3px 10px;border-radius:4px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.08em; }
+    .dc-critical .dim-full-top{border-top:4px solid var(--terra)}.dc-critical .dim-full-name{color:var(--terra)}.dc-critical .dim-score-big{color:var(--terra)}.dc-critical .dim-fill{background:var(--terra)}.dc-critical .dim-cplx-badge{background:rgba(184,74,58,.1);color:var(--terra)}.dc-critical .dim-sub-mini-fill{background:var(--terra)}.dc-critical .dim-full-bottom{background:rgba(184,74,58,.04)}.dc-critical .dim-signal-chip{background:rgba(184,74,58,.1);color:var(--terra)}
+    .dc-high .dim-full-top{border-top:4px solid var(--dourado)}.dc-high .dim-full-name{color:var(--marrom)}.dc-high .dim-score-big{color:var(--marrom)}.dc-high .dim-fill{background:var(--dourado)}.dc-high .dim-cplx-badge{background:rgba(212,165,116,.15);color:var(--marrom)}.dc-high .dim-sub-mini-fill{background:var(--dourado)}.dc-high .dim-full-bottom{background:rgba(212,165,116,.05)}.dc-high .dim-signal-chip{background:rgba(212,165,116,.12);color:var(--marrom)}
+    .dc-medium .dim-full-top{border-top:4px solid var(--slate)}.dc-medium .dim-full-name{color:var(--slate)}.dc-medium .dim-score-big{color:var(--slate)}.dc-medium .dim-fill{background:var(--slate)}.dc-medium .dim-cplx-badge{background:rgba(91,143,163,.1);color:var(--slate)}.dc-medium .dim-sub-mini-fill{background:var(--slate)}.dc-medium .dim-full-bottom{background:rgba(91,143,163,.04)}.dc-medium .dim-signal-chip{background:rgba(91,143,163,.1);color:var(--slate)}
+    .dc-low .dim-full-top{border-top:4px solid var(--sage)}.dc-low .dim-full-name{color:var(--forest)}.dc-low .dim-score-big{color:var(--forest)}.dc-low .dim-fill{background:var(--sage)}.dc-low .dim-cplx-badge{background:rgba(107,155,124,.1);color:var(--forest)}.dc-low .dim-sub-mini-fill{background:var(--sage)}.dc-low .dim-full-bottom{background:rgba(107,155,124,.04)}.dc-low .dim-signal-chip{background:rgba(107,155,124,.1);color:var(--forest)}
+    .dc-zero .dim-full-top{border-top:4px solid #bbb}.dc-zero .dim-full-name{color:#888}.dc-zero .dim-score-big{color:#aaa}.dc-zero .dim-fill{background:#ccc}.dc-zero .dim-cplx-badge{background:rgba(0,0,0,.06);color:#777}.dc-zero .dim-sub-mini-fill{background:#ccc}.dc-zero .dim-full-bottom{background:rgba(0,0,0,.02)}.dc-zero .dim-signal-chip{background:rgba(0,0,0,.05);color:#888}
+    .forecast-box { display:grid;grid-template-columns:1fr 1fr;gap:20px; }
+    .forecast-card { background:white;border:1px solid var(--areia);border-radius:14px;padding:28px; }
+    .forecast-card-label { font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.2em;color:var(--sage);text-transform:uppercase;margin-bottom:10px; }
+    .forecast-card-title { font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--forest);letter-spacing:.04em;margin-bottom:12px; }
+    .forecast-card-text { font-size:14px;line-height:1.7;color:var(--grafite);opacity:.85; }
+    .forecast-risks { list-style:none;display:flex;flex-direction:column;gap:8px;margin-top:12px; }
+    .forecast-risks li { display:flex;align-items:flex-start;gap:10px;font-size:13px;line-height:1.5; }
+    .forecast-risks li::before { content:'→';color:var(--terra);font-weight:700;flex-shrink:0;margin-top:1px; }
+    .rec-list { display:flex;flex-direction:column;gap:16px; }
+    .rec-item { display:flex;gap:20px;align-items:flex-start;background:white;border:1px solid var(--areia);border-radius:14px;padding:24px; }
+    .rec-num { font-family:'Bebas Neue',sans-serif;font-size:40px;color:var(--areia);line-height:1;flex-shrink:0;width:40px; }
+    .rec-title { font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--forest);letter-spacing:.04em;margin-bottom:6px; }
+    .rec-text { font-size:14px;line-height:1.65;color:var(--grafite);opacity:.85; }
+    .rec-urgency { margin-top:10px;display:inline-block;padding:3px 12px;border-radius:100px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em; }
+    .urg-imediato { background:rgba(184,74,58,.1);color:var(--terra); }
+    .urg-curto { background:rgba(212,165,116,.15);color:var(--marrom); }
+    .urg-medio { background:rgba(91,143,163,.1);color:var(--slate); }
+    .methodology-box { background:var(--forest);border-radius:16px;padding:36px;display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:center; }
+    .method-label { font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.2em;color:var(--sage);text-transform:uppercase;margin-bottom:10px; }
+    .method-title { font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--offwhite);letter-spacing:.04em;margin-bottom:14px; }
+    .method-text { font-size:13px;color:var(--areia);line-height:1.65;opacity:.8; }
+    .method-right { display:flex;flex-direction:column;gap:10px; }
+    .method-source-row { display:flex;align-items:center;gap:10px; }
+    .method-source-tag { font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;padding:4px 10px;border-radius:4px;flex-shrink:0; }
+    .ms-d1{background:rgba(184,74,58,.2);color:#e8836f}.ms-d2{background:rgba(212,165,116,.2);color:var(--dourado)}.ms-d3{background:rgba(91,143,163,.2);color:#8fc0d8}.ms-d4{background:rgba(107,155,124,.2);color:var(--sage)}.ms-d5{background:rgba(212,165,116,.12);color:var(--areia)}.ms-d6{background:rgba(107,83,70,.2);color:var(--areia)}
+    .method-source-text { font-size:12px;color:var(--areia);opacity:.7; }
+    @media(max-width:768px){nav{padding:0 20px}.proof-grid{grid-template-columns:1fr}.steps{grid-template-columns:1fr}.result-hero-inner{grid-template-columns:1fr}.gauge-wrap{display:none}.dims-grid{grid-template-columns:1fr}.forecast-box{grid-template-columns:1fr}.methodology-box{grid-template-columns:1fr}footer{flex-direction:column;align-items:flex-start}}
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">
+    <div class="nav-logo-mark"></div>
+    <div class="nav-logo-text">DIT <span>PRINT</span></div>
+  </div>
+  <div class="nav-badge">DIAGNÓSTICO DE INTELIGÊNCIA TERRITORIAL</div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-eyebrow">IA Territorial · Ciclo Mensal · Dados Verificados</div>
+    <h1 class="hero-title">CONHEÇA O<br/>TERRITÓRIO<br/>QUE VOCÊ ESTÁ<br/><em>INSERIDO</em></h1>
+    <p class="hero-sub">Antes de investir, licenciar, expandir ou operar —<br/>entenda o diagnóstico real do território.</p>
+    <div class="search-wrap">
+      <div class="search-bar">
+        <input id="search-input" type="text" placeholder="Digite o nome do município ou bairro..." autocomplete="off" />
+        <button id="search-btn">ANALISAR →</button>
+      </div>
+      <p class="search-hint">EX: ALAGOINHAS · JARDIM ANA CLARA · CAXIAS-RJ · NOVA IGUAÇU · BELÉM</p>
+    </div>
+  </div>
+</section>
+
+<!-- PROOF -->
+<section class="proof">
+  <div class="section-label">Territórios já analisados</div>
+  <h2 class="proof-title">A IA DIT EM CAMPO</h2>
+  <p class="proof-subtitle">Veja o que a inteligência territorial entrega a decisores que atuam nesses municípios.</p>
+  <div class="proof-grid">
+    <div class="dit-card">
+      <div class="dit-card-header">
+        <div><div class="dit-card-cycle">Ciclo · Dezembro / 2025</div><div class="dit-card-name">Alagoinhas</div><div class="dit-card-state">Bahia — Nordeste</div></div>
+        <div style="text-align:right"><div class="stt-number">76.6</div><div class="stt-label">STT</div></div>
+      </div>
+      <span class="scenario-badge scenario-escalada">⚠ Cenário: Escalada</span>
+      <div class="dim-bars"><div class="dim-bars-label">6 dimensões · PRINT Intelligence</div>
+        <div class="dim-bar-row"><div class="dim-bar-name">D1 Socioambiental</div><div class="dim-bar-track"><div class="dim-bar-fill" style="width:92.3%;background:var(--terra)"></div></div><div class="dim-bar-score">92.3</div></div>
+        <div class="dim-bar-row"><div class="dim-bar-name">D2 Socioeconômica</div><div class="dim-bar-track"><div class="dim-bar-fill" style="width:100%;background:var(--dourado)"></div></div><div class="dim-bar-score">100</div></div>
+        <div class="dim-bar-row"><div class="dim-bar-name">D3 Infraestrutura</div><div class="dim-bar-track"><div class="dim-bar-fill" style="width:41.1%;background:var(--slate)"></div></div><div class="dim-bar-score">41.1</div></div>
+        <div class="dim-bar-row"><div class="dim-bar-name">D4 Dinâmica Territ.</div><div class="dim-bar-track"><div class="dim-bar-fill" style="width:60.8%;background:var(--sage)"></div></div><div class="dim-bar-score">60.8</div></div>
+        <div class="dim-bar-row"><div class="dim-bar-name">D5 Governança</div><div class="dim-bar-track"><div class="dim-bar-fill" style="width:0%"></div></div><div class="dim-bar-score">0</div></div>
+        <div class="dim-bar-row"><div class="dim-bar-name">D6 Reputação</div><div class="dim-bar-track"><div class="dim-bar-fill" style="width:37.2%;background:var(--marrom)"></div></div><div class="dim-bar-score">37.2</div></div>
+      </div>
+      <div class="dit-card-insight"><div style="font-size:18px">⚡</div><div class="dit-card-insight-text">Risco socioambiental crítico (CEMADEN 0.87, DETER 12,5 km²) com vácuo completo de governança.</div></div>
+    </div>
+    <div class="dit-card">
+      <div class="dit-card-header">
+        <div><div class="dit-card-cycle">Ciclo · Maio / 2026</div><div class="dit-card-name">Jardim Ana Clara</div><div class="dit-card-state">Caxias — Rio de Janeiro</div></div>
+        <div style="text-align:right"><div class="stt-number">38.7</div><div class="stt-label">STT</div></div>
+      </div>
+      <span class="scenario-badge scenario-incômoda">◈ Estabilidade Incômoda</span>
+      <div class="dim-bars"><div class="dim-bars-label">6 dimensões · PRINT Intelligence</div>
+        <div class="dim-bar-row"><div class="dim-bar-name">D1 Socioambiental</div><div class="dim-bar-track"><div class="dim-bar-fill" style="width:14.4%;background:var(--terra)"></div></div><div class="dim-bar-score">14.4</div></div>
+        <div class="dim-bar-row"><div class="dim-bar-name">D2 Socioeconômica</div><div class="dim-bar-track"><div class="dim-bar-fill" style="width:17%;background:var(--dourado)"></div></div><div class="dim-bar-score">17.0</div></div>
+        <div class="dim-bar-row"><div class="dim-bar-name">D3 Infraestrutura</div><div class="dim-bar-track"><div class="dim-bar-fill" style="width:10.9%;background:var(--terra)"></div></div><div class="dim-bar-score">10.9</div></div>
+        <div class="dim-bar-row"><div class="dim-bar-name">D4 Dinâmica Territ.</div><div class="dim-bar-track"><div class="dim-bar-fill" style="width:16.8%;background:var(--sage)"></div></div><div class="dim-bar-score">16.8</div></div>
+        <div class="dim-bar-row"><div class="dim-bar-name">D5 Governança</div><div class="dim-bar-track"><div class="dim-bar-fill" style="width:0%"></div></div><div class="dim-bar-score">0</div></div>
+        <div class="dim-bar-row"><div class="dim-bar-name">D6 Reputação</div><div class="dim-bar-track"><div class="dim-bar-fill" style="width:5.8%;background:var(--marrom)"></div></div><div class="dim-bar-score">5.8</div></div>
+      </div>
+      <div class="dit-card-insight"><div style="font-size:18px">🏗</div><div class="dit-card-insight-text">Infraestrutura crítica (D3=10.9) e vácuo de governança total — embargos IBAMA ativos.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW -->
+<section class="how">
+  <div class="how-inner">
+    <div class="section-label">Como funciona</div>
+    <h2 class="proof-title">3 PASSOS PARA O DIAGNÓSTICO</h2>
+    <p class="proof-subtitle">De zero a inteligência territorial em menos de 60 segundos.</p>
+    <div class="steps">
+      <div class="step"><div class="step-num">01</div><div class="step-title">BUSQUE O TERRITÓRIO</div><p class="step-desc">Digite qualquer município, bairro ou região do Brasil. A IA coleta dados em tempo real de fontes oficiais e mídia regional.</p><div class="step-highlight">"Jardim Ana Clara, Caxias-RJ"</div></div>
+      <div class="step"><div class="step-num">02</div><div class="step-title">ACESSO POR PIX</div><p class="step-desc">R$9,90 via PIX. Sem cadastro, sem assinatura. Se o valor travar, o território provavelmente não é pra você.</p><div class="step-highlight">"Se não tem R$9,90, melhor não atuar nesse território."</div></div>
+      <div class="step"><div class="step-num">03</div><div class="step-title">DIT ENTREGUE</div><p class="step-desc">6 dimensões detalhadas: sinais críticos, sub-indicadores, cenário projetado e 4 recomendações acionáveis. Tudo em 60 segundos.</p><div class="step-highlight">STT · Situação Territorial Total</div></div>
+    </div>
+  </div>
+</section>
+<footer>
+  <div class="footer-brand">DIT · PRINT Intelligence</div>
+  <div class="footer-copy">© 2026 PRINT Comunicação · Dados verificados por IA · Uso analítico</div>
+</footer>
+
+<!-- RESULT -->
+<section id="result-section">
+  <div class="result-hero">
+    <div class="result-hero-inner">
+      <div>
+        <div class="result-meta" id="r-cycle"></div>
+        <div class="result-name" id="r-name"></div>
+        <div class="result-region" id="r-region"></div>
+        <div class="result-scenario-pill" id="r-scenario-pill"></div>
+      </div>
+      <div class="gauge-wrap"><svg id="result-gauge" width="190" height="190" viewBox="0 0 190 190"></svg><div class="gauge-stt">STT</div></div>
+    </div>
+  </div>
+  <div class="result-body">
+    <div class="exec-summary"><div class="exec-summary-label">Síntese Executiva · DIT PRINT Intelligence</div><div class="exec-summary-text" id="r-exec"></div></div>
+    <div class="signals-section"><div class="result-section-title">Sinais Críticos Detectados</div><table class="signals-table"><thead><tr><th>Fonte</th><th>Dimensão</th><th>Sinal Detectado</th><th style="width:120px">Impacto</th><th>Status</th></tr></thead><tbody id="r-signals"></tbody></table></div>
+    <div class="dims-section"><div class="result-section-title">Análise por Dimensão</div><div class="dims-grid" id="r-dims"></div></div>
+    <div class="forecast-section"><div class="result-section-title">Cenário Projetado</div><div class="forecast-box" id="r-forecast"></div></div>
+    <div class="rec-section"><div class="result-section-title">Recomendações Estratégicas</div><div class="rec-list" id="r-recs"></div></div>
+    <div class="strategic-section" id="strategic-cases-wrap" style="display:none"><div class="result-section-title">Casos Estratégicos — Brasil 2025/26</div><div class="cases-grid" id="r-cases"></div></div>
+    <div class="strategic-section" id="strategic-resources-wrap" style="display:none"><div class="result-section-title">Recursos Territoriais</div><div class="resources-grid" id="r-resources"></div></div>
+    <div class="strategic-section" id="strategic-sectors-wrap" style="display:none"><div class="result-section-title">Setores PRINT — Maturidade</div><div class="sectors-grid" id="r-sectors"></div></div>
+    <div class="strategic-section" id="strategic-hotspots-wrap" style="display:none"><div class="result-section-title">Hotspots Tangíveis · Locais dentro do Território</div><div class="hotspots-wrap"><svg id="r-hotspots-svg" class="hotspots-svg" preserveAspectRatio="xMidYMid meet"></svg><div class="hs-legend"><span><span class="hs-legend-dot" style="background:#B84A3A"></span>Risco</span><span><span class="hs-legend-dot" style="background:#2D5340"></span>Potencial</span><span><span class="hs-legend-dot" style="background:#D4A574"></span>Vulnerabilidade</span></div><div class="hs-list" id="r-hotspots-list"></div></div></div>
+    <div class="methodology-box">
+      <div><div class="method-label">Metodologia · PRINT Intelligence</div><div class="method-title">6 DIMENSÕES,<br/>32 FONTES VERIFICADAS</div><p class="method-text">STT = Σ(Di × Wi) com pesos calibrados por impacto territorial. Coleta em tempo real de APIs governamentais, mídia e inteligência de campo.</p></div>
+      <div class="method-right">
+        <div class="method-source-row"><span class="method-source-tag ms-d1">D1</span><span class="method-source-text">IBAMA · CEMADEN · INPE DETER · INMET</span></div>
+        <div class="method-source-row"><span class="method-source-tag ms-d2">D2</span><span class="method-source-text">IBGE · PNAD Contínua · IPEAData · PNUD</span></div>
+        <div class="method-source-row"><span class="method-source-tag ms-d3">D3</span><span class="method-source-text">SNIS · DataSUS · INEP · Mapa de Empresas</span></div>
+        <div class="method-source-row"><span class="method-source-tag ms-d4">D4</span><span class="method-source-text">Fogo Cruzado · ISP-RJ · FUNAI · Judiciário</span></div>
+        <div class="method-source-row"><span class="method-source-tag ms-d5">D5</span><span class="method-source-text">Querido Diário · Conselhos · Audiências</span></div>
+        <div class="method-source-row"><span class="method-source-tag ms-d6">D6</span><span class="method-source-text">Google News · Google Trends · Redes Sociais</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MODAL PIX -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-territory-label">Território Identificado</div>
+      <div class="modal-territory-name" id="modal-territory"></div>
+      <div class="modal-product-line">
+        <div><div class="modal-product-name">Diagnóstico de Inteligência Territorial</div><div class="modal-price-label">Ciclo Atual · Acesso Único · 6 Dimensões</div></div>
+        <div><div class="modal-price">R$9,90</div></div>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="qr-container"><div class="qr-wrap"><svg id="qr-svg" width="180" height="180" viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg"></svg></div></div>
+      <div class="pix-key-row">
+        <div class="pix-key-text" id="pix-key-text">00020126580014BR.GOV.BCB.PIX0136print-dit@comunicacao.com.br5204000053039865406990005802BR</div>
+        <button class="pix-key-copy" id="pix-copy-btn" onclick="copyPix()">COPIAR CHAVE</button>
+      </div>
+      <div class="modal-warning">
+        <strong>"Se você não tem R$9,90,<br/>melhor não atuar nesse território."</strong><br/>
+        <span style="font-size:13px;opacity:.75">Inteligência territorial é investimento, não custo. Decisores que hesitam em R$9,90 hesitarão muito mais quando o território cobrar a conta.</span>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-confirm" id="confirm-btn">JÁ PAGUEI — ACESSAR DIT</button>
+        <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LOADING -->
+<div class="loading-overlay" id="loading">
+  <div class="loading-box">
+    <div class="loading-territory" id="loading-name"></div>
+    <div class="loading-subtitle">Gerando diagnóstico territorial</div>
+    <div class="loading-steps" id="loading-steps"></div>
+    <div class="loading-progress-wrap"><div class="loading-progress-bar" id="loading-bar"></div></div>
+    <div class="loading-time" id="loading-time">Estimativa: 30–60 segundos</div>
+  </div>
+</div>
+
+<script>
+// ── CONFIG ──────────────────────────────────────────────────────────────────
+// API_URL: em produção, defina window.DIT_API_BASE no host (ex: 'https://dit-api.up.railway.app')
+// ou substitua diretamente o fallback abaixo.
+const API_BASE = (typeof window!=='undefined' && window.DIT_API_BASE)
+  ? window.DIT_API_BASE
+  : 'http://localhost:4000';
+const API_URL = API_BASE.replace(/\/$/,'') + '/api/dit/analyze';
+
+// ── STEPS DE LOADING ─────────────────────────────────────────────────────────
+const STEPS = [
+  { icon:'🌐', title:'Identificando no IBGE', detail:'Localizando município, estado e região geográfica no banco nacional...', duration: 4000 },
+  { icon:'🤖', title:'Ativando 32 agentes PRINT', detail:'D1 Socioambiental · D2 Socioeconômica · D3 Infraestrutura · D4 Dinâmica...', duration: 10000 },
+  { icon:'📊', title:'Processando fontes oficiais', detail:'IBAMA · CEMADEN · IBGE · DataSUS · INEP · Querido Diário · SNIS...', duration: 20000 },
+  { icon:'🧮', title:'Calculando STT com orquestrador', detail:'6 dimensões consolidadas · Σ(Di × Wi) · Verificação pós-LLM...', duration: 15000 },
+  { icon:'✍️', title:'Gerando análise executiva', detail:'IA PRINT sintetizando diagnóstico territorial e recomendações estratégicas...', duration: 999999 },
+];
+
+let loadingTimers = [];
+let apiResult = null;
+let apiDone = false;
+let animDone = false;
+let currentTerritory = '';
+
+function renderLoadingSteps() {
+  document.getElementById('loading-steps').innerHTML = STEPS.map((s,i) => `
+    <div class="loading-step" id="ls-${i}">
+      <div class="ls-icon pending" id="ls-icon-${i}">${s.icon}</div>
+      <div class="ls-text">
+        <div class="ls-title pending" id="ls-title-${i}">${s.title}</div>
+        <div class="ls-detail pending" id="ls-detail-${i}">${s.detail}</div>
+      </div>
+    </div>`).join('');
+}
+
+function setStepState(i, state) {
+  const icon  = document.getElementById(`ls-icon-${i}`);
+  const title = document.getElementById(`ls-title-${i}`);
+  const det   = document.getElementById(`ls-detail-${i}`);
+  if (!icon) return;
+  icon.className  = `ls-icon ${state}`;
+  title.className = `ls-title ${state}`;
+  det.className   = `ls-detail ${state}`;
+  if (state === 'done') icon.textContent = '✓';
+}
+
+function startLoading(territory) {
+  currentTerritory = territory;
+  apiResult = null; apiDone = false; animDone = false;
+  loadingTimers.forEach(clearTimeout); loadingTimers = [];
+
+  renderLoadingSteps();
+  document.getElementById('loading-name').textContent = territory.toUpperCase();
+  document.getElementById('loading-bar').style.width = '0%';
+  document.getElementById('loading-time').textContent = 'Estimativa: 30–60 segundos';
+  document.getElementById('loading').classList.add('active');
+
+  // Avança steps automaticamente com timers
+  let elapsed = 0;
+  STEPS.forEach((s, i) => {
+    const t1 = setTimeout(() => {
+      if (i > 0) setStepState(i-1, 'done');
+      setStepState(i, 'running');
+    }, elapsed);
+    loadingTimers.push(t1);
+
+    const progress = Math.round(((i + 0.5) / STEPS.length) * 85); // máx 85% antes do resultado
+    const t2 = setTimeout(() => {
+      document.getElementById('loading-bar').style.width = progress + '%';
+    }, elapsed + 500);
+    loadingTimers.push(t2);
+
+    elapsed += s.duration;
+  });
+
+  // Contador de segundos
+  let secs = 0;
+  const timer = setInterval(() => {
+    secs++;
+    const el = document.getElementById('loading-time');
+    if (el) el.textContent = `Analisando há ${secs}s...`;
+  }, 1000);
+  loadingTimers.push(timer);
+}
+
+function finishLoading(result) {
+  apiResult = result;
+  apiDone = true;
+  // Completa todos os steps
+  STEPS.forEach((_,i) => setStepState(i, 'done'));
+  document.getElementById('loading-bar').style.width = '100%';
+  document.getElementById('loading-time').textContent = 'DIT gerado! Carregando...';
+  loadingTimers.forEach(clearTimeout);
+  setTimeout(() => {
+    document.getElementById('loading').classList.remove('active');
+    renderResult(apiResult);
+  }, 800);
+}
+
+function failLoading(msg) {
+  loadingTimers.forEach(clearTimeout);
+  document.getElementById('loading-time').textContent = '⚠ Erro: ' + msg;
+  document.getElementById('loading-bar').style.background = 'var(--terra)';
+  setTimeout(() => {
+    document.getElementById('loading').classList.remove('active');
+  }, 3000);
+}
+
+// ── BUSCA E MODAL ────────────────────────────────────────────────────────────
+let pendingTerritory = '';
+
+document.getElementById('search-btn').addEventListener('click', () => {
+  const v = document.getElementById('search-input').value.trim();
+  if (!v) { document.getElementById('search-input').focus(); return; }
+  openModal(v);
+});
+document.getElementById('search-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('search-btn').click();
+});
+document.getElementById('modal').addEventListener('click', function(e) { if(e.target===this) closeModal(); });
+
+function openModal(territory) {
+  pendingTerritory = territory;
+  document.getElementById('modal-territory').textContent = territory.toUpperCase();
+  generateQR();
+  document.getElementById('modal').classList.add('active');
+}
+function closeModal() { document.getElementById('modal').classList.remove('active'); }
+
+// ── CONFIRMAR PAGAMENTO — dispara API ────────────────────────────────────────
+document.getElementById('confirm-btn').addEventListener('click', async () => {
+  closeModal();
+  startLoading(pendingTerritory);
+
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ territory: pendingTerritory }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: 'Erro desconhecido' }));
+      throw new Error(err.error || `HTTP ${res.status}`);
+    }
+    const data = await res.json();
+    finishLoading(data);
+  } catch (err) {
+    failLoading(err.message || 'Falha na conexão com o servidor DIT');
+  }
+});
+
+// ── RENDER RESULT ─────────────────────────────────────────────────────────────
+function gaugeColor(scenario) {
+  if (scenario === 'escalada') return '#B84A3A';
+  if (scenario === 'pressao')  return '#D4A574';
+  return '#6B9B7C';
+}
+
+function drawGauge(score, color) {
+  const r=75, cx=95, cy=95;
+  const pct = Math.min(score,100)/100;
+  const start = -Math.PI*0.75;
+  const end   = start + Math.PI*1.5*pct;
+  const x1=cx+r*Math.cos(start), y1=cy+r*Math.sin(start);
+  const x2=cx+r*Math.cos(end),   y2=cy+r*Math.sin(end);
+  const large = pct>0.5?1:0;
+  return `
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="rgba(245,241,237,0.1)" stroke-width="14" stroke-linecap="round"/>
+    <path d="M ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2}" fill="none" stroke="${color}" stroke-width="14" stroke-linecap="round"/>
+    <text x="${cx}" y="${cy-6}" text-anchor="middle" font-family="Bebas Neue,sans-serif" font-size="44" fill="#F5F1ED">${score}</text>
+    <text x="${cx}" y="${cy+18}" text-anchor="middle" font-family="DM Mono,monospace" font-size="11" fill="rgba(245,241,237,0.5)" letter-spacing="2">/100</text>`;
+}
+
+function dimCssClassFromComplexity(complexity) {
+  if (!complexity) return 'dc-zero';
+  const c = complexity.toLowerCase();
+  if (c.includes('alta')) return 'dc-critical';
+  if (c.includes('média') || c.includes('media')) return 'dc-high';
+  if (c.includes('baixa')) return 'dc-medium';
+  if (c.includes('vácuo') || c.includes('vacuo')) return 'dc-zero';
+  return 'dc-low';
+}
+
+function renderResult(t) {
+  const score    = typeof t.stt === 'number' ? Math.round(t.stt) : 0;
+  const scenario = t.scenario || 'estabilidade';
+  const color    = t.gaugeColor || gaugeColor(scenario);
+  const scenLabel = t.scenarioLabel || scenario;
+
+  // Hero
+  document.getElementById('r-cycle').textContent = `DIT · Ciclo Atual / 2026`;
+  document.getElementById('r-name').textContent   = t.territory || currentTerritory;
+  document.getElementById('r-region').textContent  = t.region || '';
+  const pill = document.getElementById('r-scenario-pill');
+  pill.textContent = scenLabel;
+  pill.className = `result-scenario-pill scenario-${scenario}`;
+  document.getElementById('result-gauge').innerHTML = drawGauge(score, color);
+
+  // Executive summary
+  const exec = Array.isArray(t.executiveSummary)
+    ? t.executiveSummary.map(p => `<p>${p}</p>`).join('')
+    : `<p>${t.executiveSummary || ''}</p>`;
+  document.getElementById('r-exec').innerHTML = exec;
+
+  // Signals
+  const signals = Array.isArray(t.keySignals) ? t.keySignals : [];
+  document.getElementById('r-signals').innerHTML = signals.map(s => {
+    const pct = Math.round((s.impact||0)*100);
+    const barColor = (s.impact||0) >= 0.7 ? 'var(--terra)' : (s.impact||0) >= 0.5 ? 'var(--dourado)' : 'var(--slate)';
+    return `<tr>
+      <td><span class="signal-source">${s.source||'—'}</span></td>
+      <td><span class="signal-dim-tag ${s.dimTag||'tag-d1'}">${s.dimension||'D1'}</span></td>
+      <td style="font-size:13px">${s.text||''}</td>
+      <td><div class="impact-bar-wrap"><div class="impact-bar-track"><div class="impact-bar-fill" style="width:${pct}%;background:${barColor}"></div></div><span class="impact-val ${s.impactCls||'impact-med'}">${s.impact||0}</span></div></td>
+      <td><span class="signal-status ${s.statusCls||'status-alerta'}">${s.status||'ALERTA'}</span></td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--sage);font-family:DM Mono,monospace;font-size:12px">Nenhum sinal crítico detectado</td></tr>';
+
+  // Dimensions — scores ocultos (produto DIT Completo), apenas complexidade visível
+  const dims = Array.isArray(t.dimensions) ? t.dimensions : [];
+  document.getElementById('r-dims').innerHTML = dims.map(d => {
+    const cls   = dimCssClassFromComplexity(d.complexity);
+    const chips = Array.isArray(d.signals) ? d.signals : [];
+    // Barra de complexidade visual (sem revelar valor numérico)
+    const barWidthMap = { 'dc-critical': '88%', 'dc-high': '65%', 'dc-medium': '42%', 'dc-low': '20%', 'dc-zero': '5%' };
+    const barW = barWidthMap[cls] || '40%';
+    return `<div class="dim-full-card ${cls}">
+      <div class="dim-full-top">
+        <div class="dim-full-header">
+          <div>
+            <div class="dim-full-code">${d.code||''} · PRINT INTELLIGENCE</div>
+            <div class="dim-full-name">${d.name||''}</div>
+          </div>
+          <div class="dim-lock-wrap">
+            <div class="dim-lock-icon">🔒</div>
+            <div class="dim-lock-label">DIT Completo</div>
+          </div>
+        </div>
+        <div class="dim-complexity-row">
+          <span class="dim-cplx-badge">${d.complexity||''}</span>
+          <span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--areia);letter-spacing:.08em;opacity:.8">${d.complexityNote||''}</span>
+        </div>
+        <div class="dim-track-locked">
+          <div class="dim-track-locked-fill" style="width:${barW}"></div>
+        </div>
+      </div>
+      <div class="dim-full-bottom">
+        <div class="dim-full-insight">${d.insight||''}</div>
+        <div style="margin-top:8px">${chips.map(c=>`<span class="dim-signal-chip">${c}</span>`).join('')}</div>
+        <div class="dim-upsell">
+          <div class="dim-upsell-text">Score por dimensão disponível no</div>
+          <div class="dim-upsell-btn">→ DIT COMPLETO</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Forecast
+  const fc = t.forecast || {};
+  const risks = Array.isArray(fc.risks) ? fc.risks.map(r=>`<li>${r}</li>`).join('') : '';
+  document.getElementById('r-forecast').innerHTML = `
+    <div class="forecast-card">
+      <div class="forecast-card-label">Horizonte: ${fc.horizon||'Próximo trimestre'}</div>
+      <div class="forecast-card-title">RISCOS PROJETADOS</div>
+      <p class="forecast-card-text">${fc.text||''}</p>
+      <ul class="forecast-risks">${risks}</ul>
+    </div>
+    <div class="forecast-card">
+      <div class="forecast-card-label">Oportunidades Identificadas</div>
+      <div class="forecast-card-title">JANELAS DE ATUAÇÃO</div>
+      <p class="forecast-card-text">${fc.opportunities||''}</p>
+      <div style="margin-top:20px;padding:16px;background:rgba(45,83,64,.06);border-radius:10px;border-left:3px solid var(--sage)">
+        <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.15em;color:var(--sage);margin-bottom:6px">PRÓXIMO PASSO</div>
+        <div style="font-size:13px;line-height:1.6;color:var(--grafite)">Assine o DIT ciclo mensal para acompanhar o STT e receber alertas em tempo real quando impacto ≥ 0,7 for detectado.</div>
+      </div>
+    </div>`;
+
+  // Recommendations
+  const recs = Array.isArray(t.recommendations) ? t.recommendations : [];
+  document.getElementById('r-recs').innerHTML = recs.map((r,i)=>`
+    <div class="rec-item">
+      <div class="rec-num">0${i+1}</div>
+      <div>
+        <div class="rec-title">${r.title||''}</div>
+        <div class="rec-text">${r.text||''}</div>
+        <span class="rec-urgency ${r.urgCls||'urg-medio'}">${r.urgency||''}</span>
+      </div>
+    </div>`).join('');
+
+  // ── STRATEGIC LAYER ─────────────────────────────────────────────────────────
+  renderStrategicCases(t.strategicCases);
+  renderResources(t.resources);
+  renderSectors(t.sectors);
+  renderHotspots(t.hotspots, t.territoryGeo);
+
+  // Show & scroll
+  const rs = document.getElementById('result-section');
+  rs.classList.add('active');
+  setTimeout(() => rs.scrollIntoView({ behavior:'smooth', block:'start' }), 100);
+}
+
+// ── STRATEGIC RENDERERS ─────────────────────────────────────────────────────
+function relevanceCls(r){
+  const m = {'ESTRATÉGICO':'estrategico','POTENCIAL':'potencial','LATENTE':'latente','NÃO APLICÁVEL':'nao-aplicavel'};
+  return m[r]||'potencial';
+}
+function maturityCls(m){
+  const map = {'Alta Maturidade':'alta','Em Desenvolvimento':'dev','Latente':'latente','Inexistente':'inex'};
+  return map[m]||'latente';
+}
+function renderStrategicCases(cases){
+  if(!Array.isArray(cases)||!cases.length){document.getElementById('strategic-cases-wrap').style.display='none';return;}
+  const html = cases.map(c => {
+    const ev = (c.evidence||[]).slice(0,4).map(e=>`<li>${e}</li>`).join('');
+    const risks = (c.risks||[]).slice(0,4).map(r=>`<li>${r}</li>`).join('');
+    const pot = c.potential ? `<div class="case-potential"><strong>Potencial:</strong> ${c.potential}</div>` : '';
+    return `<div class="case-card ${relevanceCls(c.relevance)}">
+      <div class="case-label">${c.caseId||''}</div>
+      <div class="case-title">${c.title||''}</div>
+      <span class="case-relevance">${c.relevance||''}</span>
+      <div class="case-thesis">${c.thesis||''}</div>
+      <ul class="case-evidence">${ev}</ul>
+      ${pot}
+      <ul class="case-risks">${risks}</ul>
+    </div>`;
+  }).join('');
+  document.getElementById('r-cases').innerHTML = html;
+  document.getElementById('strategic-cases-wrap').style.display='block';
+}
+function renderResources(resources){
+  if(!Array.isArray(resources)||!resources.length){document.getElementById('strategic-resources-wrap').style.display='none';return;}
+  const html = resources.map(r=>`
+    <div class="res-card">
+      <div class="res-head">
+        <div class="res-name">${r.name||''}</div>
+        <span class="res-abundance ${r.abundance||''}">${r.abundance||''}</span>
+      </div>
+      <div class="res-category">${r.category||''}</div>
+      <div class="res-notes">${r.notes||''}</div>
+    </div>`).join('');
+  document.getElementById('r-resources').innerHTML = html;
+  document.getElementById('strategic-resources-wrap').style.display='block';
+}
+function renderSectors(sectors){
+  if(!Array.isArray(sectors)||!sectors.length){document.getElementById('strategic-sectors-wrap').style.display='none';return;}
+  const html = sectors.map(s=>`
+    <div class="sec-card">
+      <div class="sec-id">${s.sectorId||''}</div>
+      <div class="sec-name">${s.name||''}</div>
+      <span class="sec-maturity ${maturityCls(s.maturity)}">${s.maturity||''}</span>
+      <div class="sec-insight">${s.insight||''}</div>
+    </div>`).join('');
+  document.getElementById('r-sectors').innerHTML = html;
+  document.getElementById('strategic-sectors-wrap').style.display='block';
+}
+function renderHotspots(hotspots, geo){
+  if(!Array.isArray(hotspots)||!hotspots.length){document.getElementById('strategic-hotspots-wrap').style.display='none';return;}
+  const pts = hotspots.filter(h => typeof h.lat==='number' && typeof h.lng==='number');
+  if(!pts.length){document.getElementById('strategic-hotspots-wrap').style.display='none';return;}
+  // bounds
+  let west,south,east,north;
+  if(geo && Array.isArray(geo.bbox) && geo.bbox.length===4){
+    [west,south,east,north] = geo.bbox;
+  } else {
+    west = Math.min(...pts.map(p=>p.lng));
+    east = Math.max(...pts.map(p=>p.lng));
+    south = Math.min(...pts.map(p=>p.lat));
+    north = Math.max(...pts.map(p=>p.lat));
+  }
+  // Garantir margem mínima
+  const padX = Math.max((east-west)*0.05, 0.01);
+  const padY = Math.max((north-south)*0.05, 0.01);
+  west -= padX; east += padX; south -= padY; north += padY;
+  const W = 800, H = 340;
+  const px = ln => ((ln - west) / (east - west)) * W;
+  const py = lt => H - ((lt - south) / (north - south)) * H;
+  const colorFor = t => t==='risco'?'#B84A3A':(t==='vulnerabilidade'?'#D4A574':'#2D5340');
+  // SVG
+  let svg = `<rect x="0" y="0" width="${W}" height="${H}" fill="#f8f5f0"/>`;
+  // grade
+  for(let i=1;i<5;i++){
+    svg += `<line x1="${W*i/5}" y1="0" x2="${W*i/5}" y2="${H}" stroke="#e8dfd0" stroke-width="1"/>`;
+    svg += `<line x1="0" y1="${H*i/5}" x2="${W}" y2="${H*i/5}" stroke="#e8dfd0" stroke-width="1"/>`;
+  }
+  // centroide
+  if(geo && geo.centroid){
+    const cx = px(geo.centroid.lng), cy = py(geo.centroid.lat);
+    svg += `<circle cx="${cx}" cy="${cy}" r="6" fill="none" stroke="#2D5340" stroke-width="2" stroke-dasharray="3,3"/>`;
+    svg += `<text x="${cx+10}" y="${cy+4}" font-family="DM Mono,monospace" font-size="10" fill="#2D5340">centro</text>`;
+  }
+  // pontos
+  pts.forEach(p=>{
+    const x = px(p.lng), y = py(p.lat);
+    const r = 4 + (p.impact||0.5)*5;
+    svg += `<circle cx="${x}" cy="${y}" r="${r}" fill="${colorFor(p.type)}" fill-opacity="0.65" stroke="${colorFor(p.type)}" stroke-width="1.5"><title>${(p.name||'').replace(/[<>"&]/g,'')}</title></circle>`;
+  });
+  document.getElementById('r-hotspots-svg').innerHTML = svg;
+  document.getElementById('r-hotspots-svg').setAttribute('viewBox',`0 0 ${W} ${H}`);
+  // Lista
+  const list = pts.slice(0,30).map(p=>`
+    <div class="hs-item">
+      <span class="hs-marker" style="background:${colorFor(p.type)}"></span>
+      <div>
+        <strong>${p.name||''}</strong>
+        <span class="hs-meta">${p.category||''} · ${p.source||''}</span>
+      </div>
+    </div>`).join('');
+  document.getElementById('r-hotspots-list').innerHTML = list;
+  document.getElementById('strategic-hotspots-wrap').style.display='block';
+}
+
+// ── PIX COPY ──────────────────────────────────────────────────────────────────
+function copyPix() {
+  const txt = document.getElementById('pix-key-text').textContent;
+  navigator.clipboard.writeText(txt).catch(()=>{});
+  const btn = document.getElementById('pix-copy-btn');
+  btn.textContent = 'COPIADO ✓';
+  setTimeout(()=> btn.textContent = 'COPIAR CHAVE', 2000);
+}
+
+// ── QR CODE ───────────────────────────────────────────────────────────────────
+function generateQR() {
+  const SIZE=25, MOD=7, PAD=8;
+  const grid=Array.from({length:SIZE},()=>new Array(SIZE).fill(0));
+  const used=Array.from({length:SIZE},()=>new Array(SIZE).fill(false));
+  const finder=[[1,1,1,1,1,1,1],[1,0,0,0,0,0,1],[1,0,1,1,1,0,1],[1,0,1,1,1,0,1],[1,0,1,1,1,0,1],[1,0,0,0,0,0,1],[1,1,1,1,1,1,1]];
+  [[0,0],[0,18],[18,0]].forEach(([r,c])=>{for(let i=0;i<7;i++)for(let j=0;j<7;j++){grid[r+i][c+j]=finder[i][j];used[r+i][c+j]=true;}});
+  for(let i=0;i<SIZE;i++){used[6][i]=true;used[i][6]=true;}
+  for(let i=8;i<17;i++){grid[6][i]=(i%2===0)?1:0;grid[i][6]=(i%2===0)?1:0;}
+  for(let r=0;r<9;r++)for(let c=0;c<9;c++)used[r][c]=true;
+  for(let r=0;r<9;r++)for(let c=16;c<25;c++)used[r][c]=true;
+  for(let r=16;r<25;r++)for(let c=0;c<9;c++)used[r][c]=true;
+  let seed=0x9e3779b9;
+  const rng=()=>{seed=((seed^(seed<<13))^((seed^(seed<<13))>>>17)^((((seed^(seed<<13))^((seed^(seed<<13))>>>17))<<5)))>>>0;return seed/0xffffffff;};
+  for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++)if(!used[r][c])grid[r][c]=rng()>0.45?1:0;
+  const W=PAD*2+SIZE*MOD;
+  let rects=`<rect width="${W}" height="${W}" fill="white" rx="6"/>`;
+  for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++)if(grid[r][c])rects+=`<rect x="${PAD+c*MOD}" y="${PAD+r*MOD}" width="${MOD}" height="${MOD}" fill="#2D5340"/>`;
+  const cx=PAD+9*MOD,cy=PAD+9*MOD,cw=7*MOD,ch=7*MOD;
+  rects+=`<rect x="${cx}" y="${cy}" width="${cw}" height="${ch}" fill="white"/>`;
+  rects+=`<rect x="${cx+2}" y="${cy+2}" width="${cw-4}" height="${ch-4}" rx="3" fill="#F5F1ED" stroke="#D4C9B8" stroke-width="1"/>`;
+  rects+=`<text x="${cx+cw/2}" y="${cy+ch/2+5}" text-anchor="middle" font-family="Arial,sans-serif" font-size="13" font-weight="bold" fill="#2D5340">PIX</text>`;
+  const svg=document.getElementById('qr-svg');
+  svg.setAttribute('viewBox',`0 0 ${W} ${W}`);
+  svg.setAttribute('width','180');svg.setAttribute('height','180');
+  svg.innerHTML=rects;
+}
+</script>
+</body>
+</html>

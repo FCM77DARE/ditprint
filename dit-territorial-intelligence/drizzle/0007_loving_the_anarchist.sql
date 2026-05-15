@@ -1,0 +1,2 @@
+ALTER TABLE `collection_snapshots` MODIFY COLUMN `collectionType` enum('news','structured','full','historical') NOT NULL DEFAULT 'full';--> statement-breakpoint
+ALTER TABLE `index_history` MODIFY COLUMN `source` enum('llm','manual','import','llm_historical') NOT NULL DEFAULT 'llm';

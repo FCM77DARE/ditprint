@@ -1,0 +1,56 @@
+
+## Evolução Dashboard + Pipeline Inteligente
+
+- [x] Integrar Querido Diário API (substituto do DOU com API aberta)
+- [x] Integrar ANA (Agência Nacional de Águas) para dados hídricos
+- [x] Substituir NewsAPI por Google News RSS como fonte principal (100+ sinais)
+- [x] Exibir imagem de capa das notícias nos cards do dashboard (Open Graph)
+- [x] Análise automática de sinais via LLM (ler notícia, avaliar impacto por índice)
+- [x] Sugestão automática de novo STT baseada nos sinais relevantes analisados
+- [x] Gerador de one-pager executivo do território (Markdown com Streamdown)
+- [x] STT calculado automaticamente pelo LLM com contexto territorial pré-definido
+- [x] Criar arquivo de contexto territorial (metodologia DIT, pesos dos índices, histórico, fontes)
+- [x] Painel STT reformulado: apenas revisão e publicação (sem campos manuais)
+- [x] Integrar IBAMA API (embargos, autos de infração) → IVE + ICI
+- [x] Integrar ANA (Agência Nacional de Águas) dados hídricos e outorgas → IVE
+- [x] Integrar IBGE (Censo 2022, rendimento domiciliar) → IVS
+- [x] Integrar INPE/DETER + PRODES (alertas e desmatamento) → IVE
+- [x] Integrar Querido Diário (atos oficiais municipais/estaduais) → ICI
+- [x] Distinguir sinais de notícias vs. dados estruturados no Dashboard (badges visuais)
+- [x] Criar tabela collection_snapshots para armazenar cada coleta com dados brutos por fonte
+- [x] Criar tabela index_history para série histórica dos 5 índices por período
+- [x] Armazenar snapshot completo a cada coleta (notícias + dados estruturados)
+- [x] Painel histórico com gráfico de linha/área/barras: STT + sub-índices ao longo do tempo
+- [x] Gráfico de barras empilhadas: composição do STT por índice em cada período
+- [x] Tabela de variações: delta entre períodos com destaque de acelerações
+- [x] Linha do tempo de eventos críticos (sinais de alto impacto) sobre o gráfico STT
+- [x] Seed de dados históricos reais (2024-01 a 2025-12) para Baia de Guanabara
+- [x] Adicionar botão de acesso ao Dashboard no header e na seção Radar do site público
+- [x] Diagnosticar e corrigir coletores de dados estruturados (IBAMA/IBGE/INPE/ANA/QD) que retornam zero
+- [ ] Exportar one-pager como PDF
+- [ ] Agendamento automático de coleta (segunda-feira 8h)
+- [ ] Conectar botão "Publicar Alerta" com envio de e-mail (Resend/SendGrid)
+- [x] Legenda de composição STT no painel de curadoria (o que é cada índice, peso, fórmula)
+- [x] Exibir índice atual do território como base de comparação no painel de curadoria
+- [x] Coleta automática a cada 24h com agendamento server-side
+- [x] Cards diários de coleta acessíveis no dashboard (histórico por data)
+- [x] Wizard de criação de novo território (upload PDF ou descrição manual)
+- [x] IA extrai contexto do PDF/texto e aplica metodologia DIT para gerar territoryContext
+- [x] Novo território aparece no pipeline e dashboard após criação
+- [x] Pipeline de coleta histórica retroativa: 24 meses, mês a mês, queries com framing de data
+- [x] STT calculado automaticamente após cada coleta (sem intervenção manual)
+- [x] Coleta histórica disparada automaticamente ao criar novo território
+- [x] Scheduler mensal: coleta do mês atual + cálculo STT automático
+- [x] Dashboard histórico: gráficos dos 24 meses de dados reais para todos os territórios
+- [ ] Remover seed de dados fictícios — substituir por dados reais coletados
+- [x] Tooltips explicativos em todos os botões do dashboard
+- [x] Coleta histórica automática no boot (24 meses, sem ação manual)
+- [x] Relevância automática para sinais históricos (curationStatus=relevant automático)
+- [x] Curadoria manual apenas para sinais do mês atual
+- [x] Distinção visual clara entre sinais históricos (auto) e sinais atuais (curadoria)
+
+## Sessão atual — Enriquecimento site público + dashboard + análise histórica
+- [ ] Site público: STT e territórios alimentados dinamicamente pelo banco (não hardcoded)
+- [ ] Site público: seção "Sinais em Campo" com 3-4 exemplos reais de sinais coletados
+- [ ] Dashboard: painel de STT comparativo entre todos os territórios (visão geral)
+- [ ] Análise histórica: ranking de períodos críticos, correlação de índices, narrativa LLM por período

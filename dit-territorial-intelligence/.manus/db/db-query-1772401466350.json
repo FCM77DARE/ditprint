@@ -1,0 +1,220 @@
+{
+  "query": "SELECT territoryId, period, stt, source, signalCount FROM index_history ORDER BY territoryId, period LIMIT 30;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2aGV9vQqnMXZ7WH.b5ed6992562a --database 43iZsmPphrqUoXjRK5zrxR --execute SELECT territoryId, period, stt, source, signalCount FROM index_history ORDER BY territoryId, period LIMIT 30;",
+  "rows": [
+    {
+      "territoryId": "1",
+      "period": "2024-01",
+      "stt": "71",
+      "source": "import",
+      "signalCount": "0"
+    },
+    {
+      "territoryId": "1",
+      "period": "2024-02",
+      "stt": "72",
+      "source": "import",
+      "signalCount": "0"
+    },
+    {
+      "territoryId": "1",
+      "period": "2024-03",
+      "stt": "70",
+      "source": "import",
+      "signalCount": "0"
+    },
+    {
+      "territoryId": "1",
+      "period": "2024-04",
+      "stt": "73",
+      "source": "import",
+      "signalCount": "0"
+    },
+    {
+      "territoryId": "1",
+      "period": "2024-05",
+      "stt": "74",
+      "source": "import",
+      "signalCount": "0"
+    },
+    {
+      "territoryId": "1",
+      "period": "2024-06",
+      "stt": "76",
+      "source": "import",
+      "signalCount": "0"
+    },
+    {
+      "territoryId": "1",
+      "period": "2024-07",
+      "stt": "75",
+      "source": "import",
+      "signalCount": "0"
+    },
+    {
+      "territoryId": "1",
+      "period": "2024-08",
+      "stt": "77",
+      "source": "import",
+      "signalCount": "0"
+    },
+    {
+      "territoryId": "1",
+      "period": "2024-09",
+      "stt": "76",
+      "source": "import",
+      "signalCount": "0"
+    },
+    {
+      "territoryId": "1",
+      "period": "2024-10",
+      "stt": "78",
+      "source": "import",
+      "signalCount": "0"
+    },
+    {
+      "territoryId": "1",
+      "period": "2024-11",
+      "stt": "77",
+      "source": "import",
+      "signalCount": "0"
+    },
+    {
+      "territoryId": "1",
+      "period": "2024-12",
+      "stt": "79",
+      "source": "import",
+      "signalCount": "0"
+    },
+    {
+      "territoryId": "1",
+      "period": "2025-01",
+      "stt": "78",
+      "source": "import",
+      "signalCount": "0"
+    },
+    {
+      "territoryId": "1",
+      "period": "2025-02",
+      "stt": "76",
+      "source": "import",
+      "signalCount": "0"
+    },
+    {
+      "territoryId": "1",
+      "period": "2025-03",
+      "stt": "77",
+      "source": "import",
+      "signalCount": "0"
+    },
+    {
+      "territoryId": "1",
+      "period": "2025-04",
+      "stt": "79",
+      "source": "import",
+      "signalCount": "0"
+    },
+    {
+      "territoryId": "1",
+      "period": "2025-05",
+      "stt": "80",
+      "source": "import",
+      "signalCount": "0"
+    },
+    {
+      "territoryId": "1",
+      "period": "2025-06",
+      "stt": "78",
+      "source": "import",
+      "signalCount": "0"
+    },
+    {
+      "territoryId": "1",
+      "period": "2025-07",
+      "stt": "77",
+      "source": "import",
+      "signalCount": "0"
+    },
+    {
+      "territoryId": "1",
+      "period": "2025-08",
+      "stt": "79",
+      "source": "import",
+      "signalCount": "0"
+    },
+    {
+      "territoryId": "1",
+      "period": "2025-09",
+      "stt": "81",
+      "source": "import",
+      "signalCount": "0"
+    },
+    {
+      "territoryId": "1",
+      "period": "2025-10",
+      "stt": "80",
+      "source": "import",
+      "signalCount": "0"
+    },
+    {
+      "territoryId": "1",
+      "period": "2025-11",
+      "stt": "79",
+      "source": "import",
+      "signalCount": "0"
+    },
+    {
+      "territoryId": "1",
+      "period": "2025-12",
+      "stt": "78",
+      "source": "import",
+      "signalCount": "0"
+    },
+    {
+      "territoryId": "1",
+      "period": "2026-01",
+      "stt": "78.3",
+      "source": "llm_historical",
+      "signalCount": "5"
+    },
+    {
+      "territoryId": "1",
+      "period": "2026-02",
+      "stt": "78.9",
+      "source": "llm_historical",
+      "signalCount": "7"
+    },
+    {
+      "territoryId": "1",
+      "period": "2026-03",
+      "stt": "77.2",
+      "source": "llm",
+      "signalCount": "24"
+    },
+    {
+      "territoryId": "2",
+      "period": "2024-01",
+      "stt": "71",
+      "source": "import",
+      "signalCount": "0"
+    },
+    {
+      "territoryId": "2",
+      "period": "2024-02",
+      "stt": "72",
+      "source": "import",
+      "signalCount": "0"
+    },
+    {
+      "territoryId": "2",
+      "period": "2024-03",
+      "stt": "70",
+      "source": "import",
+      "signalCount": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "territoryId\tperiod\tstt\tsource\tsignalCount\n1\t2024-01\t71\timport\t0\n1\t2024-02\t72\timport\t0\n1\t2024-03\t70\timport\t0\n1\t2024-04\t73\timport\t0\n1\t2024-05\t74\timport\t0\n1\t2024-06\t76\timport\t0\n1\t2024-07\t75\timport\t0\n1\t2024-08\t77\timport\t0\n1\t2024-09\t76\timport\t0\n1\t2024-10\t78\timport\t0\n1\t2024-11\t77\timport\t0\n1\t2024-12\t79\timport\t0\n1\t2025-01\t78\timport\t0\n1\t2025-02\t76\timport\t0\n1\t2025-03\t77\timport\t0\n1\t2025-04\t79\timport\t0\n1\t2025-05\t80\timport\t0\n1\t2025-06\t78\timport\t0\n1\t2025-07\t77\timport\t0\n1\t2025-08\t79\timport\t0\n1\t2025-09\t81\timport\t0\n1\t2025-10\t80\timport\t0\n1\t2025-11\t79\timport\t0\n1\t2025-12\t78\timport\t0\n1\t2026-01\t78.3\tllm_historical\t5\n1\t2026-02\t78.9\tllm_historical\t7\n1\t2026-03\t77.2\tllm\t24\n2\t2024-01\t71\timport\t0\n2\t2024-02\t72\timport\t0\n2\t2024-03\t70\timport\t0\n",
+  "stderr": "",
+  "execution_time_ms": 51
+}

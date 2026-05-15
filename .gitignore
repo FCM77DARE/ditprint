@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.env
+.env.local
+*.log
+.DS_Store
+.vercel/
+.railway/
+*.tsbuildinfo
+dit-territorial-intelligence/node_modules/
+dit-territorial-intelligence/dist/
+dit-territorial-intelligence/.env

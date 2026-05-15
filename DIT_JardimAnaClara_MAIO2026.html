@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>DIT · Jardim Ana Clara · Maio 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Nunito:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+/* ═══════════════════════════════════════════════════════════════════
+   PRINT BRANDBOOK — Paleta oficial
+   Verde Floresta  #2D5340  — institucional, capa, topbar
+   Verde Sálvia    #6B9B7C  — secundário, badges positivos
+   Off-white       #F5F1ED  — fundo da página
+   Grafite         #2C2C2C  — texto principal
+   Areia           #D4C9B8  — bordas, fundos sutis
+   Dourado         #D4A574  — destaque, alertas, KPIs
+   Azul Ardósia    #5B8FA3  — dados, gráficos, info
+   Marrom          #6B5346  — terciário
+   Terracota       #B84A3A  — crítico / risco
+═══════════════════════════════════════════════════════════════════ */
+:root{
+  --forest:  #2D5340;
+  --sage:    #6B9B7C;
+  --offwhite:#F5F1ED;
+  --grafite: #2C2C2C;
+  --areia:   #D4C9B8;
+  --dourado: #D4A574;
+  --slate:   #5B8FA3;
+  --marrom:  #6B5346;
+  --terra:   #B84A3A;
+  --white:   #FFFFFF;
+  --lightbg: #EDE9E3;
+  --page-w:  860px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:'Nunito',sans-serif;
+  background:#1C2820;
+  color:var(--grafite);
+  font-size:13px;
+  line-height:1.65;
+  -webkit-print-color-adjust:exact;
+  print-color-adjust:exact;
+}
+
+/* ── TOPBAR ── */
+.topbar{
+  position:fixed;top:0;left:0;right:0;z-index:999;
+  background:var(--forest);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 32px;
+  border-bottom:3px solid var(--dourado);
+}
+.tb-left{display:flex;align-items:center;gap:14px}
+.tb-logo{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:.1em;color:var(--offwhite)}
+.tb-logo span{color:var(--dourado)}
+.tb-meta{font-size:10px;color:rgba(245,241,237,.45);letter-spacing:.07em;text-transform:uppercase;font-family:'DM Mono',monospace}
+.tb-right{display:flex;gap:8px}
+.tb-btn{font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;padding:7px 18px;border-radius:3px;cursor:pointer;border:none;letter-spacing:.05em;text-transform:uppercase;transition:all .15s}
+.tb-btn-ghost{background:rgba(245,241,237,.08);color:var(--offwhite);border:1px solid rgba(245,241,237,.2)}
+.tb-btn-ghost:hover{background:rgba(245,241,237,.15)}
+.tb-btn-primary{background:var(--dourado);color:var(--forest)}
+.tb-btn-primary:hover{background:#c49464}
+
+/* ── PAGE WRAP ── */
+.page-wrap{
+  max-width:var(--page-w);
+  margin:72px auto 48px;
+  background:var(--offwhite);
+  position:relative;overflow:hidden;
+  box-shadow:0 24px 80px rgba(0,0,0,.55);
+}
+
+/* ── COVER ── */
+.cover{
+  background:var(--forest);
+  position:relative;overflow:hidden;
+  min-height:480px;
+  display:flex;flex-direction:column;
+}
+.cover-stripe{
+  height:6px;
+  background:linear-gradient(90deg,var(--dourado) 0%,var(--dourado) 50%,var(--slate) 50%,var(--slate) 100%);
+}
+.cover-inner{padding:52px 60px 48px;flex:1;display:flex;flex-direction:column;position:relative;z-index:2}
+
+/* Topographic pattern */
+.cover-topo{
+  position:absolute;inset:0;z-index:1;opacity:.07;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cpath d='M-40 200 Q100 160 200 200 Q300 240 440 200' fill='none' stroke='%23F5F1ED' stroke-width='1.2'/%3E%3Cpath d='M-40 160 Q100 120 200 160 Q300 200 440 160' fill='none' stroke='%23F5F1ED' stroke-width='1'/%3E%3Cpath d='M-40 240 Q100 200 200 240 Q300 280 440 240' fill='none' stroke='%23F5F1ED' stroke-width='1'/%3E%3Cpath d='M-40 120 Q100 80 200 120 Q300 160 440 120' fill='none' stroke='%23F5F1ED' stroke-width='.8'/%3E%3Cpath d='M-40 280 Q100 240 200 280 Q300 320 440 280' fill='none' stroke='%23F5F1ED' stroke-width='.8'/%3E%3Cpath d='M-40 80 Q100 40 200 80 Q300 120 440 80' fill='none' stroke='%23F5F1ED' stroke-width='.6'/%3E%3Cpath d='M-40 320 Q100 280 200 320 Q300 360 440 320' fill='none' stroke='%23F5F1ED' stroke-width='.6'/%3E%3Cpath d='M-40 40 Q100 0 200 40 Q300 80 440 40' fill='none' stroke='%23F5F1ED' stroke-width='.4'/%3E%3Cpath d='M-40 360 Q100 320 200 360 Q300 400 440 360' fill='none' stroke='%23F5F1ED' stroke-width='.4'/%3E%3C/svg%3E");
+  background-size:400px 400px;
+}
+.cover-glow{
+  position:absolute;right:-80px;top:-80px;
+  width:500px;height:500px;
+  background:radial-gradient(ellipse,rgba(212,165,116,.12) 0%,transparent 65%);
+  z-index:1;
+}
+
+.cover-eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(212,165,116,.15);border:1px solid rgba(212,165,116,.35);
+  padding:5px 14px;border-radius:3px;margin-bottom:28px;
+  font-size:9px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--dourado);align-self:flex-start;font-family:'DM Mono',monospace;
+}
+.cover-title{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:76px;line-height:.9;
+  color:var(--offwhite);letter-spacing:-.5px;margin-bottom:10px;
+}
+.cover-title .hl{color:var(--dourado)}
+.cover-title .hl2{color:#8BBCCC}
+.cover-subtitle{
+  font-size:14px;font-weight:300;
+  color:rgba(245,241,237,.55);letter-spacing:.02em;
+  margin-bottom:32px;max-width:480px;line-height:1.6;
+}
+.cover-scenario{
+  display:inline-flex;align-items:center;gap:12px;margin-bottom:36px;
+}
+.scenario-badge{
+  background:var(--dourado);color:var(--forest);
+  font-size:9px;font-weight:800;padding:5px 14px;border-radius:3px;
+  letter-spacing:.14em;text-transform:uppercase;font-family:'DM Mono',monospace;
+}
+.scenario-label{
+  font-size:11px;color:rgba(245,241,237,.5);
+  font-family:'DM Mono',monospace;letter-spacing:.06em;
+}
+.cover-meta-grid{
+  display:grid;grid-template-columns:repeat(5,1fr);gap:1px;
+  background:rgba(245,241,237,.08);border:1px solid rgba(245,241,237,.08);
+  border-radius:3px;overflow:hidden;
+}
+.cover-meta-item{padding:14px 16px;background:rgba(245,241,237,.04)}
+.cmi-lbl{font-size:8px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:rgba(245,241,237,.3);margin-bottom:5px;font-family:'DM Mono',monospace}
+.cmi-val{font-size:12px;font-weight:700;color:rgba(245,241,237,.88);line-height:1.3}
+.cmi-val.warn{color:var(--dourado)}
+.cmi-val.info{color:#8BBCCC}
+.cmi-val.ok{color:#8EC9A2}
+.cover-footer{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 60px;background:rgba(0,0,0,.2);
+  border-top:1px solid rgba(245,241,237,.08);position:relative;z-index:2;
+}
+.cover-doc-num{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:rgba(245,241,237,.2);font-family:'DM Mono',monospace}
+
+/* ── REPORT BODY ── */
+.report-body{padding:52px 60px;background:var(--offwhite)}
+
+/* ── SECTION ── */
+.section{margin-bottom:56px}
+.section-head{display:flex;align-items:center;gap:14px;margin-bottom:24px}
+.sec-num{font-family:'DM Mono',monospace;font-size:10px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:var(--dourado);white-space:nowrap}
+.sec-rule{flex:1;height:1px;background:var(--areia)}
+.sec-rule-2{flex:1;height:1px;background:var(--sage);opacity:.5}
+
+/* ── KPI ── */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.kpi-row-3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.kpi-row-6{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:20px}
+.kpi{
+  border-top:3px solid var(--areia);
+  background:var(--white);
+  padding:16px 18px 14px;border-radius:3px;
+}
+.kpi.gold{border-top-color:var(--dourado)}
+.kpi.forest{border-top-color:var(--forest)}
+.kpi.sage{border-top-color:var(--sage)}
+.kpi.slate{border-top-color:var(--slate)}
+.kpi.terra{border-top-color:var(--terra)}
+.kpi.dark{border-top-color:var(--grafite)}
+.kpi-lbl{font-size:8px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#888;margin-bottom:6px;font-family:'DM Mono',monospace}
+.kpi-val{font-family:'Bebas Neue',sans-serif;font-size:36px;line-height:1;color:var(--grafite);letter-spacing:-.5px}
+.kpi-val.xl{font-size:48px}
+.kpi-val.gold{color:var(--dourado)}
+.kpi-val.terra{color:var(--terra)}
+.kpi-sub{font-size:10px;color:#888;margin-top:5px;line-height:1.4}
+.kpi-badge{display:inline-block;font-size:8px;font-weight:700;padding:2px 8px;border-radius:2px;margin-top:6px;letter-spacing:.06em;text-transform:uppercase;font-family:'DM Mono',monospace}
+.kb-ok{background:#E8F2EB;color:#2A6340}
+.kb-warn{background:#FBF2E8;color:#8A5010}
+.kb-risk{background:#FAEBE8;color:#7A2A20}
+.kb-info{background:#E8EFF5;color:#2A4A6A}
+.kb-zero{background:#EDEBE6;color:#4A4A4A}
+.kb-sage{background:#EAF2EC;color:#3A6B4A}
+
+/* ── CARD ── */
+.card{background:var(--white);border-radius:3px;padding:22px 24px;margin-bottom:18px}
+.card-head{
+  font-family:'DM Mono',monospace;font-size:10px;font-weight:500;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--grafite);margin-bottom:16px;
+  display:flex;align-items:center;justify-content:space-between;
+  padding-bottom:12px;border-bottom:1px solid var(--areia);
+}
+.card-tag{font-family:'DM Mono',monospace;font-size:8px;font-weight:700;padding:2px 8px;border-radius:2px;letter-spacing:.1em;text-transform:uppercase}
+.ct-gold{background:#FBF2E8;color:#8A5010}
+.ct-forest{background:#E8EFEB;color:#1A4030}
+.ct-slate{background:#E8EFF5;color:#2A4A6A}
+.ct-terra{background:#FAEBE8;color:#7A2A20}
+.ct-sage{background:#EAF2EC;color:#2A5A3A}
+
+/* ── TABLES ── */
+.tbl-wrap{overflow:auto;border-radius:3px;margin-bottom:4px}
+table{width:100%;border-collapse:collapse;font-size:11px}
+thead th{padding:9px 12px;font-size:8px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;background:var(--forest);color:rgba(245,241,237,.85);text-align:left;white-space:nowrap;font-family:'DM Mono',monospace}
+tbody td{padding:9px 12px;border-bottom:1px solid var(--lightbg);color:var(--grafite);vertical-align:top;line-height:1.5}
+tbody tr:nth-child(even) td{background:#FAFAF7}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:#F2EEE8}
+
+/* ── BADGES ── */
+.badge{display:inline-flex;align-items:center;font-size:8px;font-weight:700;padding:2px 8px;border-radius:2px;white-space:nowrap;letter-spacing:.06em;text-transform:uppercase;font-family:'DM Mono',monospace}
+.b-sage{background:#EAF2EC;color:#2A5A3A}
+.b-gold{background:#FBF2E8;color:#8A5010}
+.b-slate{background:#E8EFF5;color:#2A4A6A}
+.b-terra{background:#FAEBE8;color:#7A2A20}
+.b-dark{background:#EDEBE6;color:#2C2C2C}
+.b-areia{background:#F3EFE8;color:#5A5040}
+
+/* ── PROSE ── */
+.prose{background:var(--white);border-radius:3px;margin-bottom:14px;overflow:hidden}
+.prose-hd{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:#F0EBE2;border-bottom:1px solid var(--areia);cursor:pointer}
+.prose-hd-title{font-family:'DM Mono',monospace;font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--grafite)}
+.prose-toggle{width:18px;height:18px;border-radius:2px;background:var(--forest);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .2s}
+.prose-toggle.open{transform:rotate(180deg)}
+.prose-toggle svg{width:8px;height:8px;fill:none;stroke:var(--offwhite);stroke-width:2.5;stroke-linecap:round}
+.prose-body{padding:20px 22px}
+.prose-body p{font-size:12.5px;color:var(--grafite);line-height:1.8;margin-bottom:12px}
+.prose-body p:last-child{margin-bottom:0}
+.prose-body ul{padding-left:16px;margin-bottom:12px}
+.prose-body li{font-size:12.5px;color:var(--grafite);line-height:1.7;margin-bottom:4px}
+.prose-body strong{font-weight:700;color:var(--grafite)}
+.callout{border-left:4px solid var(--dourado);background:#FBF6EE;padding:12px 16px;border-radius:0 3px 3px 0;margin:12px 0}
+.callout-forest{border-left-color:var(--forest);background:#EDF2EE}
+.callout-terra{border-left-color:var(--terra);background:#FAF0EE}
+.callout p{font-size:12px;color:var(--grafite);margin:0;font-style:italic;line-height:1.65}
+
+/* ── MSG CENTRAL ── */
+.msg-central{
+  background:var(--forest);border-radius:3px;
+  padding:28px 32px 24px;margin-bottom:16px;
+  position:relative;overflow:hidden;
+}
+.msg-central::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--dourado),var(--slate))}
+.msg-central-topo{position:absolute;inset:0;opacity:.06;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='200'%3E%3Cpath d='M-30 100 Q75 75 150 100 Q225 125 330 100' fill='none' stroke='%23F5F1ED' stroke-width='1'/%3E%3Cpath d='M-30 70 Q75 45 150 70 Q225 95 330 70' fill='none' stroke='%23F5F1ED' stroke-width='.8'/%3E%3Cpath d='M-30 130 Q75 105 150 130 Q225 155 330 130' fill='none' stroke='%23F5F1ED' stroke-width='.8'/%3E%3C/svg%3E");background-size:300px 200px}
+.msg-central-lbl{font-family:'DM Mono',monospace;font-size:9px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:rgba(245,241,237,.35);margin-bottom:14px;position:relative}
+.msg-central-text{font-size:16px;font-weight:300;color:var(--offwhite);line-height:1.65;font-style:italic;border-left:3px solid var(--dourado);padding-left:18px;position:relative}
+.msg-central-note{font-size:9px;color:rgba(245,241,237,.3);margin-top:14px;letter-spacing:.08em;text-transform:uppercase;font-family:'DM Mono',monospace;position:relative}
+
+/* ── PILLARS ── */
+.pillar{border-radius:3px;padding:16px 18px;margin-bottom:10px;border-left:4px solid var(--areia)}
+.pillar.p-gold{background:#FBF5EC;border-left-color:var(--dourado)}
+.pillar.p-sage{background:#EDF3EE;border-left-color:var(--sage)}
+.pillar.p-slate{background:#EBF1F5;border-left-color:var(--slate)}
+.pillar.p-terra{background:#F7EDEB;border-left-color:var(--terra)}
+.pillar.p-forest{background:#EBF0EC;border-left-color:var(--forest)}
+.pillar-lbl{font-size:8px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#888;margin-bottom:7px;font-family:'DM Mono',monospace}
+.pillar-text{font-size:12px;color:var(--grafite);line-height:1.65;font-style:italic}
+
+/* ── EVIDENCE ── */
+.evidence{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--lightbg)}
+.evidence:last-child{border-bottom:none}
+.evid-num{font-family:'DM Mono',monospace;font-size:9px;font-weight:500;color:var(--dourado);flex-shrink:0;padding-top:1px;letter-spacing:.06em;min-width:22px}
+.evid-text{font-size:12px;color:var(--grafite);line-height:1.65}
+
+/* ── TIMELINE ── */
+.timeline{padding-left:28px;position:relative}
+.timeline::before{content:'';position:absolute;left:8px;top:4px;bottom:4px;width:2px;background:var(--areia)}
+.tl-item{position:relative;margin-bottom:22px}
+.tl-dot{position:absolute;left:-28px;top:3px;width:14px;height:14px;border-radius:50%;border:2px solid var(--offwhite)}
+.tl-dot.now{background:var(--dourado);box-shadow:0 0 0 2px var(--dourado)}
+.tl-dot.future{background:var(--offwhite);box-shadow:0 0 0 2px var(--areia)}
+.tl-dot.done{background:var(--forest);box-shadow:0 0 0 2px var(--forest)}
+.tl-dot.warn{background:var(--terra);box-shadow:0 0 0 2px var(--terra)}
+.tl-date{font-family:'DM Mono',monospace;font-size:8.5px;font-weight:500;color:#888;letter-spacing:.1em;margin-bottom:3px;text-transform:uppercase}
+.tl-title{font-size:13px;font-weight:700;color:var(--grafite);margin-bottom:3px}
+.tl-body{font-size:11px;color:#666;line-height:1.55}
+
+/* ── SWOT ── */
+.swot-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px;background:var(--areia);border-radius:3px;overflow:hidden;margin-bottom:18px}
+.swot-cell{padding:22px;background:var(--white)}
+.swot-cell-head{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:.04em;margin-bottom:14px}
+.swot-s .swot-cell-head{color:var(--forest)}
+.swot-w .swot-cell-head{color:var(--terra)}
+.swot-o .swot-cell-head{color:var(--slate)}
+.swot-t .swot-cell-head{color:var(--marrom)}
+.swot-item{font-size:11.5px;color:var(--grafite);line-height:1.6;padding:6px 0;border-bottom:1px solid var(--lightbg)}
+.swot-item:last-child{border-bottom:none}
+.swot-item-label{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#999;margin-right:6px;font-family:'DM Mono',monospace}
+
+/* ── PROG ── */
+.prog{margin-bottom:14px}
+.prog-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px}
+.prog-label{font-size:11.5px;color:var(--grafite);font-weight:600}
+.prog-label small{font-size:9px;font-weight:400;color:#888;margin-left:6px}
+.prog-meta{font-family:'DM Mono',monospace;font-size:11px;color:#888}
+.prog-bar{height:5px;background:var(--lightbg);border-radius:100px;overflow:hidden}
+.prog-fill{height:100%;border-radius:100px}
+
+/* ── LAYOUT ── */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px}
+.col-6-4{display:grid;grid-template-columns:6fr 4fr;gap:18px;margin-bottom:18px}
+
+/* ── ALERT STRIP ── */
+.alert-strip{
+  background:var(--terra);color:#fff;
+  padding:10px 20px;border-radius:3px;
+  font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  margin-bottom:18px;display:flex;align-items:center;gap:10px;
+  font-family:'DM Mono',monospace;
+}
+.info-strip{
+  background:var(--forest);color:var(--offwhite);
+  padding:10px 20px;border-radius:3px;
+  font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  margin-bottom:18px;display:flex;align-items:center;gap:10px;
+  font-family:'DM Mono',monospace;
+}
+
+/* ── CHART WRAP ── */
+.chart-wrap{background:var(--white);border-radius:3px;padding:24px;margin-bottom:18px}
+.chart-title{font-family:'DM Mono',monospace;font-size:10px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--grafite);margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid var(--areia)}
+
+/* ── SIG ── */
+.sig-block{background:var(--forest);border-radius:3px;padding:28px 32px 24px;position:relative;overflow:hidden;border-top:4px solid var(--dourado)}
+.sig-title{font-family:'DM Mono',monospace;font-size:10px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:rgba(245,241,237,.5);margin-bottom:14px}
+.sig-text{font-size:12px;color:rgba(245,241,237,.55);line-height:1.7;margin-bottom:20px;max-width:540px}
+.sig-name{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:.04em;color:var(--offwhite)}
+.sig-role{font-size:11px;color:rgba(245,241,237,.4);margin-top:3px;line-height:1.5}
+.sig-date{font-size:10px;color:rgba(245,241,237,.25);margin-top:10px;font-style:italic;font-family:'DM Mono',monospace}
+
+/* ── ORNAMENT ── */
+.ornament{display:flex;align-items:center;gap:12px;margin:36px 0 28px}
+.orn-line{flex:1;height:1px;background:var(--areia)}
+.orn-diamond{width:8px;height:8px;background:var(--dourado);transform:rotate(45deg);flex-shrink:0}
+
+/* ── FOOTER ── */
+.page-footer{display:flex;align-items:center;justify-content:space-between;padding:14px 60px;background:#EDE9E3;border-top:1px solid var(--areia)}
+.pf-brand{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:.06em;color:var(--forest)}
+.pf-brand span{color:var(--dourado)}
+.pf-center{font-family:'DM Mono',monospace;font-size:8px;color:#888;letter-spacing:.1em;text-transform:uppercase}
+.pf-right{font-size:8.5px;color:#888;font-family:'DM Mono',monospace}
+
+/* ── PRINT ── */
+@media print{
+  .topbar{display:none}
+  body{background:#fff}
+  .page-wrap{margin:0;max-width:100%;box-shadow:none}
+  .prose-body{display:block!important}
+  @page{margin:0;size:A4}
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="tb-left">
+    <div class="tb-logo">PRINT<span>.</span></div>
+    <div style="width:1px;height:20px;background:rgba(245,241,237,.15)"></div>
+    <div class="tb-meta">DIT · Jardim Ana Clara · Caxias · Maio 2026</div>
+  </div>
+  <div class="tb-right">
+    <button class="tb-btn tb-btn-ghost" onclick="window.history.back()">← Voltar</button>
+    <button class="tb-btn tb-btn-primary" onclick="window.print()">Exportar PDF</button>
+  </div>
+</div>
+
+<div class="page-wrap">
+
+  <!-- ══ CAPA ══════════════════════════════════════════════════════════ -->
+  <div class="cover">
+    <div class="cover-stripe"></div>
+    <div class="cover-topo"></div>
+    <div class="cover-glow"></div>
+    <div class="cover-inner">
+      <div class="cover-eyebrow">Diagnóstico de Inteligência Territorial · Comunidade Urbana</div>
+      <div class="cover-title">
+        DIT —<br>
+        <span class="hl">JARDIM</span><br>
+        <span class="hl2">ANA CLARA</span>
+      </div>
+      <div class="cover-subtitle">Monitoramento territorial de comunidade urbana em Caxias · Score de Tensão Territorial consolidado em 6 dimensões estruturais. Inteligência de risco para decisores em gestão social, infraestrutura e investimento comunitário.</div>
+      <div class="cover-scenario">
+        <span class="scenario-badge">⚖ Estabilidade Incômoda</span>
+        <span class="scenario-label">stt 38.7 / 100 · Baixa Complexidade · 3 vetores críticos ativos</span>
+      </div>
+      <div class="cover-meta-grid">
+        <div class="cover-meta-item">
+          <div class="cmi-lbl">Território</div>
+          <div class="cmi-val">Jardim Ana Clara, Caxias</div>
+        </div>
+        <div class="cover-meta-item">
+          <div class="cmi-lbl">Período</div>
+          <div class="cmi-val">Maio 2026</div>
+        </div>
+        <div class="cover-meta-item">
+          <div class="cmi-lbl">STT Global</div>
+          <div class="cmi-val warn">38.7 / 100</div>
+        </div>
+        <div class="cover-meta-item">
+          <div class="cmi-lbl">Dimensão Crítica</div>
+          <div class="cmi-val warn">D3 · Infraestrutura</div>
+        </div>
+        <div class="cover-meta-item">
+          <div class="cmi-lbl">Vácuo Crítico</div>
+          <div class="cmi-val info">D5 · Governança 0/100</div>
+        </div>
+      </div>
+    </div>
+    <div class="cover-footer">
+      <div style="display:flex;align-items:center;gap:16px">
+        <svg width="72" height="26" viewBox="0 0 72 26">
+          <text x="0" y="20" font-family="'Bebas Neue',sans-serif" font-size="22" fill="#F5F1ED" letter-spacing="1">PRINT</text>
+        </svg>
+        <div style="width:1px;height:28px;background:rgba(245,241,237,.15)"></div>
+        <div style="font-size:9px;color:rgba(245,241,237,.35);font-family:'DM Mono',monospace;letter-spacing:.06em;line-height:1.6">Territorial<br>Intelligence™</div>
+        <div style="width:1px;height:28px;background:rgba(245,241,237,.1)"></div>
+        <div style="font-size:9px;color:rgba(245,241,237,.3);line-height:1.6">
+          <div style="font-size:8px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(245,241,237,.2);font-family:'DM Mono',monospace">Fontes ativas</div>
+          CEMADEN · INPE DETER · IBAMA · PNADC
+        </div>
+      </div>
+      <div class="cover-doc-num">DIT-JAC-2026-05 · Rev.01 · Confidencial</div>
+    </div>
+  </div>
+
+  <!-- ══ BODY ══════════════════════════════════════════════════════════ -->
+  <div class="report-body">
+
+    <!-- ── 01 SÍNTESE EXECUTIVA ────────────────────────────────────── -->
+    <div class="section">
+      <div class="section-head">
+        <div class="sec-num">01</div>
+        <div class="sec-rule"></div>
+        <div class="sec-num" style="color:var(--forest)">Síntese Executiva</div>
+        <div class="sec-rule-2"></div>
+      </div>
+
+      <div class="info-strip">
+        ◆ &nbsp;Cenário: Estabilidade Incômoda — STT 38.7 indica baixa tensão global, mas três dimensões estruturais em estado crítico criam potencial disruptivo latente.
+      </div>
+
+      <div class="kpi-row">
+        <div class="kpi gold">
+          <div class="kpi-lbl">STT Global</div>
+          <div class="kpi-val xl gold">38.7</div>
+          <div class="kpi-sub">Score de Tensão Territorial · Maio/2026</div>
+          <span class="kpi-badge kb-warn">Baixa Complexidade</span>
+        </div>
+        <div class="kpi terra">
+          <div class="kpi-lbl">D3 · Infraestrutura</div>
+          <div class="kpi-val terra">10.9</div>
+          <div class="kpi-sub">Ponto crítico estrutural · Impacto direto na vida diária</div>
+          <span class="kpi-badge kb-risk">Crítico</span>
+        </div>
+        <div class="kpi dark">
+          <div class="kpi-lbl">D5 · Governança</div>
+          <div class="kpi-val">0</div>
+          <div class="kpi-sub">Vácuo institucional completo · Nenhuma articulação ativa</div>
+          <span class="kpi-badge kb-zero">Vácuo</span>
+        </div>
+        <div class="kpi">
+          <div class="kpi-lbl">D6 · Reputação</div>
+          <div class="kpi-val">5.8</div>
+          <div class="kpi-sub">Percepção externa frágil · Baixo interesse externo</div>
+          <span class="kpi-badge kb-risk">Fragilidade</span>
+        </div>
+      </div>
+
+      <div class="msg-central">
+        <div class="msg-central-topo"></div>
+        <div class="msg-central-lbl">Diagnóstico Central — Maio 2026</div>
+        <div class="msg-central-text">
+          "O Jardim Ana Clara apresenta estabilidade aparente com potencial disruptivo significativo. O STT de 38.7 não deve ser lido como território seguro: a convergência de infraestrutura crítica (D3=10.9), vácuo institucional total (D5=0) e reputação externa quase inexistente (D6=5.8) cria um ambiente onde qualquer perturbação externa — ambiental, econômica ou de segurança — encontra zero capacidade de resposta institucional. É um território que precisa de atenção preventiva, não reativa."
+        </div>
+        <div class="msg-central-note">Análise consolidada por LLM · PRINT Territorial Intelligence™ · Ciclo: Maio/2026</div>
+      </div>
+
+      <div class="kpi-row-3">
+        <div class="kpi p-gold" style="background:#FBF5EC;border-top:3px solid var(--dourado);padding:14px 16px">
+          <div class="kpi-lbl">D1 · Socioambiental</div>
+          <div class="kpi-val" style="font-size:30px">14.4</div>
+          <div class="kpi-sub">Pressão ambiental crescente · CEMADEN + IBAMA ativos</div>
+          <span class="kpi-badge kb-warn">Atenção</span>
+        </div>
+        <div class="kpi" style="background:#EBF1F5;border-top:3px solid var(--slate);padding:14px 16px">
+          <div class="kpi-lbl">D2 · Socioeconômica</div>
+          <div class="kpi-val" style="font-size:30px">17.0</div>
+          <div class="kpi-sub">Alívio leve · PNADC aponta melhoria tênue em renda</div>
+          <span class="kpi-badge kb-info">Moderado</span>
+        </div>
+        <div class="kpi" style="background:#EBF1F5;border-top:3px solid var(--sage);padding:14px 16px">
+          <div class="kpi-lbl">D4 · Dinâmica Territorial</div>
+          <div class="kpi-val" style="font-size:30px">16.8</div>
+          <div class="kpi-sub">Conflitos territoriais e atividades criminosas elevam volatilidade</div>
+          <span class="kpi-badge kb-warn">Atenção</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 02 STT + 6 DIMENSÕES ────────────────────────────────────── -->
+    <div class="section">
+      <div class="section-head">
+        <div class="sec-num">02</div>
+        <div class="sec-rule"></div>
+        <div class="sec-num" style="color:var(--forest)">Score de Tensão Territorial — 6 Dimensões</div>
+        <div class="sec-rule-2"></div>
+      </div>
+
+      <div class="two-col" style="align-items:start">
+        <!-- Gauge -->
+        <div class="chart-wrap">
+          <div class="chart-title">STT Global · Maio 2026</div>
+          <div style="display:flex;align-items:center;justify-content:center;padding:16px 0">
+            <svg viewBox="0 0 300 300" width="268" height="268">
+              <defs>
+                <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" style="stop-color:#D4A574"/>
+                  <stop offset="100%" style="stop-color:#B48050"/>
+                </linearGradient>
+              </defs>
+              <!-- Outer ring decoration -->
+              <circle cx="150" cy="150" r="138" fill="none" stroke="#EDE9E3" stroke-width="1"/>
+              <!-- Track -->
+              <circle cx="150" cy="150" r="118" fill="none" stroke="#EDE9E3" stroke-width="20" stroke-linecap="round"/>
+              <!-- Fill: 38.7% of 2π*118 = 287.6/741.4 -->
+              <circle cx="150" cy="150" r="118" fill="none" stroke="url(#gaugeGrad)" stroke-width="20"
+                stroke-dasharray="287 742" stroke-linecap="round"
+                transform="rotate(-90 150 150)"/>
+              <!-- Inner fill -->
+              <circle cx="150" cy="150" r="98" fill="#F7F4EF"/>
+              <!-- Score text -->
+              <text x="150" y="136" text-anchor="middle" font-family="'Bebas Neue',sans-serif" font-size="64" fill="#2C2C2C" letter-spacing="-1">38.7</text>
+              <text x="150" y="158" text-anchor="middle" font-family="'DM Mono',monospace" font-size="8.5" fill="#888" font-weight="500" letter-spacing="3">STT / 100</text>
+              <text x="150" y="176" text-anchor="middle" font-family="'DM Mono',monospace" font-size="8" fill="#D4A574" font-weight="700" letter-spacing="2">BAIXA COMPLEXIDADE</text>
+              <text x="150" y="192" text-anchor="middle" font-family="'Nunito',sans-serif" font-size="8" fill="#999" letter-spacing="1">⚖ ESTABILIDADE INCÔMODA</text>
+              <!-- Scale markers -->
+              <text x="22" y="156" text-anchor="middle" font-family="'DM Mono',monospace" font-size="7" fill="#BDB8B0">0</text>
+              <text x="150" y="280" text-anchor="middle" font-family="'DM Mono',monospace" font-size="7" fill="#BDB8B0">50</text>
+              <text x="278" y="156" text-anchor="middle" font-family="'DM Mono',monospace" font-size="7" fill="#BDB8B0">100</text>
+            </svg>
+          </div>
+          <div style="text-align:center;margin-top:4px">
+            <span style="font-family:'DM Mono',monospace;font-size:8px;color:#AAA;letter-spacing:.06em">Pesos: D1×0.22 · D2×0.15 · D3×0.15 · D4×0.22 · D5×0.15 · D6×0.11</span>
+          </div>
+        </div>
+
+        <!-- Dimension bars -->
+        <div class="chart-wrap">
+          <div class="chart-title">Score por Dimensão · Mai/2026</div>
+          <div id="dim-bars"></div>
+          <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--areia)">
+            <div style="font-family:'DM Mono',monospace;font-size:8px;color:#AAA;letter-spacing:.05em;line-height:2.2">
+              <span style="display:inline-block;width:10px;height:10px;background:#B84A3A;border-radius:2px;margin-right:5px;vertical-align:middle"></span>Crítico
+              &nbsp;
+              <span style="display:inline-block;width:10px;height:10px;background:#D4A574;border-radius:2px;margin-right:5px;vertical-align:middle"></span>Atenção
+              &nbsp;
+              <span style="display:inline-block;width:10px;height:10px;background:#5B8FA3;border-radius:2px;margin-right:5px;vertical-align:middle"></span>Moderado
+              &nbsp;
+              <span style="display:inline-block;width:10px;height:10px;background:#2C2C2C;border-radius:2px;margin-right:5px;vertical-align:middle"></span>Vácuo
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6 mini KPIs -->
+      <div class="kpi-row-6">
+        <div class="kpi gold" style="padding:12px 13px">
+          <div class="kpi-lbl">D1 · Socioambiental</div>
+          <div class="kpi-val" style="font-size:26px">14.4</div>
+          <div class="kpi-sub" style="font-size:9px">Peso 22%</div>
+          <span class="kpi-badge kb-warn">Atenção</span>
+        </div>
+        <div class="kpi slate" style="padding:12px 13px">
+          <div class="kpi-lbl">D2 · Socioeconômica</div>
+          <div class="kpi-val" style="font-size:26px">17.0</div>
+          <div class="kpi-sub" style="font-size:9px">Peso 15%</div>
+          <span class="kpi-badge kb-info">Moderado</span>
+        </div>
+        <div class="kpi terra" style="padding:12px 13px">
+          <div class="kpi-lbl">D3 · Infraestrutura</div>
+          <div class="kpi-val terra" style="font-size:26px">10.9</div>
+          <div class="kpi-sub" style="font-size:9px">Peso 15%</div>
+          <span class="kpi-badge kb-risk">Crítico</span>
+        </div>
+        <div class="kpi gold" style="padding:12px 13px">
+          <div class="kpi-lbl">D4 · Dinâmica</div>
+          <div class="kpi-val" style="font-size:26px">16.8</div>
+          <div class="kpi-sub" style="font-size:9px">Peso 22%</div>
+          <span class="kpi-badge kb-warn">Atenção</span>
+        </div>
+        <div class="kpi dark" style="padding:12px 13px">
+          <div class="kpi-lbl">D5 · Governança</div>
+          <div class="kpi-val" style="font-size:26px">0</div>
+          <div class="kpi-sub" style="font-size:9px">Peso 15%</div>
+          <span class="kpi-badge kb-zero">Vácuo</span>
+        </div>
+        <div class="kpi" style="padding:12px 13px;border-top-color:var(--marrom)">
+          <div class="kpi-lbl">D6 · Reputação</div>
+          <div class="kpi-val" style="font-size:26px">5.8</div>
+          <div class="kpi-sub" style="font-size:9px">Peso 11%</div>
+          <span class="kpi-badge kb-risk">Fragilidade</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 03 ANÁLISE POR DIMENSÃO ─────────────────────────────────── -->
+    <div class="section">
+      <div class="section-head">
+        <div class="sec-num">03</div>
+        <div class="sec-rule"></div>
+        <div class="sec-num" style="color:var(--forest)">Análise por Dimensão</div>
+        <div class="sec-rule-2"></div>
+      </div>
+
+      <!-- D1 -->
+      <div class="card">
+        <div class="card-head">D1 · Socioambiental — Score 14.4/100 <span class="card-tag ct-gold">Atenção · Peso 22%</span></div>
+        <div class="callout">
+          <p><strong>Vetor de pressão crescente:</strong> Monitoramentos intensificados do CEMADEN e INPE DETER, combinados com novos embargos do IBAMA, configuram um ambiente de pressão ambiental em ascensão. O score 14.4 reflete um território ainda não em colapso ambiental, mas com sinais de alerta que demandam atenção preventiva antes que reguladores ampliem restrições.</p>
+        </div>
+        <div class="two-col" style="margin-bottom:0">
+          <div class="pillar p-gold">
+            <div class="pillar-lbl">CEMADEN + INPE DETER</div>
+            <div class="pillar-text">"Risco de desastres naturais e degradação ambiental elevados. Dificulta novos desenvolvimentos imobiliários e pode acionar ações regulatórias mais rígidas."</div>
+          </div>
+          <div class="pillar p-terra">
+            <div class="pillar-lbl">Novos Embargos IBAMA</div>
+            <div class="pillar-text">"Inibem o potencial econômico da área. Empresas dependentes de licenças ambientais enfrentam ambiente hostil a novas operações e expansões."</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- D2 + D3 -->
+      <div class="two-col">
+        <div class="card" style="margin-bottom:0">
+          <div class="card-head">D2 · Socioeconômica — 17.0 <span class="card-tag ct-slate">Moderado</span></div>
+          <div class="prose" style="margin-bottom:0">
+            <div class="prose-hd" onclick="toggleProse(this)">
+              <div class="prose-hd-title">Leitura Analítica</div>
+              <div class="prose-toggle open"><svg viewBox="0 0 10 6"><path d="M1 1l4 4 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            </div>
+            <div class="prose-body">
+              <p>A atualização da PNADC aponta para um <strong>leve alívio em renda e emprego</strong> — a única dimensão com sinal positivo no período. O score 17.0 indica, porém, que as melhorias são tênues e não estruturais: a informalidade continua alta e a capacidade de absorção econômica do território permanece limitada.</p>
+              <div class="callout-forest callout">
+                <p>Oportunidade: o alívio econômico cria janela para iniciativas de formalização e capacitação profissional, potencializando o capital humano existente.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:0;border-top:3px solid var(--terra)">
+          <div class="card-head">D3 · Infraestrutura — 10.9 <span class="card-tag ct-terra">Ponto Crítico</span></div>
+          <div class="alert-strip" style="font-size:9px;padding:8px 12px;margin-bottom:12px">
+            ⚠ Score mais baixo · Impacto adverso direto na qualidade de vida
+          </div>
+          <div class="prose">
+            <div class="prose-hd" onclick="toggleProse(this)">
+              <div class="prose-hd-title">Análise Crítica</div>
+              <div class="prose-toggle open"><svg viewBox="0 0 10 6"><path d="M1 1l4 4 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            </div>
+            <div class="prose-body">
+              <p>Com apenas <strong>10.9/100</strong>, a Infraestrutura é o vetor de maior pressão negativa sobre o STT. Instalações críticas deficientes, transporte precário e segurança pública insuficiente geram operações cotidianas voláteis e aumentam o custo social e econômico de qualquer intervenção no território.</p>
+              <ul>
+                <li>Saneamento e habitação: cobertura abaixo do mínimo adequado</li>
+                <li>Transporte: mobilidade restrita amplifica isolamento</li>
+                <li>Segurança pública: sobrecarregada, contribuindo para D4 elevado</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- D4 + D5 -->
+      <div class="two-col">
+        <div class="card" style="margin-bottom:0">
+          <div class="card-head">D4 · Dinâmica Territorial — 16.8 <span class="card-tag ct-gold">Atenção · Volatilidade</span></div>
+          <div class="prose">
+            <div class="prose-hd" onclick="toggleProse(this)">
+              <div class="prose-hd-title">Conflitos e Atividades Criminosas</div>
+              <div class="prose-toggle open"><svg viewBox="0 0 10 6"><path d="M1 1l4 4 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            </div>
+            <div class="prose-body">
+              <p>A dimensão de Dinâmica é ativamente impulsionada por <strong>conflitos territoriais e atividades criminosas</strong>, sugerindo volatilidade elevada. Essa combinação amplifica a percepção de risco e impacta diretamente a confiança dos stakeholders, dificultando processos decisórios de longo prazo no território.</p>
+              <div class="callout-terra callout">
+                <p><strong>Atenção:</strong> A presença de poder paralelo é um fator multiplicador de risco — sem governança (D5=0), não há mecanismo de contenção ou mediação institucional disponível.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:0;border-top:3px solid var(--grafite)">
+          <div class="card-head">D5 · Governança — 0/100 <span class="card-tag" style="background:#EDEBE6;color:#2C2C2C">Vácuo Total</span></div>
+          <div class="callout-terra callout" style="margin-bottom:14px">
+            <p><strong>Fator sistêmico crítico:</strong> A ausência completa de governança ativa é o maior amplificador de risco do território — qualquer crise encontra zero capacidade de resposta institucional.</p>
+          </div>
+          <div class="evidence">
+            <div class="evid-num">—</div>
+            <div class="evid-text">Nenhum instrumento regulatório eficaz em funcionamento</div>
+          </div>
+          <div class="evidence">
+            <div class="evid-num">—</div>
+            <div class="evid-text">Sem articulação ativa com poder público detectada</div>
+          </div>
+          <div class="evidence">
+            <div class="evid-num">—</div>
+            <div class="evid-text">Conselhos e mecanismos participativos inativos</div>
+          </div>
+          <div class="evidence">
+            <div class="evid-num">—</div>
+            <div class="evid-text">TACs e compensações sem fiscalização rastreável</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- D6 -->
+      <div class="card" style="border-top:3px solid var(--marrom)">
+        <div class="card-head">D6 · Reputação e Visibilidade — Score 5.8/100 <span class="card-tag" style="background:#F0EBE4;color:#5A3A2A">Fragilidade Extrema</span></div>
+        <div class="two-col" style="margin-bottom:0">
+          <div class="pillar p-terra">
+            <div class="pillar-lbl">Percepção Externa</div>
+            <div class="pillar-text">"Percepção externa frágil com consequências negativas sobre potenciais investidores e parceiros. O território é praticamente invisível para atores externos — invisibilidade que protege parcialmente, mas também impede acesso a recursos."</div>
+          </div>
+          <div class="pillar p-forest">
+            <div class="pillar-lbl">Baixo Interesse Científico</div>
+            <div class="pillar-text">"Ausência de núcleos de pesquisa e centros de produção de conhecimento local dificulta a geração de evidências para acesso a políticas públicas, editais e financiamentos baseados em dados."</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 04 SINAIS CRÍTICOS ───────────────────────────────────────── -->
+    <div class="section">
+      <div class="section-head">
+        <div class="sec-num">04</div>
+        <div class="sec-rule"></div>
+        <div class="sec-num" style="color:var(--forest)">Sinais Críticos Monitorados</div>
+        <div class="sec-rule-2"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">Sinais de Alta Prioridade · Maio 2026 <span class="card-tag ct-gold">Fontes Oficiais</span></div>
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Fonte</th><th>Sinal</th><th>Dimensão</th><th>Natureza</th><th>Classificação</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="badge b-dark">CEMADEN</span></td>
+                <td><strong>Monitoramento de Risco Natural</strong><br><span style="color:#888;font-size:10px">Elevado risco de desastres naturais na região</span></td>
+                <td><span class="badge b-gold">D1</span></td>
+                <td>Ambiental</td>
+                <td><span class="badge b-gold">Atenção</span></td>
+              </tr>
+              <tr>
+                <td><span class="badge b-dark">INPE DETER</span></td>
+                <td><strong>Degradação Ambiental Detectada</strong><br><span style="color:#888;font-size:10px">Monitoramento intensificado da cobertura vegetal</span></td>
+                <td><span class="badge b-gold">D1</span></td>
+                <td>Ambiental</td>
+                <td><span class="badge b-gold">Atenção</span></td>
+              </tr>
+              <tr>
+                <td><span class="badge b-dark">IBAMA</span></td>
+                <td><strong>Novos Embargos Ambientais</strong><br><span style="color:#888;font-size:10px">Inibição do potencial econômico da área</span></td>
+                <td><span class="badge b-gold">D1</span></td>
+                <td>Regulatório</td>
+                <td><span class="badge b-terra">Alto Impacto</span></td>
+              </tr>
+              <tr>
+                <td><span class="badge b-dark">PNADC/IBGE</span></td>
+                <td><strong>Leve Melhoria em Renda e Emprego</strong><br><span style="color:#888;font-size:10px">Único sinal positivo do período — frágil e incipiente</span></td>
+                <td><span class="badge b-slate">D2</span></td>
+                <td>Socioeconômico</td>
+                <td><span class="badge b-sage">Positivo</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">Evidências — Intersecção de Riscos <span class="card-tag ct-forest">Análise PRINT</span></div>
+        <div class="evidence">
+          <div class="evid-num">01</div>
+          <div class="evid-text"><strong>Convergência ambiental-regulatória:</strong> CEMADEN, INPE DETER e IBAMA sinalizando simultaneamente cria um ambiente hostil a novas operações que dependam de licenciamento ou aprovação ambiental. Qualquer projeto com impacto no uso do solo enfrenta barreira tripla regulatória.</div>
+        </div>
+        <div class="evidence">
+          <div class="evid-num">02</div>
+          <div class="evid-text"><strong>Infraestrutura em 10.9 com D5 em zero:</strong> Essa combinação é estruturalmente perigosa. A deterioração de infraestrutura sem nenhum mecanismo de governança para corrigi-la é uma trajetória de decaimento sem ponto de inflexão endógeno.</div>
+        </div>
+        <div class="evidence">
+          <div class="evid-num">03</div>
+          <div class="evid-text"><strong>D4=16.8 com poder paralelo ativo e D5=0:</strong> Conflitos territoriais e atividades criminosas em ambiente sem governança institucional criam condições para consolidação de estruturas de poder informais — o cenário mais difícil de reverter em médio prazo.</div>
+        </div>
+        <div class="evidence">
+          <div class="evid-num">04</div>
+          <div class="evid-text"><strong>O único sinal positivo (D2=+leve):</strong> A melhoria em renda e emprego é frágil e ainda não estrutural. Deve ser tratada como oportunidade de janela — não como tendência consolidada. Sem intervenção, pode ser revertida nos próximos ciclos.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 05 CENÁRIO E PROJEÇÃO ────────────────────────────────────── -->
+    <div class="section">
+      <div class="section-head">
+        <div class="sec-num">05</div>
+        <div class="sec-rule"></div>
+        <div class="sec-num" style="color:var(--forest)">Cenário Projetado — Próximo Trimestre</div>
+        <div class="sec-rule-2"></div>
+      </div>
+
+      <div class="msg-central" style="margin-bottom:20px">
+        <div class="msg-central-topo"></div>
+        <div class="msg-central-lbl">Projeção — Q3/2026</div>
+        <div class="msg-central-text">
+          "Com o cenário atual de estabilidade incômoda, esperamos tensões crescentes em uso da terra e infraestrutura. À medida que pressões ambientais e lacunas de governança persistem, o risco de escalada de conflitos sociais e deterioração reputacional aumenta. Sem intervenção proativa em D3 e D5, o STT pode cruzar o limiar de Média Complexidade (40+) nos próximos dois ciclos."
+        </div>
+        <div class="msg-central-note">Projeção baseada em tendência dos sinais ativos · Revisão em Junho/2026</div>
+      </div>
+
+      <div class="two-col">
+        <div>
+          <div class="pillar p-terra">
+            <div class="pillar-lbl">Cenário Pessimista — Sem Intervenção</div>
+            <div class="pillar-text">"STT pode superar 40 em 2 ciclos. D3 continuando em queda, D4 escalando com poder paralelo consolidado, e D5 permanecendo em zero configuram trajetória de deterioração progressiva com baixo potencial de reversão espontânea."</div>
+          </div>
+          <div class="pillar p-sage">
+            <div class="pillar-lbl">Cenário Otimista — Com Intervenção</div>
+            <div class="pillar-text">"Intervenção focada em D3 (infraestrutura básica) e D5 (governança) pode estabilizar o STT abaixo de 35 em 3 ciclos. A janela de oportunidade em D2 (melhoria econômica) é o principal catalisador disponível no momento."</div>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:0">
+          <div class="card-head">Fatores a Monitorar — Q3/2026</div>
+          <div id="monitor-bars"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 06 SWOT ─────────────────────────────────────────────────── -->
+    <div class="section">
+      <div class="section-head">
+        <div class="sec-num">06</div>
+        <div class="sec-rule"></div>
+        <div class="sec-num" style="color:var(--forest)">Análise SWOT Territorial</div>
+        <div class="sec-rule-2"></div>
+      </div>
+
+      <div class="swot-grid">
+        <div class="swot-cell swot-s">
+          <div class="swot-cell-head">Forças</div>
+          <div class="swot-item"><span class="swot-item-label">S1</span>Sinal positivo em D2 — melhoria tênue em renda e emprego detectada</div>
+          <div class="swot-item"><span class="swot-item-label">S2</span>STT em Baixa Complexidade — ainda há margem antes do limiar crítico</div>
+          <div class="swot-item"><span class="swot-item-label">S3</span>Comunidade consolidada com capital social latente não mensurado</div>
+          <div class="swot-item"><span class="swot-item-label">S4</span>Localização urbana facilita acesso a serviços e mercado de trabalho</div>
+        </div>
+        <div class="swot-cell swot-w">
+          <div class="swot-cell-head">Fraquezas</div>
+          <div class="swot-item"><span class="swot-item-label">W1</span>D3=10.9 — infraestrutura crítica como maior supressor do STT</div>
+          <div class="swot-item"><span class="swot-item-label">W2</span>D5=0 — vácuo institucional sem mecanismo de autocorreção</div>
+          <div class="swot-item"><span class="swot-item-label">W3</span>D6=5.8 — invisibilidade externa impede acesso a recursos e parceiros</div>
+          <div class="swot-item"><span class="swot-item-label">W4</span>Pressão ambiental tripla (CEMADEN + DETER + IBAMA) em ascensão</div>
+        </div>
+        <div class="swot-cell swot-o">
+          <div class="swot-cell-head">Oportunidades</div>
+          <div class="swot-item"><span class="swot-item-label">O1</span>Janela em D2: melhoria econômica como base para formalização</div>
+          <div class="swot-item"><span class="swot-item-label">O2</span>D5=0 cria espaço para atores que queiram construir governança — diferencial único</div>
+          <div class="swot-item"><span class="swot-item-label">O3</span>D6 baixo = território abaixo do radar — oportunidade de posicionamento antes da concorrência</div>
+          <div class="swot-item"><span class="swot-item-label">O4</span>Demanda reprimida por infraestrutura básica justifica projetos de impacto social</div>
+        </div>
+        <div class="swot-cell swot-t">
+          <div class="swot-cell-head">Ameaças</div>
+          <div class="swot-item"><span class="swot-item-label">A1</span>Poder paralelo (D4) consolidando-se sem contrapeso institucional (D5=0)</div>
+          <div class="swot-item"><span class="swot-item-label">A2</span>Cruzamento do limiar 40 (Média Complexidade) em 2 ciclos sem intervenção</div>
+          <div class="swot-item"><span class="swot-item-label">A3</span>Embargos IBAMA ampliando restrições e inviabilizando novos empreendimentos</div>
+          <div class="swot-item"><span class="swot-item-label">A4</span>Perda da janela D2 por inércia — melhoria econômica revertendo sem ancoragem</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 07 RECOMENDAÇÕES ─────────────────────────────────────────── -->
+    <div class="section">
+      <div class="section-head">
+        <div class="sec-num">07</div>
+        <div class="sec-rule"></div>
+        <div class="sec-num" style="color:var(--forest)">Recomendações Estratégicas</div>
+        <div class="sec-rule-2"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">Plano de Ação Prioritário · 3 Eixos <span class="card-tag ct-forest">Intervenção Preventiva</span></div>
+        <div class="timeline">
+          <div class="tl-item">
+            <div class="tl-dot now"></div>
+            <div class="tl-date">Imediato — Jun/2026 · Governança</div>
+            <div class="tl-title">Implementar Comitê de Governança Territorial</div>
+            <div class="tl-body">Estabelecer estrutura mínima de governança — mesmo informal — para restaurar capacidade de resposta institucional. Foco em compliance regulatório e articulação com stakeholders públicos e privados. Com D5=0, qualquer iniciativa nessa direção representa avanço significativo e cria diferencial de posicionamento.</div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-dot warn"></div>
+            <div class="tl-date">Curto Prazo — Q3/2026 · Infraestrutura</div>
+            <div class="tl-title">Investimentos Cirúrgicos em D3 — Transporte e Segurança</div>
+            <div class="tl-body">Direcionamento estratégico para itens de maior retorno: mobilidade (transporte interno do território) e segurança pública (parceria com autoridades). Esses dois vetores, ao melhorarem, têm efeito cascata em D4 (dinâmica) e na percepção de D6 (reputação).</div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-dot future"></div>
+            <div class="tl-date">Médio Prazo — Q4/2026 · Reputação</div>
+            <div class="tl-title">Intensificar Monitoramento e Comunicação de Risco</div>
+            <div class="tl-body">Aumentar capacidade de monitoramento via parcerias com entidades ambientais. Construir narrativa de território em transformação — D6=5.8 é uma oportunidade: o território precisa ser apresentado ao mercado antes que uma crise de imagem se consolide. A comunicação proativa vale mais que a reativa.</div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-dot future"></div>
+            <div class="tl-date">Longo Prazo — 2027 · Consolidação</div>
+            <div class="tl-title">Capitalizar a Janela Econômica de D2</div>
+            <div class="tl-body">A leve melhoria em renda e emprego é a única base sólida disponível. Programas de formalização, capacitação profissional e microcrédito ancorados nos dados do PNADC podem transformar o sinal positivo em tendência estrutural — e produzir evidências mensuráveis para acesso a recursos externos.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">Indicador de Reversão de Cenário <span class="card-tag ct-sage">O Que Observar</span></div>
+        <div class="two-col" style="margin-bottom:0">
+          <div class="pillar p-forest" style="margin-bottom:0">
+            <div class="pillar-lbl">Sinal de Melhora — Gatilho Positivo</div>
+            <div class="pillar-text">"Qualquer sinal em D5 ≥ 10 por dois ciclos consecutivos — articulação com poder público, TAC ativo, presença em conselho — indica início de reversão. É o termômetro mais sensível do território."</div>
+          </div>
+          <div class="pillar p-terra" style="margin-bottom:0">
+            <div class="pillar-lbl">Sinal de Alerta — Gatilho Negativo</div>
+            <div class="pillar-text">"D3 abaixo de 8.0 ou D4 acima de 25.0 em dois ciclos indica aceleração de deterioração. Nesse ponto, intervenção passa a ser emergencial — não preventiva — com custo significativamente maior."</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 08 METODOLOGIA ───────────────────────────────────────────── -->
+    <div class="section">
+      <div class="section-head">
+        <div class="sec-num">08</div>
+        <div class="sec-rule"></div>
+        <div class="sec-num" style="color:var(--forest)">Metodologia e Fontes</div>
+        <div class="sec-rule-2"></div>
+      </div>
+
+      <div class="two-col">
+        <div class="card" style="margin-bottom:0">
+          <div class="card-head">Fontes Ativas · Maio 2026</div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Fonte</th><th>Dimensão</th><th>Tipo de Sinal</th></tr></thead>
+              <tbody>
+                <tr><td><strong>CEMADEN</strong></td><td><span class="badge b-gold">D1</span></td><td>Risco natural · Tempo real</td></tr>
+                <tr><td><strong>INPE DETER</strong></td><td><span class="badge b-gold">D1</span></td><td>Desmatamento · Diário</td></tr>
+                <tr><td><strong>IBAMA</strong></td><td><span class="badge b-gold">D1</span></td><td>Embargos · Diário</td></tr>
+                <tr><td><strong>PNADC / IBGE</strong></td><td><span class="badge b-slate">D2</span></td><td>Renda e emprego · Mensal</td></tr>
+                <tr><td><strong>Google News RSS</strong></td><td><span class="badge b-areia">D6</span></td><td>Reputação · Contínuo</td></tr>
+                <tr><td><strong>Querido Diário</strong></td><td><span class="badge b-dark">D5</span></td><td>Governança · Diário</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div>
+          <div class="prose">
+            <div class="prose-hd" onclick="toggleProse(this)">
+              <div class="prose-hd-title">Fórmula STT · 6 Dimensões</div>
+              <div class="prose-toggle open"><svg viewBox="0 0 10 6"><path d="M1 1l4 4 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            </div>
+            <div class="prose-body">
+              <p><strong>STT = Σ (Di × Wi)</strong> · onde Σ Wi = 1.0</p>
+              <ul>
+                <li>D1 Socioambiental × 0.22</li>
+                <li>D2 Socioeconômica × 0.15</li>
+                <li>D3 Infraestrutura × 0.15</li>
+                <li>D4 Dinâmica Territorial × 0.22</li>
+                <li>D5 Governança × 0.15</li>
+                <li>D6 Reputação × 0.11</li>
+              </ul>
+              <div class="callout-forest callout"><p>Consolidação mensal com análise qualitativa por LLM. Publicação após validação humana da equipe PRINT.</p></div>
+            </div>
+          </div>
+          <div class="prose" style="margin-top:8px">
+            <div class="prose-hd" onclick="toggleProse(this)">
+              <div class="prose-hd-title">Escala STT</div>
+              <div class="prose-toggle"><svg viewBox="0 0 10 6"><path d="M1 1l4 4 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            </div>
+            <div class="prose-body" style="display:none">
+              <ul>
+                <li><strong>0–39 · Baixa Complexidade</strong> — ambiente com espaço para intervenção</li>
+                <li><strong>40–69 · Média Complexidade</strong> — monitoramento ativo recomendado</li>
+                <li><strong>70–79 · Alta Complexidade</strong> — due diligence ampliada</li>
+                <li><strong>80+ · Complexidade Extrema</strong> — risco operacional elevado</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ORNAMENT + ASSINATURA -->
+    <div class="ornament">
+      <div class="orn-line"></div>
+      <div class="orn-diamond"></div>
+      <div class="orn-line"></div>
+    </div>
+
+    <div class="sig-block">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:40px">
+        <div>
+          <div class="sig-title">Responsabilidade Técnica</div>
+          <div class="sig-text">Este diagnóstico é produzido pela plataforma <strong style="color:rgba(245,241,237,.7)">PRINT Territorial Intelligence™</strong> com base em dados coletados automaticamente de fontes públicas oficiais. Os scores e análises são indicadores de suporte à decisão — não substituem due diligence específica ou levantamentos de campo.</div>
+          <div class="sig-name">PRINT Comunicação</div>
+          <div class="sig-role">Inteligência Territorial · DIT — Diagnóstico de Inteligência Territorial</div>
+          <div class="sig-date">Jardim Ana Clara, Caxias · Maio de 2026 · Versão 1.0</div>
+        </div>
+        <div style="display:flex;flex-direction:column;justify-content:center;gap:12px">
+          <div style="font-family:'DM Mono',monospace;font-size:9px;color:rgba(245,241,237,.3);letter-spacing:.1em;text-transform:uppercase">Próxima Edição</div>
+          <div style="background:rgba(212,165,116,.12);border:1px solid rgba(212,165,116,.25);border-radius:3px;padding:12px 16px">
+            <div style="font-family:'DM Mono',monospace;font-size:8px;color:rgba(245,241,237,.35);letter-spacing:.1em;margin-bottom:6px">JUNHO / 2026</div>
+            <div style="font-size:12px;color:rgba(245,241,237,.65);line-height:1.55">Atualização mensal com dados de todas as dimensões e análise de variação sobre os sinais Q2/2026.</div>
+          </div>
+          <div style="font-family:'DM Mono',monospace;font-size:8px;color:rgba(245,241,237,.2)">DIT-JAC-2026-05 · Rev.01 · Confidencial</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /report-body -->
+
+  <!-- FOOTER -->
+  <div class="page-footer">
+    <div class="pf-brand">PRINT<span>.</span></div>
+    <div class="pf-center">DIT · Diagnóstico de Inteligência Territorial · Jardim Ana Clara, Caxias</div>
+    <div class="pf-right">Maio 2026 · Rev.01</div>
+  </div>
+
+</div><!-- /page-wrap -->
+
+<script>
+function toggleProse(hd){
+  var body=hd.nextElementSibling;
+  var toggle=hd.querySelector('.prose-toggle');
+  var open=body.style.display!=='none'&&body.style.display!=='';
+  body.style.display=open?'none':'block';
+  toggle.classList.toggle('open',!open);
+}
+
+// Dimension bars — cores brandbook
+var dims=[
+  {label:'D1 · Socioambiental',   val:14.4, weight:'22%', color:'#D4A574'},
+  {label:'D2 · Socioeconômica',   val:17.0, weight:'15%', color:'#5B8FA3'},
+  {label:'D3 · Infraestrutura',   val:10.9, weight:'15%', color:'#B84A3A'},
+  {label:'D4 · Dinâmica Territ.', val:16.8, weight:'22%', color:'#D4A574'},
+  {label:'D5 · Governança',       val:0,    weight:'15%', color:'#2C2C2C'},
+  {label:'D6 · Reputação',        val:5.8,  weight:'11%', color:'#6B5346'},
+];
+var pc=document.getElementById('dim-bars');
+dims.forEach(function(d){
+  pc.innerHTML+='<div class="prog">'+
+    '<div class="prog-top">'+
+      '<span class="prog-label">'+d.label+'<small>peso '+d.weight+'</small></span>'+
+      '<span class="prog-meta">'+d.val+'</span>'+
+    '</div>'+
+    '<div class="prog-bar"><div class="prog-fill" style="width:'+(d.val||1)+'%;background:'+d.color+'"></div></div>'+
+  '</div>';
+});
+
+// Monitor bars
+var monitors=[
+  {label:'D5 Governança — qualquer sinal ≥ 10',  val:0,    color:'#2C2C2C'},
+  {label:'D3 Infraestrutura — alerta crítico ≤8', val:10.9, color:'#B84A3A'},
+  {label:'D4 Dinâmica — limite de escalada ≥25',  val:16.8, color:'#D4A574'},
+  {label:'D2 Socioeconômica — janela a preservar', val:17.0, color:'#5B8FA3'},
+];
+var mc=document.getElementById('monitor-bars');
+monitors.forEach(function(m){
+  mc.innerHTML+='<div class="prog">'+
+    '<div class="prog-top">'+
+      '<span class="prog-label" style="font-size:10px">'+m.label+'</span>'+
+      '<span class="prog-meta">'+m.val+'</span>'+
+    '</div>'+
+    '<div class="prog-bar"><div class="prog-fill" style="width:'+(m.val||1)+'%;background:'+m.color+'"></div></div>'+
+  '</div>';
+});
+</script>
+</body>
+</html>

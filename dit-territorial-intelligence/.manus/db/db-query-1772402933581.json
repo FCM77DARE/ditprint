@@ -1,0 +1,9 @@
+{
+  "query": "UPDATE stt_scores s\nJOIN (\n  SELECT territoryId, MAX(period) as maxPeriod\n  FROM stt_scores\n  GROUP BY territoryId\n) latest ON s.territoryId = latest.territoryId AND s.period = latest.maxPeriod\nSET s.published = 1, s.publishedAt = NOW()\nWHERE s.published = 0;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2aGV9vQqnMXZ7WH.b5ed6992562a --database 43iZsmPphrqUoXjRK5zrxR --execute UPDATE stt_scores s\nJOIN (\n  SELECT territoryId, MAX(period) as maxPeriod\n  FROM stt_scores\n  GROUP BY territoryId\n) latest ON s.territoryId = latest.territoryId AND s.period = latest.maxPeriod\nSET s.published = 1, s.publishedAt = NOW()\nWHERE s.published = 0;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 74
+}

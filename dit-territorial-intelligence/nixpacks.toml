@@ -1,0 +1,12 @@
+# Nixpacks config (Railway/Render auto-detect helper)
+[phases.setup]
+nixPkgs = ["nodejs_20", "pnpm-10_x"]
+
+[phases.install]
+cmds = ["pnpm install --frozen-lockfile=false"]
+
+[phases.build]
+cmds = ["pnpm build"]
+
+[start]
+cmd = "pnpm start"

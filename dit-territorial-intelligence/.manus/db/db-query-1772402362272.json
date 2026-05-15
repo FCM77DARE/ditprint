@@ -1,0 +1,130 @@
+{
+  "query": "SELECT DATE_FORMAT(publishedAt, '%Y-%m') as period, COUNT(*) as count FROM signals GROUP BY DATE_FORMAT(publishedAt, '%Y-%m') ORDER BY period DESC LIMIT 30;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2aGV9vQqnMXZ7WH.b5ed6992562a --database 43iZsmPphrqUoXjRK5zrxR --execute SELECT DATE_FORMAT(publishedAt, '%Y-%m') as period, COUNT(*) as count FROM signals GROUP BY DATE_FORMAT(publishedAt, '%Y-%m') ORDER BY period DESC LIMIT 30;",
+  "rows": [
+    {
+      "period": "2026-03",
+      "count": "1"
+    },
+    {
+      "period": "2026-02",
+      "count": "15"
+    },
+    {
+      "period": "2026-01",
+      "count": "9"
+    },
+    {
+      "period": "2025-12",
+      "count": "3"
+    },
+    {
+      "period": "2025-11",
+      "count": "4"
+    },
+    {
+      "period": "2025-10",
+      "count": "9"
+    },
+    {
+      "period": "2025-09",
+      "count": "8"
+    },
+    {
+      "period": "2025-08",
+      "count": "3"
+    },
+    {
+      "period": "2025-07",
+      "count": "2"
+    },
+    {
+      "period": "2025-06",
+      "count": "9"
+    },
+    {
+      "period": "2025-05",
+      "count": "5"
+    },
+    {
+      "period": "2025-02",
+      "count": "1"
+    },
+    {
+      "period": "2025-01",
+      "count": "1"
+    },
+    {
+      "period": "2024-11",
+      "count": "2"
+    },
+    {
+      "period": "2024-08",
+      "count": "2"
+    },
+    {
+      "period": "2024-07",
+      "count": "2"
+    },
+    {
+      "period": "2024-06",
+      "count": "1"
+    },
+    {
+      "period": "2024-04",
+      "count": "2"
+    },
+    {
+      "period": "2024-03",
+      "count": "2"
+    },
+    {
+      "period": "2023-11",
+      "count": "1"
+    },
+    {
+      "period": "2023-07",
+      "count": "1"
+    },
+    {
+      "period": "2022-11",
+      "count": "1"
+    },
+    {
+      "period": "2022-10",
+      "count": "1"
+    },
+    {
+      "period": "2022-09",
+      "count": "1"
+    },
+    {
+      "period": "2022-08",
+      "count": "1"
+    },
+    {
+      "period": "2022-06",
+      "count": "1"
+    },
+    {
+      "period": "2021-10",
+      "count": "1"
+    },
+    {
+      "period": "2021-05",
+      "count": "1"
+    },
+    {
+      "period": "2020-10",
+      "count": "1"
+    },
+    {
+      "period": "2020-05",
+      "count": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "period\tcount\n2026-03\t1\n2026-02\t15\n2026-01\t9\n2025-12\t3\n2025-11\t4\n2025-10\t9\n2025-09\t8\n2025-08\t3\n2025-07\t2\n2025-06\t9\n2025-05\t5\n2025-02\t1\n2025-01\t1\n2024-11\t2\n2024-08\t2\n2024-07\t2\n2024-06\t1\n2024-04\t2\n2024-03\t2\n2023-11\t1\n2023-07\t1\n2022-11\t1\n2022-10\t1\n2022-09\t1\n2022-08\t1\n2022-06\t1\n2021-10\t1\n2021-05\t1\n2020-10\t1\n2020-05\t1\n",
+  "stderr": "",
+  "execution_time_ms": 54
+}

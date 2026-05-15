@@ -1,0 +1,157 @@
+{
+  "query": "SHOW COLUMNS FROM signals; SELECT COUNT(*) as total FROM signals;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2aGV9vQqnMXZ7WH.b5ed6992562a --database 43iZsmPphrqUoXjRK5zrxR --execute SHOW COLUMNS FROM signals; SELECT COUNT(*) as total FROM signals;",
+  "rows": [
+    {
+      "Field": "id",
+      "Type": "int(11)",
+      "Null": "NO",
+      "Key": "PRI",
+      "Default": "NULL",
+      "Extra": "auto_increment"
+    },
+    {
+      "Field": "territoryId",
+      "Type": "int(11)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "source",
+      "Type": "enum('newsapi','dou','ibama','ibama-embargo','ibama-auto-infracao','ibge-censo','ibge-rendimento','inpe-deter','inpe-prodes','ana-hidroweb','ana-outorgas','querido-diario','google-rss','manual')",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "relatedIndex",
+      "Type": "enum('ITT','ICS','IVS','IVE','ICI','GERAL')",
+      "Null": "YES",
+      "Key": "",
+      "Default": "GERAL",
+      "Extra": ""
+    },
+    {
+      "Field": "title",
+      "Type": "varchar(500)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "summary",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "url",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "publishedAt",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "curationStatus",
+      "Type": "enum('pending','relevant','ignored','analyzed')",
+      "Null": "NO",
+      "Key": "",
+      "Default": "pending",
+      "Extra": ""
+    },
+    {
+      "Field": "curationNote",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "curatedBy",
+      "Type": "int(11)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "curatedAt",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "metadata",
+      "Type": "json",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "createdAt",
+      "Type": "timestamp",
+      "Null": "NO",
+      "Key": "",
+      "Default": "CURRENT_TIMESTAMP",
+      "Extra": ""
+    },
+    {
+      "Field": "imageUrl",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "llmAnalysis",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "llmImpactScore",
+      "Type": "float",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "llmSuggestedIndex",
+      "Type": "enum('ITT','ICS','IVS','IVE','ICI','GERAL')",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    }
+  ],
+  "messages": [
+    "total",
+    "109"
+  ],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\nid\tint(11)\tNO\tPRI\tNULL\tauto_increment\nterritoryId\tint(11)\tNO\t\tNULL\t\nsource\tenum('newsapi','dou','ibama','ibama-embargo','ibama-auto-infracao','ibge-censo','ibge-rendimento','inpe-deter','inpe-prodes','ana-hidroweb','ana-outorgas','querido-diario','google-rss','manual')\tNO\t\tNULL\t\nrelatedIndex\tenum('ITT','ICS','IVS','IVE','ICI','GERAL')\tYES\t\tGERAL\t\ntitle\tvarchar(500)\tNO\t\tNULL\t\nsummary\ttext\tYES\t\tNULL\t\nurl\ttext\tYES\t\tNULL\t\npublishedAt\ttimestamp\tYES\t\tNULL\t\ncurationStatus\tenum('pending','relevant','ignored','analyzed')\tNO\t\tpending\t\ncurationNote\ttext\tYES\t\tNULL\t\ncuratedBy\tint(11)\tYES\t\tNULL\t\ncuratedAt\ttimestamp\tYES\t\tNULL\t\nmetadata\tjson\tYES\t\tNULL\t\ncreatedAt\ttimestamp\tNO\t\tCURRENT_TIMESTAMP\t\nimageUrl\ttext\tYES\t\tNULL\t\nllmAnalysis\ttext\tYES\t\tNULL\t\nllmImpactScore\tfloat\tYES\t\tNULL\t\nllmSuggestedIndex\tenum('ITT','ICS','IVS','IVE','ICI','GERAL')\tYES\t\tNULL\t\ntotal\n109\n",
+  "stderr": "",
+  "execution_time_ms": 82
+}

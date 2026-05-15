@@ -1,0 +1,112 @@
+INDICADORES DE TERRITORIALIDADE ESTRATÉGICA;;;;;;;;
+DIMENSÃO ;OBJETO DE ESTUDO ;ITENS DE ESTUDO ;INDICADORES ;POSSÍVEIS FONTES;PESO;OBSERVAÇÃO;;
+1. SOCIOAMBIENTAL;1.1 Bioma;"1.1.1 Clima
+1.1.2 Vegetação
+1.1.3 Áreas de Proteção Ambiental  (APA) / Áreas de Preservação Permanente                                                                                                                                                  1.1.4 - Políticas públicas (ir para infraestrutura)";"1.1.1.1 Clima predominante  
+1.1.2.1 Vegetação predominate 
+1.1.3.1 Percentual/quantidade de APA e APP                                                                                                      1.1.3.1 /Legislação Ambiental";"1.1.1.1 IMET; CPTEC/INPE
+1.1.2.1 IBGE; MapBiomas; Aqui tem Mata; Google Earth
+1.1.3.1 CNU; Secretarias de Meio Ambiente";"1
+1
+2 ";;;
+;1.2 Vulnerabilidade Ambiental ;"1.2.1 Eventos Climáticos 
+1.2.2 Degradação ambiental 
+";1.2.1.1 Quantidade e frequência de eventos extremos ocorridos (secas, enchentes, deslizamentos, incêndios, etc) nos últimos 5 anos;" 1.2.1.1 CEMADEN; INMET; Fiocruz Clima; Clima Adapt
+1.2.2.1 IDA; INEP/Terrabrasilis ";"3
+3
+3";;;
+;1.3 Passivos Ambientais ;"1.3.1 Acidentes 
+1.3.2 Empreendimentos com significativo grau de impacto 
+1.3.1 Existência de lixões ou aterros sanitários não controlados";"1.3.1.1 Quantidade de Acidentes Ambientais com Contaminação ocorridos nos últimos 5 anos 
+1.3.1.2 Número de TACs ambientais ativos
+1.31.3 Número de Ações Civis Públicas Ambientais
+1.3.2.1 Quantidade de empreendimentos médios/grandes na região  ";"Orgãos fiscalizadores municipais, estaduais e federal (Ibama) 
+Ministério Público Estadual e Federal";"3
+3";;;
+2. SOCIOECONOMICA;2.1 População ;2.1.1 Perfil demográfico                                                                             2.1.2 Pirâmide etária;"2.1.1.1 População por idade e gênero
+2.1.1.2 População urbana e rural
+2.1.1.3 Densidade demográfica 
+2.1.1.3 IDH ";"IBGE; PNUD";1;;;
+;2.2 Desigualdade  ;"2.2.1 Renda / Emprego
+2.2.2 Pobreza                                                                                 2.2.3 Vocação Econômica do território/município";" 2.2.1.1 Renda per capita média
+ 2.2.1.2 Taxa de desemprego e informalidade
+2.2.2.1 Taxa de Pobreza (abaixo da linha da pobreza)
+2.2.2.2 Indíce de Gini";"IBGE; PNAD; IPEAData; Atlas de Desenvolvimento Humano; Cadastro Único  ";"1
+2";;;
+3. INFRAESTRUTURA E SERVIÇOS;3.1 Acesso a Políticas Públicas ;"3.1.1 Saneamento
+3.1.2 Saúde 
+3.1.3 Educação
+3.1.4 Habitação                                                            ";"3.1.1.1 Cobertura do Saneamento 
+3.1.1.2 Acesso a serviços de saúde 
+3.1.1.3 Taxa de escolaridade média
+3.1.4.1 Percentagem de deficit habitacional ";"3.1.1.1 Sinasa  
+3.1.1.2 DataSus 
+3.1.1.3 Inep
+3.1.4.1 IBGE                                                          3.1.4.2 Mapa do Saneamento Brasileiro";"2
+1
+1
+1";;;
+;3.2 Industrias e Serviços ;"3.2.1 Industrias
+3.2.2 Serviços 
+3.2.3 Comércios ";"3.2.1.1 Perfil e quantidade das Industrias locais
+3.2.2.1 Perfil e quantidade dos Serviços locais 
+3.2.3.1 Perfil e quantidade dos Comercios locais ";"IBGE; Mapa de Empresas do GF; PMS; PMC";"1
+1
+1";;;
+;3.3. Logística ;"3.3.1  Transporte / mobilidade 
+3.3.2  Acesso a rodovias                                                       3.3.3 Transporte hidroviário                                                    3.3.4 Existência de portos";"3.3.1.1 Quantitativo de empresas e linhas que atendem a localidade
+3.3.1.2 Tempo médio de deslocamento para o centro da cidade
+3.3.2 Distância das principais rodovias
+3.3.3 Serviços de distribuição, logistica na região ";Prefeitura municipal                                                                                                              Secretarias estaduais de Transporte                                                                       ANTT;1;;;
+4. DINÂMICA TERRITORIAL;4.1 Uso e Ocupação;"4.1.1 Zonemaneto 
+4.1.2 Áreas de lazer  ";"4.1.1. Quantidades de bairros / distritos
+4.1.2 Quantidade de praças / quadras / espaços coletivos   ";Plano Diretor Municipal;1;;;
+;4.2 Conflitos de Uso ;"4.2.1 Conflitos poder público 
+4.2.2 Conflitos setor privado  
+4.2.3 Conflitos poder paralelo 
+4.2.4 Sobrecarga de projetos /ações";"4.2.1.1 Histórico e quantitativo de conflitos com o poder público nos últimos 10 anos  
+4.2.2.1 Histórico e quantitativo de conflitos com empresas nos últimos 10 anos
+4.2.3.1 Dados sobre presença de poder paralelo na localidade  
+4.2.4.1 Quantitativo e tempo de execução de projetos /ações na localidade ";"4.2.1 Poder Judiciário; Mídia  
+4.2.2 Poder Judiciário; Mídia
+4.2.3  Instituto Fogo Cruzado; GENI/UFF (Grupo de Estudos dos Novos Ilegalismos); Instituto de Segurança Pública do RJ (ISP-RJ)
+4.2.4 Mídia; Associação de Moradores; Conselhos Municipais ";"3
+2
+3
+1";;;
+;4.3 Expansão urbana ;4.3.1 Populações em áreas de risco ;4.3.1.1 Percentual da população em áreas de risco (enchentes, deslizamentos, desmatamento);"IBGE; Cemaden (Centro Nacional de Monitoramento e Alertas de Desastres Naturais)";2;;;
+;4.4. Populações tradicionais ;4.4.1 Existência de populações tradicionais  ;"4.4.1 Quantitativo de comunidade tradicionais existentes
+4.4.2 Porcentagem de reconhecidas pelos órgãos afins";"Iphan; Funai; IBGE; Plataforma de Territórios Tradicionais (Unicamp) ";3;;;
+5. GOVERNANCA E ARTICULAÇÃO ;5.1 Capacidade Institucional;5.1 Quantitativo, atuação e influência das instituições atuantes na região ;"5.1.1 Quantidade de instituições existentes e atuantes na localidade
+5.1.2 Quantidade de instituições cadastradas nos Conselhos
+5.1.2 Porcentagem de instituições com capacidade de autogestão ";Conselhos Municipais;2;;;
+;5.2 Participação Social ;"5.2.1 Perfil Comunitário 
+5.2.2 Representatividade e participação em espaços de controle social (Audiências Conselhos / Comissões / Comitês existentes etc.
+5.2.3 Sobrecarga Comunitária";"5.2.1.1 Quantidade de instituições comunitárias existentes e atuantes 
+5.2.2.1 Quantidade de instituições/ representantes da sociedade civil participando de espaços de controle social 
+5.2.3.1 Quantidade de empreendimentos em instalação ou operação no teritório
+5.2.3.2 Quantidade de Programas de Educação Ambiental e de Programas de Comunicação Social em atuação no território (Obs.: a quantidade em si não determina o nível de saturação da comunidade. Penso que é preciso cruzar com número de habitantes e observação direta). ";"Audiências Conselhos / Comissões / Comitês existentes 
+Órgãos ambientais municipais, estaduais e federais.";3;;;
+;5.3 Articulação com o Poder Público;"5.3.1 Parcerias estabelecidas com o poder público local
+5.3.2 iInfluências negativas do poder público no território ";;;3;;;
+6. REPUTAÇÃO E VISIBILIDADE ;6.1 Mídia;"6.1.1  Característica marcante do território
+6.1.2 Interesse de busca
+6.1.3 Escala de repercussão";"6.1.1.1  Cidade turística, polo industrial, área ambientalmente sensível, patrimônios materiais ou imateriais
+6.1.2.1 Volume de buscas associados ao território
+6.1.3.1 Quantitativo de matérias sobre o território (meio ambiente, turismo, cultura, economia, eventos, curiosidades) que tiveram alcance regional e/ou nacional. 
+Engajamento";"Repetição de termos nas matérias, títulos recorrentes
+Google Trends
+Google News, G1, Folha de São Paulo, O Globo";;;;
+;6.2 Pressão Social ;;;;;;;
+;6.3 Pressão Política ;;;;;;;
+;6.4 Interesse Estratégico ;;;;;;;
+;6.3 Interesse Científico ;;"Grupos de estudos afins 
+Conselhos / Comissões / Comitês existentes 
+Pesquisas relevantes ";;;;;
+7. POTENCIALDIDADES ;7.1 Capital social;;;;;;;
+;7.2 Patrimônios materiais e imateriais;;;;;;;
+;7.3 Resiliência ;;;;;;;
+;;;;;;;;
+;;;;;;;;
+;;;;;;;;
+Observações: Juliane - vermelho / Jaciara - azul;;;;;;;;

@@ -1,0 +1,8 @@
+{
+  "query": "\nSELECT 'index_history' as tabela, COUNT(*) as total FROM index_history\nUNION ALL\nSELECT 'collection_snapshots', COUNT(*) FROM collection_snapshots\nUNION ALL\nSELECT 'territorial_signals', COUNT(*) FROM territorial_signals\nUNION ALL\nSELECT 'territories', COUNT(*) FROM territories;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2aGV9vQqnMXZ7WH.b5ed6992562a --database 43iZsmPphrqUoXjRK5zrxR --execute \nSELECT 'index_history' as tabela, COUNT(*) as total FROM index_history\nUNION ALL\nSELECT 'collection_snapshots', COUNT(*) FROM collection_snapshots\nUNION ALL\nSELECT 'territorial_signals', COUNT(*) FROM territorial_signals\nUNION ALL\nSELECT 'territories', COUNT(*) FROM territories;\n",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1146 (42S02) at line 2: Table '43izsmpphrquoxjrk5zrxr.territorial_signals' doesn't exist"
+  ]
+}
