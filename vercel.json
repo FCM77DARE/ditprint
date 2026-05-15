@@ -1,6 +1,10 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "cleanUrls": true,
+  "framework": null,
+  "buildCommand": null,
+  "outputDirectory": ".",
+  "installCommand": "echo no-op",
+  "cleanUrls": false,
   "rewrites": [
     { "source": "/", "destination": "/land-dit.html" }
   ],

@@ -1,0 +1,11 @@
+dit-territorial-intelligence/
+node_modules/
+*.md
+DIT_*.html
+DIT_*.md
+*.log
+backfill-*.log
+*.csv
+.git/
+.claude/
+PROMPT-CURSOR.md
