@@ -49,9 +49,15 @@ function validateEnv() {
   const jwt = requireString("JWT_SECRET", process.env.JWT_SECRET, MIN_JWT_SECRET_LENGTH);
   if (!jwt.ok) errors.push(jwt.reason);
 
-  // DATABASE_URL — mandatory in production; optional in dev (in-memory fallback allowed).
+  // DATABASE_URL — optional. Sem DB, endpoints públicos (ex: /api/dit/analyze)
+  // operam em modo in-memory; endpoints autenticados são desabilitados.
   const db = requireString("DATABASE_URL", process.env.DATABASE_URL);
-  if (!db.ok && isProduction) errors.push(db.reason);
+  if (!db.ok && isProduction) {
+    console.warn(
+      "[env] DATABASE_URL ausente em produção — rodando em modo stateless " +
+        "(somente landing/analytics públicos). Configure MySQL para habilitar dashboard."
+    );
+  }
 
   if (errors.length > 0) fatal(errors);
 
