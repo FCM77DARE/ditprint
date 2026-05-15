@@ -294,15 +294,15 @@ async function resolveLocation(rawName: string): Promise<ResolvedLocation | null
   const distList = await loadAllDistritos();
   let distritoHit: IbgeDistrito | null = null;
   if (distList) {
-    let hits = distList.filter((x) => normalize(x.nome) === target);
-    if (hintState) {
-      const sameUf = hits.filter(
-        (d) => d.municipio.microrregiao?.mesorregiao?.UF?.sigla === hintState
-      );
-      if (sameUf.length > 0) hits = sameUf;
-    }
+    const allHits = distList.filter((x) => normalize(x.nome) === target);
+    // Quando o usuário informa UF, só consideramos distritos daquela UF.
+    const hits = hintState
+      ? allHits.filter(
+          (d) => d.municipio.microrregiao?.mesorregiao?.UF?.sigla === hintState
+        )
+      : allHits;
     distritoHit = hits[0] ?? null;
-    // Se UF foi explicitada e bateu distrito, confiamos no IBGE.
+    // Se UF foi explicitada e bateu distrito naquela UF, confiamos no IBGE.
     if (distritoHit && hintState) {
       const d = distritoHit;
       const geo = await lookupGeoBox(
