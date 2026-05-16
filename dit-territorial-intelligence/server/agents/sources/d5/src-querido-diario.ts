@@ -33,12 +33,19 @@ export class SrcQueridoDiario extends BaseSourceAgent {
       "audiência pública", "orçamento participativo", "improbidade", "licitação irregular",
     ];
 
+    // Janela temporal (T-24mo → T). Querido Diário aceita published_since/until
+    // em formato ISO (YYYY-MM-DD).
+    const since = options.dateStart ? toIso(options.dateStart) : undefined;
+    const until = options.dateEnd ? toIso(options.dateEnd) : undefined;
+    const dateFilter =
+      (since ? `&published_since=${since}` : "") + (until ? `&published_until=${until}` : "");
+
     for (const code of ibgeCodes.slice(0, 2)) {
       for (const kw of keywords.slice(0, 3)) {
         try {
           const url =
             `${QD_BASE}/gazettes?territory_ids=${code}&querystring=${encodeURIComponent(kw)}` +
-            `&size=5&sort_by=relevance`;
+            `&size=5&sort_by=relevance${dateFilter}`;
 
           const res = await fetch(url, { signal: options.signal });
           if (!res.ok) continue;
@@ -76,4 +83,10 @@ export class SrcQueridoDiario extends BaseSourceAgent {
       return true;
     });
   }
+}
+
+/** Converte "MM/DD/YYYY" → "YYYY-MM-DD" (formato aceito pelo QD API). */
+function toIso(usDate: string): string {
+  const [mm, dd, yyyy] = usDate.split("/");
+  return `${yyyy}-${mm}-${dd}`;
 }

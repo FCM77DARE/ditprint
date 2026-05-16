@@ -27,9 +27,15 @@ export class SrcGoogleTrends extends BaseSourceAgent {
     if (!SERPAPI_KEY) return [];
 
     const query = territory.name;
+    // Janela temporal: usa dateStart/dateEnd quando disponíveis (T-24mo → T),
+    // senão default "today 5-y" pra capturar a trajetória de longo prazo.
+    // SerpAPI aceita "YYYY-MM-DD YYYY-MM-DD" como intervalo customizado.
+    const dateParam = options.dateStart && options.dateEnd
+      ? `${toIso(options.dateStart)} ${toIso(options.dateEnd)}`
+      : "today 2-y";
     const url =
       `https://serpapi.com/search.json?engine=google_trends` +
-      `&q=${encodeURIComponent(query)}&data_type=TIMESERIES&date=today+3-m` +
+      `&q=${encodeURIComponent(query)}&data_type=TIMESERIES&date=${encodeURIComponent(dateParam)}` +
       `&geo=BR&api_key=${SERPAPI_KEY}`;
 
     try {
@@ -72,4 +78,10 @@ export class SrcGoogleTrends extends BaseSourceAgent {
       return [];
     }
   }
+}
+
+/** Converte "MM/DD/YYYY" → "YYYY-MM-DD" (formato aceito pelo SerpAPI Trends). */
+function toIso(usDate: string): string {
+  const [mm, dd, yyyy] = usDate.split("/");
+  return `${yyyy}-${mm}-${dd}`;
 }

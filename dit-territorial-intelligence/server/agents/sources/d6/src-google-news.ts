@@ -29,12 +29,21 @@ export class SrcGoogleNews extends BaseSourceAgent {
 
     const signals: RawSignal[] = [];
 
+    // Janela temporal T-24mo → T (Google News RSS aceita after:/before: como query op).
+    const sinceIso = options.dateStart ? toIso(options.dateStart) : undefined;
+    const untilIso = options.dateEnd ? toIso(options.dateEnd) : undefined;
+    const sinceDate = sinceIso ? new Date(sinceIso) : null;
+    const untilDate = untilIso ? new Date(untilIso) : null;
+    const dateOp =
+      sinceIso && untilIso ? ` after:${sinceIso} before:${untilIso}` : "";
+
     for (const rawQuery of queries.slice(0, 5)) {
       try {
         // Garantir contexto geográfico para evitar "Santana" de outros estados
-        const query = rawQuery.toLowerCase().includes(territory.name.toLowerCase()) 
-          ? rawQuery 
+        const base = rawQuery.toLowerCase().includes(territory.name.toLowerCase())
+          ? rawQuery
           : `${rawQuery} ${territory.name}`;
+        const query = base + dateOp;
 
         const url = `${GNEWS_BASE}${encodeURIComponent(query)}&num=10`;
         const res = await fetch(url, {
@@ -47,11 +56,15 @@ export class SrcGoogleNews extends BaseSourceAgent {
         const items = parseRssItems(xml);
 
         for (const item of items) {
+          const published = item.pubDate ? new Date(item.pubDate) : new Date();
+          // Filtro client-side: descarta itens fora da janela T-24mo
+          if (sinceDate && published < sinceDate) continue;
+          if (untilDate && published > untilDate) continue;
           signals.push({
             title: item.title,
             summary: item.description,
             url: item.link,
-            publishedAt: item.pubDate ? new Date(item.pubDate) : new Date(),
+            publishedAt: published,
             sourceAgentId: this.id,
             metadata: { query },
           });
@@ -69,6 +82,12 @@ export class SrcGoogleNews extends BaseSourceAgent {
       return true;
     });
   }
+}
+
+/** Converte "MM/DD/YYYY" → "YYYY-MM-DD". */
+function toIso(usDate: string): string {
+  const [mm, dd, yyyy] = usDate.split("/");
+  return `${yyyy}-${mm}-${dd}`;
 }
 
 function parseRssItems(xml: string): Array<{
