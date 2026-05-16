@@ -113,9 +113,48 @@ ditLandingRouter.post("/lead", async (req: Request, res: Response) => {
   }
 });
 
-// ── CACHE (6h por território) ─────────────────────────────────────────────────
+// ── CACHE (lock diário por território) ────────────────────────────────────────
+// Chave inclui YYYY-MM-DD para garantir que o mesmo território, no mesmo dia UTC,
+// devolva sempre o MESMO STT — mata a "volatilidade visual" entre re-rodadas no
+// mesmo dia (Google News mudando, etc). Persistido em disco em data/dit-cache.json
+// pra sobreviver a redeploys do Railway dentro do mesmo dia.
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname as pathDirname, join } from "node:path";
+
+const CACHE_FILE = join(process.cwd(), "data", "dit-cache.json");
 const analysisCache = new Map<string, { result: unknown; ts: number }>();
-const CACHE_TTL_MS = 6 * 60 * 60 * 1000;
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+
+function todayKey(slug: string): string {
+  return `${slug}|${new Date().toISOString().slice(0, 10)}`;
+}
+
+function loadCacheFromDisk(): void {
+  try {
+    if (!existsSync(CACHE_FILE)) return;
+    const raw = readFileSync(CACHE_FILE, "utf-8");
+    const obj = JSON.parse(raw) as Record<string, { result: unknown; ts: number }>;
+    for (const [k, v] of Object.entries(obj)) {
+      if (Date.now() - v.ts < CACHE_TTL_MS) analysisCache.set(k, v);
+    }
+    log.info({ entries: analysisCache.size }, "Cache DIT recarregado do disco");
+  } catch (err) {
+    log.warn({ err: (err as Error).message }, "Falha ao recarregar cache do disco — ignorado");
+  }
+}
+
+function persistCacheToDisk(): void {
+  try {
+    mkdirSync(pathDirname(CACHE_FILE), { recursive: true });
+    const obj: Record<string, { result: unknown; ts: number }> = {};
+    analysisCache.forEach((v, k) => { obj[k] = v; });
+    writeFileSync(CACHE_FILE, JSON.stringify(obj), "utf-8");
+  } catch (err) {
+    log.warn({ err: (err as Error).message }, "Falha ao persistir cache em disco — ignorado");
+  }
+}
+
+loadCacheFromDisk();
 
 // ── RATE LIMIT (por IP) ───────────────────────────────────────────────────────
 const requestLog = new Map<string, number[]>();
@@ -802,7 +841,7 @@ async function callLLMAnthropicClaude(prompt: string): Promise<unknown> {
     body: JSON.stringify({
       model: "claude-3-5-haiku-20241022",
       max_tokens: 4096,
-      temperature: 0.3,
+      temperature: 0,
       system:
         "Você é o sistema de IA do DIT PRINT Territorial Intelligence™. " +
         "Responda SEMPRE com JSON válido e completo, sem nenhum texto fora do JSON. " +
@@ -851,7 +890,7 @@ async function callLLMOpenAI(prompt: string): Promise<unknown> {
       ],
       response_format: { type: "json_object" },
       max_tokens: 4096,
-      temperature: 0.3,
+      temperature: 0,
     }),
     signal: AbortSignal.timeout(58000),
   });
@@ -896,12 +935,12 @@ ditLandingRouter.post("/analyze", async (req: Request, res: Response) => {
   }
 
   const territoryClean = territory.trim().slice(0, 120);
-  const cacheKey = makeSlug(territoryClean);
+  const cacheKey = todayKey(makeSlug(territoryClean));
 
-  // Cache hit
+  // Cache hit (lock diário — mesmo território no mesmo dia UTC = mesmo STT)
   const cached = analysisCache.get(cacheKey);
   if (cached && Date.now() - cached.ts < CACHE_TTL_MS) {
-    log.info({ territory: territoryClean }, "Cache hit — retornando DIT em cache");
+    log.info({ territory: territoryClean }, "Cache hit — retornando DIT em cache (lock diário)");
     res.json(cached.result);
     return;
   }
@@ -1037,8 +1076,9 @@ ditLandingRouter.post("/analyze", async (req: Request, res: Response) => {
           ? { ...(llmReport as Record<string, unknown>), ...baseExtra }
           : llmReport;
 
-    // 6. Cache e retorno
+    // 6. Cache e retorno — persistido em disco para sobreviver a redeploys
     analysisCache.set(cacheKey, { result, ts: Date.now() });
+    persistCacheToDisk();
     log.info({ territory: resolvedName }, "DIT análise concluída e entregue");
     res.json(result);
 
