@@ -1,11 +1,22 @@
+/**
+ * src-cemaden — CEMADEN via Google News RSS
+ *
+ * Substituímos o stub Math.random() por busca real no Google News RSS,
+ * modelado em src-google-news.ts. Filtra pubDate client-side dentro
+ * da janela options.dateStart / options.dateEnd.
+ * Dimension: D1 (Ambiental).
+ */
+
 import { BaseSourceAgent } from "../../base-source";
-import type { RawSignal, CollectOptions } from "../../types";
+import type { CollectOptions, RawSignal } from "../../types";
 import type { Territory } from "../../../../drizzle/schema";
-import axios from "axios";
+import type { DimensionId, SourceId } from "../../../indicators";
+
+const GNEWS_BASE = "https://news.google.com/rss/search?hl=pt-BR&gl=BR&ceid=BR:pt-BR&q=";
 
 export class SrcCemaden extends BaseSourceAgent {
-  readonly id = "src-cemaden";
-  readonly dimension = "D1";
+  readonly id: SourceId = "src-cemaden";
+  readonly dimension: DimensionId = "D1";
   readonly name = "CEMADEN - Centro Nacional de Monitoramento e Alertas de Desastres Naturais";
 
   protected async fetchSignals(
@@ -14,38 +25,83 @@ export class SrcCemaden extends BaseSourceAgent {
   ): Promise<RawSignal[]> {
     const signals: RawSignal[] = [];
 
+    const sinceIso = options.dateStart ? toIso(options.dateStart) : undefined;
+    const untilIso = options.dateEnd ? toIso(options.dateEnd) : undefined;
+    const sinceDate = sinceIso ? new Date(sinceIso) : null;
+    const untilDate = untilIso ? new Date(untilIso) : null;
+    const dateOp =
+      sinceIso && untilIso ? ` after:${sinceIso} before:${untilIso}` : "";
+
+    const query = `CEMADEN ${territory.name} alerta OR enchente OR deslizamento${dateOp}`;
+    const url = `${GNEWS_BASE}${encodeURIComponent(query)}&num=10`;
+
     try {
-      // O CEMADEN disponibiliza dados sobre alertas de desastres naturais.
-      // Em uma integração real, buscaríamos pela API usando as coordenadas ou códigos IBGE dos municípios do território.
-      
-      // Simulação da chamada HTTP:
-      // const response = await axios.get(`http://api.cemaden.gov.br/alertas?municipio=${territory.ibgeCode}`, { signal: options.signal });
+      const res = await fetch(url, {
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        },
+        signal: options.signal,
+      });
+      if (!res.ok) return [];
 
-      const hasAlert = Math.random() > 0.85; // Simula 15% de chance de ter um alerta ativo
+      const xml = await res.text();
+      const items = parseRssItems(xml);
 
-      if (hasAlert) {
+      for (const item of items) {
+        const published = item.pubDate ? new Date(item.pubDate) : new Date();
+        if (sinceDate && published < sinceDate) continue;
+        if (untilDate && published > untilDate) continue;
         signals.push({
-          title: "Alerta CEMADEN: Risco de Deslizamento/Alagamento",
-          summary: "Identificado risco hidrológico ou geológico para a região monitorada nas últimas 24 horas.",
+          title: item.title,
+          summary: item.description,
+          url: item.link,
+          publishedAt: published,
           sourceAgentId: this.id,
-          publishedAt: new Date(),
-          rawValue: 1, // 1 = alerta ativo
-        });
-      } else {
-        signals.push({
-          title: "Monitoramento CEMADEN",
-          summary: "Nenhum alerta crítico de desastre natural para os municípios do território no momento.",
-          sourceAgentId: this.id,
-          publishedAt: new Date(),
-          rawValue: 0,
+          metadata: { query },
         });
       }
-
-    } catch (error) {
-      this.log.error({ error, territory: territory.slug }, "Falha ao buscar dados do CEMADEN");
-      throw error;
+    } catch {
+      return [];
     }
 
-    return signals;
+    const seen = new Set<string>();
+    return signals.filter((s) => {
+      if (!s.url || seen.has(s.url)) return false;
+      seen.add(s.url);
+      return true;
+    });
   }
+}
+
+function toIso(usDate: string): string {
+  const [mm, dd, yyyy] = usDate.split("/");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function parseRssItems(xml: string): Array<{
+  title: string;
+  link: string;
+  description: string;
+  pubDate: string;
+}> {
+  const items: Array<{ title: string; link: string; description: string; pubDate: string }> = [];
+  const itemMatches = Array.from(xml.matchAll(/<item>([\s\S]*?)<\/item>/g));
+
+  for (const match of itemMatches) {
+    const block = match[1];
+    const title = (block.match(/<title>([\s\S]*?)<\/title>/)?.[1] ?? "")
+      .replace(/<!\[CDATA\[|\]\]>/g, "")
+      .trim();
+    const link = (block.match(/<link>([\s\S]*?)<\/link>/)?.[1] ?? "").trim();
+    const description = (block.match(/<description>([\s\S]*?)<\/description>/)?.[1] ?? "")
+      .replace(/<!\[CDATA\[|\]\]>/g, "")
+      .replace(/<[^>]+>/g, "")
+      .trim();
+    const pubDate = (block.match(/<pubDate>([\s\S]*?)<\/pubDate>/)?.[1] ?? "").trim();
+
+    if (title && link) items.push({ title, link, description, pubDate });
+  }
+
+  return items;
 }

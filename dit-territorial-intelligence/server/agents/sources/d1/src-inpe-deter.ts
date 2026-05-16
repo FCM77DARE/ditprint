@@ -1,61 +1,57 @@
+/**
+ * src-inpe-deter — INPE / DETER via SerpAPI (Google) — fallback
+ *
+ * O WFS oficial do TerraBrasilis é instável; usamos SerpAPI como
+ * proxy para capturar notícias e relatórios públicos de DETER.
+ * Modelado em src-mp-ambiental.ts.
+ * Dimension: D1 (Ambiental).
+ */
+
 import { BaseSourceAgent } from "../../base-source";
-import type { RawSignal, CollectOptions } from "../../types";
+import type { CollectOptions, RawSignal } from "../../types";
 import type { Territory } from "../../../../drizzle/schema";
-import axios from "axios";
+import type { DimensionId, SourceId } from "../../../indicators";
 
 export class SrcInpeDeter extends BaseSourceAgent {
-  readonly id = "src-inpe-deter";
-  readonly dimension = "D1";
+  readonly id: SourceId = "src-inpe-deter";
+  readonly dimension: DimensionId = "D1";
   readonly name = "INPE - TerraBrasilis (Alertas DETER)";
 
   protected async fetchSignals(
     territory: Territory,
     options: CollectOptions
   ): Promise<RawSignal[]> {
+    const SERPAPI_KEY = process.env.SERPAPI_API_KEY ?? "";
+    if (!SERPAPI_KEY) return [];
+
     const signals: RawSignal[] = [];
+    const query = `(desmatamento OR DETER OR INPE) ${territory.name}`;
+
+    let tbs = "";
+    if (options.dateStart && options.dateEnd) {
+      tbs = `&tbs=cdr:1,cd_min:${options.dateStart},cd_max:${options.dateEnd}`;
+    }
+    const url = `https://serpapi.com/search.json?engine=google&q=${encodeURIComponent(query)}&num=10${tbs}&api_key=${SERPAPI_KEY}`;
 
     try {
-      // O INPE TerraBrasilis disponibiliza dados via WFS e APIs REST.
-      // Exemplo de integração buscando alertas de desmatamento recentes (simulação baseada na API do INPE)
-      
-      // Para uma integração real em produção, usaríamos as coordenadas do território (BBox) 
-      // para consultar a API WFS do TerraBrasilis.
-      
-      // Simulando a chamada HTTP:
-      // const bbox = territory.bbox; // ex: "-44.0,-23.0,-42.0,-22.0"
-      // const response = await axios.get(`http://terrabrasilis.dpi.inpe.br/geoserver/wfs?request=GetFeature&typeName=deter&bbox=${bbox}`, { signal: options.signal });
+      const res = await fetch(url, { signal: options.signal });
+      if (!res.ok) return [];
 
-      // Como placeholder inicial (visto que dependemos do shapefile/bbox do território),
-      // enviamos um sinal de "monitoramento ativo" ou buscamos dados estaduais.
-      
-      // Aqui simulamos uma resposta:
-      const simulatedAlerts = Math.random() > 0.7 ? [{ area_km2: 12.5, date: new Date().toISOString() }] : [];
+      const data = await res.json();
+      const results = data.organic_results ?? [];
 
-      if (simulatedAlerts.length > 0) {
-        for (const alert of simulatedAlerts) {
-          signals.push({
-            title: `Alerta DETER: Desmatamento Detectado`,
-            summary: `Área de ${alert.area_km2} km² com indícios de desmatamento ou degradação na região do território.`,
-            sourceAgentId: this.id,
-            publishedAt: new Date(alert.date),
-            rawValue: alert.area_km2,
-            unit: "km²",
-          });
-        }
-      } else {
+      for (const item of results) {
         signals.push({
-          title: "Monitoramento INPE DETER",
-          summary: "Nenhum novo alerta de desmatamento expressivo detectado na região neste período.",
+          title: item.title,
+          summary: item.snippet,
+          url: item.link,
           sourceAgentId: this.id,
           publishedAt: new Date(),
-          rawValue: 0,
-          unit: "km²",
+          metadata: { query },
         });
       }
-
-    } catch (error) {
-      this.log.error({ error, territory: territory.slug }, "Falha ao buscar dados do INPE DETER");
-      throw error;
+    } catch {
+      return [];
     }
 
     return signals;
