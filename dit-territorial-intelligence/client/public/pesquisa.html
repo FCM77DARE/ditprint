@@ -316,12 +316,63 @@
 
 <!-- NAV -->
 <nav>
-  <div class="nav-logo">
+  <a href="/" style="display:flex;align-items:center;gap:14px;text-decoration:none;color:inherit;">
     <div class="nav-logo-mark"></div>
     <div class="nav-logo-text">DIT <span>PRINT</span></div>
+  </a>
+  <div style="display:flex;gap:24px;align-items:center;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:rgba(245,241,237,.7);">
+    <a href="/" style="color:inherit;text-decoration:none;transition:color .2s;" onmouseover="this.style.color='var(--dourado)'" onmouseout="this.style.color='rgba(245,241,237,.7)'">Início</a>
+    <a href="/metodologia" style="color:inherit;text-decoration:none;transition:color .2s;" onmouseover="this.style.color='var(--dourado)'" onmouseout="this.style.color='rgba(245,241,237,.7)'">Metodologia</a>
+    <a href="/dashboard" style="color:inherit;text-decoration:none;transition:color .2s;" onmouseover="this.style.color='var(--dourado)'" onmouseout="this.style.color='rgba(245,241,237,.7)'">Dashboard</a>
+    <a href="/pesquisa.html" style="color:var(--dourado);text-decoration:none;font-weight:700;">Pesquisar</a>
   </div>
-  <div class="nav-badge">DIAGNÓSTICO DE INTELIGÊNCIA TERRITORIAL</div>
 </nav>
+
+<!-- Live signals strip — feed SSE de sinais classificados em tempo real -->
+<div id="live-signals" style="position:fixed;top:64px;left:0;right:0;z-index:99;background:rgba(10,18,14,0.92);backdrop-filter:blur(10px);border-bottom:1px solid rgba(212,165,116,0.12);height:28px;display:flex;align-items:center;overflow:hidden;font-family:'DM Mono',monospace;font-size:10px;color:rgba(245,241,237,.65);letter-spacing:.05em;">
+  <div style="flex-shrink:0;padding:0 14px 0 24px;color:var(--terra);font-weight:700;letter-spacing:.15em;border-right:1px solid rgba(212,165,116,0.15);height:100%;display:flex;align-items:center;">
+    <span style="width:6px;height:6px;border-radius:50%;background:var(--terra);margin-right:8px;animation:pulse 1.5s ease-in-out infinite;"></span>SINAIS AO VIVO
+  </div>
+  <div id="live-signals-track" style="flex:1;white-space:nowrap;overflow:hidden;padding:0 14px;">
+    <span id="live-signals-content" style="display:inline-block;">Conectando à malha de monitoramento PRINT…</span>
+  </div>
+</div>
+<style>
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+  body{padding-top:28px}
+  @media(max-width:768px){#live-signals{display:none}body{padding-top:0}}
+</style>
+<script>
+  // SSE: conecta no endpoint /api/alerts/stream, mostra os 6 sinais mais recentes
+  // num ticker discreto abaixo da nav.
+  (function(){
+    var url = (window.DIT_API_BASE || '') + '/api/alerts/stream';
+    var maxItems = 6;
+    var items = [];
+    function render() {
+      var el = document.getElementById('live-signals-content');
+      if (!el || items.length === 0) return;
+      el.textContent = items.map(function(s){
+        return '▸ ' + (s.territoryName || 'Território') + ' · ' + (s.title || s.summary || 'sinal') + '  ';
+      }).join(' ');
+    }
+    try {
+      var es = new EventSource(url);
+      es.onmessage = function(e) {
+        try {
+          var data = JSON.parse(e.data);
+          items.unshift(data);
+          if (items.length > maxItems) items.length = maxItems;
+          render();
+        } catch (err) { /* ignore */ }
+      };
+      es.onerror = function() {
+        var el = document.getElementById('live-signals-content');
+        if (el && items.length === 0) el.textContent = 'Aguardando próximo sinal classificado…';
+      };
+    } catch (err) { /* navegador sem EventSource — silencia */ }
+  })();
+</script>
 
 <!-- HERO -->
 <section class="hero">
