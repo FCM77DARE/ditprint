@@ -1,7 +1,13 @@
 import { BaseSourceAgent } from "../../base-source";
 import type { RawSignal, CollectOptions } from "../../types";
 import type { Territory } from "../../../../drizzle/schema";
-import axios from "axios";
+
+interface IbgeQuery {
+  agregado: number;
+  variavel: number;
+  label: string;
+  unit: string;
+}
 
 export class SrcIbgeRenda extends BaseSourceAgent {
   readonly id = "src-ibge-renda";
@@ -13,23 +19,58 @@ export class SrcIbgeRenda extends BaseSourceAgent {
     territory: Territory,
     options: CollectOptions
   ): Promise<RawSignal[]> {
+    const ctx = territory.contextData as Record<string, unknown> | null;
+    const ibgeMuns = (ctx?.ibgeMunicipios as string[]) ?? [];
+    if (ibgeMuns.length === 0) return [];
+
     const signals: RawSignal[] = [];
 
-    try {
-      // API de Agregados do IBGE - PNADC (Pesquisa Nacional por Amostra de Domicílios Contínua)
-      // Dados de taxa de desocupação e rendimento médio real
+    // PNAD Contínua: rendimento médio domiciliar per capita (agregado 7064 / var 1641)
+    // Taxa de desocupação (agregado 5429 / var 4099 — pode variar por região)
+    const queries: IbgeQuery[] = [
+      { agregado: 7064, variavel: 1641, label: "rendimento médio domiciliar per capita", unit: "R$" },
+      { agregado: 5429, variavel: 4099, label: "taxa de desocupação", unit: "%" },
+    ];
 
-      signals.push({
-        title: "Atualização PNADC (Renda e Emprego)",
-        summary: "Indicadores de desemprego e informalidade da PNADC verificados para a macrorregião do território.",
-        sourceAgentId: this.id,
-        publishedAt: new Date(),
-        rawValue: 0,
-      });
+    for (const ibgeId of ibgeMuns) {
+      for (const q of queries) {
+        try {
+          const url = `https://servicodados.ibge.gov.br/api/v3/agregados/${q.agregado}/periodos/-6/variaveis/${q.variavel}?localidades=N6%5B${ibgeId}%5D`;
+          const res = await fetch(url, { signal: options.signal });
+          if (!res.ok) continue;
+          const data = await res.json();
+          if (!Array.isArray(data) || data.length === 0) continue;
 
-    } catch (error) {
-      this.log.error({ error, territory: territory.slug }, "Falha ao buscar dados do IBGE Renda (PNADC)");
-      throw error;
+          const serie = data[0]?.resultados?.[0]?.series?.[0]?.serie ?? {};
+          const periodos = Object.keys(serie).sort();
+          // pega o último valor válido
+          let chosen: { periodo: string; value: number } | null = null;
+          for (let i = periodos.length - 1; i >= 0; i--) {
+            const raw = serie[periodos[i]];
+            if (raw && raw !== "-" && raw !== "...") {
+              const num = parseFloat(String(raw).replace(",", "."));
+              if (!Number.isNaN(num)) {
+                chosen = { periodo: periodos[i], value: num };
+                break;
+              }
+            }
+          }
+          if (!chosen) continue;
+
+          signals.push({
+            title: `PNAD Contínua: ${q.label} ${chosen.value.toLocaleString("pt-BR")} ${q.unit} (município ${ibgeId})`,
+            summary: `IBGE/PNADC indica ${q.label} de ${chosen.value} ${q.unit} para o município ${ibgeId} no período ${chosen.periodo}.`,
+            sourceAgentId: this.id,
+            publishedAt: new Date(),
+            rawValue: chosen.value,
+            unit: q.unit,
+            metadata: { ibgeId, agregado: q.agregado, variavel: q.variavel, periodo: chosen.periodo },
+          });
+        } catch (err) {
+          this.log.warn({ err, ibgeId, agregado: q.agregado }, "Falha PNADC");
+          continue;
+        }
+      }
     }
 
     return signals;

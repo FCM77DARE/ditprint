@@ -33,6 +33,7 @@ export const SOURCE_IDS = {
   INPE_DETER: "src-inpe-deter",
   IBAMA: "src-ibama",
   MP_AMBIENTAL: "src-mp-ambiental",
+  INEA: "src-inea",
 
   // D2 — Socioeconômica
   IBGE_CENSO: "src-ibge-censo",

@@ -1,7 +1,6 @@
 import { BaseSourceAgent } from "../../base-source";
 import type { RawSignal, CollectOptions } from "../../types";
 import type { Territory } from "../../../../drizzle/schema";
-import axios from "axios";
 
 export class SrcPnudAtlas extends BaseSourceAgent {
   readonly id = "src-pnud-atlas";
@@ -13,26 +12,57 @@ export class SrcPnudAtlas extends BaseSourceAgent {
     territory: Territory,
     options: CollectOptions
   ): Promise<RawSignal[]> {
+    const ctx = territory.contextData as Record<string, unknown> | null;
+    const ibgeMuns = (ctx?.ibgeMunicipios as string[]) ?? [];
     const signals: RawSignal[] = [];
 
+    // Atlas Brasil não expõe API REST aberta documentada.
+    // Estratégia 1: Google News RSS para notícias recentes sobre IDH do território.
     try {
-      // O PNUD publica o Atlas do Desenvolvimento Humano do Brasil.
-      // Esses dados geralmente são estáticos por longos períodos (anuais/decenais).
-      // Pode ser consultado via API ou extraído do banco de dados local que alimentamos periodicamente.
-      
-      signals.push({
-        title: "Índice de Desenvolvimento Humano (IDH)",
-        summary: "Monitoramento de IDHM (Renda, Longevidade e Educação) realizado. Nenhuma atualização estrutural no período.",
-        sourceAgentId: this.id,
-        publishedAt: new Date(),
-        rawValue: 0,
-      });
+      const query = encodeURIComponent(`IDH ${territory.name}`);
+      const url = `https://news.google.com/rss/search?q=${query}&hl=pt-BR&gl=BR&ceid=BR:pt-BR`;
+      const res = await fetch(url, { signal: options.signal });
+      if (res.ok) {
+        const xml = await res.text();
+        // Parse simples de itens RSS
+        const items = xml.match(/<item>[\s\S]*?<\/item>/g) ?? [];
+        for (const item of items.slice(0, 5)) {
+          const title = item.match(/<title>([\s\S]*?)<\/title>/)?.[1]?.trim();
+          const link = item.match(/<link>([\s\S]*?)<\/link>/)?.[1]?.trim();
+          const pubDate = item.match(/<pubDate>([\s\S]*?)<\/pubDate>/)?.[1]?.trim();
+          if (!title) continue;
+          signals.push({
+            title: `Notícia IDH: ${this.stripCdata(title)}`,
+            summary: `Cobertura recente sobre IDH/desenvolvimento humano relacionada a ${territory.name}.`,
+            url: link ? this.stripCdata(link) : undefined,
+            sourceAgentId: this.id,
+            publishedAt: pubDate ? new Date(pubDate) : new Date(),
+            metadata: { provider: "google-news-rss", territory: territory.slug },
+          });
+        }
+      }
+    } catch (err) {
+      this.log.warn({ err }, "Google News RSS falhou (tolerado)");
+    }
 
-    } catch (error) {
-      this.log.error({ error, territory: territory.slug }, "Falha ao buscar dados do PNUD Atlas");
-      throw error;
+    // Estratégia 2 (fallback informativo): link para perfil do Atlas Brasil por município.
+    if (signals.length === 0 && ibgeMuns.length > 0) {
+      for (const ibgeId of ibgeMuns) {
+        signals.push({
+          title: `IDH do município ${ibgeId}: consultar Atlas Brasil`,
+          summary: `Atlas Brasil mantém o IDHM (renda, longevidade, educação) por município. Sem API REST aberta — link direto disponível.`,
+          url: `https://www.atlasbrasil.org.br/perfil/municipio/${ibgeId}`,
+          sourceAgentId: this.id,
+          publishedAt: new Date(),
+          metadata: { ibgeId, fallback: "atlas-brasil-link" },
+        });
+      }
     }
 
     return signals;
+  }
+
+  private stripCdata(value: string): string {
+    return value.replace(/^<!\[CDATA\[/, "").replace(/\]\]>$/, "").trim();
   }
 }
