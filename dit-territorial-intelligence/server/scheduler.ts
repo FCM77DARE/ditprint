@@ -20,8 +20,8 @@ import { logger } from "./_core/logger";
 
 const log = logger.child({ module: "scheduler" });
 
-// Intervalo padrão: 24 horas em ms
-const COLLECTION_INTERVAL_MS = 24 * 60 * 60 * 1000;
+// Intervalo padrão: 4 horas em ms (6 ciclos/dia → sinais ao vivo no ticker)
+const COLLECTION_INTERVAL_MS = 4 * 60 * 60 * 1000;
 
 // Controle de estado
 let schedulerTimer: ReturnType<typeof setTimeout> | null = null;
@@ -185,7 +185,10 @@ export function startScheduler(options: { runImmediately?: boolean } = {}) {
     schedule();
   }
 
-  log.info({ nextRunAt: new Date(Date.now() + COLLECTION_INTERVAL_MS).toISOString() }, "Agendador iniciado — próxima coleta em 24h");
+  log.info(
+    { nextRunAt: new Date(Date.now() + COLLECTION_INTERVAL_MS).toISOString(), intervalHours: 4 },
+    "Agendador iniciado — próxima coleta em 4h"
+  );
 }
 
 /**

@@ -73,9 +73,20 @@ type SseClient = {
 
 const sseClients = new Map<string, SseClient>();
 
+// Buffer circular dos últimos 30 sinais (replay para novos clientes SSE).
+// Sem isso, quem abre a tela entre ciclos de coleta (4h) vê só "Aguardando…".
+const SSE_REPLAY_LIMIT = 30;
+const signalBuffer: AlertPayload[] = [];
+
+function pushToBuffer(payload: AlertPayload): void {
+  signalBuffer.unshift(payload);
+  if (signalBuffer.length > SSE_REPLAY_LIMIT) signalBuffer.length = SSE_REPLAY_LIMIT;
+}
+
 /**
  * Register a new SSE client. Call from Express route handler.
  * Returns an unsubscribe function — call it on connection close.
+ * Envia o buffer recente (últimos N sinais) imediatamente.
  */
 export function registerSseClient(
   id: string,
@@ -84,6 +95,18 @@ export function registerSseClient(
 ): () => void {
   sseClients.set(id, { id, territoryId, write });
   log.debug({ id, territoryId, total: sseClients.size }, "SSE client registered");
+
+  // Replay: envia sinais recentes (em ordem cronológica reversa do mais recente para o mais antigo)
+  // Filtra por território se especificado.
+  for (const payload of signalBuffer) {
+    if (territoryId !== undefined && payload.territoryId !== territoryId) continue;
+    try {
+      write(`data: ${JSON.stringify(payload)}\n\n`);
+    } catch {
+      break;
+    }
+  }
+
   return () => {
     sseClients.delete(id);
     log.debug({ id, total: sseClients.size }, "SSE client unregistered");
@@ -91,6 +114,7 @@ export function registerSseClient(
 }
 
 function broadcastSse(payload: AlertPayload): void {
+  pushToBuffer(payload);
   const data = `data: ${JSON.stringify(payload)}\n\n`;
   let sent = 0;
   for (const client of Array.from(sseClients.values())) {

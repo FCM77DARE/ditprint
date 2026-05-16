@@ -111,7 +111,9 @@ async function startServer() {
 
   server.listen(port, () => {
     log.info({ port }, `Servidor DIT iniciado em http://localhost:${port}/`);
-    startScheduler({ runImmediately: false });
+    // runImmediately: true em produção → primeira coleta popula o buffer SSE
+    // logo após o deploy, evitando "Aguardando próximo sinal…" na tela.
+    startScheduler({ runImmediately: process.env.NODE_ENV === "production" });
   });
 }
 
