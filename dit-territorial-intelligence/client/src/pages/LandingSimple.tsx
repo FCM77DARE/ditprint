@@ -1,40 +1,109 @@
-import { useState } from "react";
-import { useLocation } from "wouter";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import Header from "@/components/Header";
 import SignalFeed from "@/components/SignalFeed";
-import { 
-  Search, 
-  ArrowRight, 
-  Zap, 
-  ShieldCheck, 
-  BarChart3, 
-  TrendingUp, 
+import DiagnosisReport, { type DitAnalyzeResult } from "@/components/DiagnosisReport";
+import {
+  Search,
+  ArrowRight,
+  Zap,
+  ShieldCheck,
+  BarChart3,
   AlertTriangle,
   Radio,
   Target,
   Loader2
 } from "lucide-react";
 
+// ── Loading steps (replicam o UX de pesquisa.html — 30-60s de análise real)
+const LOADING_STEPS = [
+  { icon: "🌐", title: "Identificando no IBGE",        detail: "Localizando município, estado e região geográfica..." },
+  { icon: "🤖", title: "Ativando 32 agentes PRINT",     detail: "D1 Socioambiental · D2 Socioeconômica · D3 Infraestrutura..." },
+  { icon: "📊", title: "Processando fontes oficiais",   detail: "IBAMA · CEMADEN · IBGE · DataSUS · INEP · Querido Diário..." },
+  { icon: "🧮", title: "Calculando STT com orquestrador", detail: "6 dimensões consolidadas · Σ(Di × Wi)..." },
+  { icon: "✍️", title: "Gerando análise executiva",     detail: "IA PRINT sintetizando diagnóstico e recomendações..." },
+];
+// Marcos de tempo em ms (cumulativos) — quando cada step entra em "running"
+const STEP_MARKS = [0, 4000, 14000, 34000, 49000];
+
 export default function LandingSimple() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
-  const [, setLocation] = useLocation();
+  const [activeStep, setActiveStep] = useState(0);
+  const [elapsed, setElapsed] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+  const [result, setResult] = useState<DitAnalyzeResult | null>(null);
+  const timersRef = useRef<number[]>([]);
+  const reportRef = useRef<HTMLDivElement>(null);
 
-  const handleSearch = (e: React.FormEvent) => {
+  // Limpa timers quando o componente desmonta
+  useEffect(() => {
+    return () => {
+      timersRef.current.forEach(t => clearTimeout(t));
+      timersRef.current = [];
+    };
+  }, []);
+
+  function clearTimers() {
+    timersRef.current.forEach(t => clearTimeout(t));
+    timersRef.current = [];
+  }
+
+  function startProgress() {
+    setActiveStep(0);
+    setElapsed(0);
+    // Agenda transições entre steps
+    STEP_MARKS.forEach((ms, i) => {
+      const handle = window.setTimeout(() => setActiveStep(i), ms);
+      timersRef.current.push(handle);
+    });
+    // Contador de segundos
+    const interval = window.setInterval(() => setElapsed(e => e + 1), 1000);
+    timersRef.current.push(interval);
+  }
+
+  const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     const q = searchQuery.trim();
-    if (!q) return;
+    if (!q || isSearching) return;
+
     setIsSearching(true);
-    // A página de pesquisa rica (antiga land-dit.html, agora /pesquisa.html)
-    // assume a busca real: análise via /api/dit/analyze + relatório completo
-    // com setores, casos estratégicos, hotspots, recursos. O React mantém
-    // metodologia, dashboard, radar — tudo no mesmo domínio.
-    window.location.href = `/pesquisa.html?territory=${encodeURIComponent(q)}`;
+    setError(null);
+    setResult(null);
+    clearTimers();
+    startProgress();
+
+    try {
+      const res = await fetch("/api/dit/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ territory: q }),
+      });
+      if (!res.ok) {
+        const errPayload = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
+        throw new Error((errPayload as { error?: string }).error || `HTTP ${res.status}`);
+      }
+      const data = (await res.json()) as DitAnalyzeResult;
+      // Completa todos os steps visualmente antes de mostrar
+      setActiveStep(LOADING_STEPS.length);
+      setResult(data);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Falha na conexão com o servidor DIT";
+      setError(msg);
+    } finally {
+      clearTimers();
+      setIsSearching(false);
+    }
   };
+
+  // Scroll para o relatório quando aparecer
+  useEffect(() => {
+    if (result && reportRef.current) {
+      setTimeout(() => reportRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 150);
+    }
+  }, [result]);
 
   const socialProof = [
     {
@@ -89,7 +158,7 @@ export default function LandingSimple() {
       <section className="relative flex min-h-[90vh] flex-col items-center justify-center overflow-hidden px-4 pt-20">
         <div className="absolute inset-0 -z-10 bg-neural-pattern opacity-10" />
         <div className="absolute inset-0 -z-10 bg-gradient-to-b from-background via-background/80 to-background" />
-        
+
         <div className="container max-w-4xl space-y-12 text-center">
           <div className="space-y-6">
             <h1 className="font-display text-5xl font-bold leading-tight tracking-tight text-foreground lg:text-7xl text-glow">
@@ -114,8 +183,9 @@ export default function LandingSimple() {
                   className="h-16 border-none bg-transparent font-body text-lg focus-visible:ring-0"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  disabled={isSearching}
                 />
-                <Button 
+                <Button
                   type="submit"
                   size="lg"
                   disabled={isSearching}
@@ -136,8 +206,80 @@ export default function LandingSimple() {
               <span className="text-primary font-bold animate-pulse">●</span> DIT Engine ativado e monitorando 47 territórios estratégicos
             </p>
           </form>
+
+          {/* Loading panel — visível durante a análise */}
+          {isSearching && (
+            <div className="mx-auto max-w-2xl rounded-2xl border border-primary/30 bg-card/60 p-6 text-left glass">
+              <div className="flex items-center gap-3 mb-4">
+                <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                <div className="font-mono text-xs font-bold uppercase tracking-wider text-primary">
+                  Gerando diagnóstico · {searchQuery.toUpperCase()}
+                </div>
+              </div>
+              <div className="space-y-2">
+                {LOADING_STEPS.map((s, i) => {
+                  const state = i < activeStep ? "done" : i === activeStep ? "running" : "pending";
+                  return (
+                    <div key={i} className="flex items-start gap-3">
+                      <div
+                        className={`flex h-7 w-7 items-center justify-center rounded-full text-sm flex-shrink-0 ${
+                          state === "done"
+                            ? "bg-primary/20 text-primary"
+                            : state === "running"
+                              ? "bg-accent/20 text-accent animate-pulse"
+                              : "bg-muted/30 text-muted-foreground/40"
+                        }`}
+                      >
+                        {state === "done" ? "✓" : s.icon}
+                      </div>
+                      <div className="flex-1">
+                        <div
+                          className={`font-mono text-xs font-bold uppercase tracking-wider ${
+                            state === "pending" ? "text-muted-foreground/40" : state === "running" ? "text-accent" : "text-primary"
+                          }`}
+                        >
+                          {s.title}
+                        </div>
+                        <div className={`text-xs ${state === "pending" ? "text-muted-foreground/30" : "text-muted-foreground"}`}>
+                          {s.detail}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="mt-4 font-mono text-[10px] text-muted-foreground/60">
+                Analisando há {elapsed}s · Estimativa: 30–60 segundos
+              </div>
+            </div>
+          )}
+
+          {/* Erro */}
+          {error && !isSearching && (
+            <div className="mx-auto max-w-2xl rounded-xl border border-destructive/40 bg-destructive/10 p-4 text-left">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
+                <div>
+                  <div className="font-mono text-xs font-bold uppercase tracking-wider text-destructive mb-1">
+                    Não foi possível gerar o diagnóstico
+                  </div>
+                  <div className="text-sm text-foreground/80">{error}</div>
+                  <div className="text-xs text-muted-foreground mt-2">
+                    Tente novamente em alguns instantes ou ajuste o nome do território.
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </section>
+
+      {/* Relatório inline — substitui o redirect para /pesquisa.html */}
+      {result && (
+        <section ref={reportRef} className="border-t border-border/40">
+          <DiagnosisReport result={result} />
+        </section>
+      )}
 
       {/* Social Proof & Intelligence Sections */}
       <section className="border-t border-border/40 bg-card/10 py-24 relative overflow-hidden">
@@ -184,7 +326,7 @@ export default function LandingSimple() {
                   O que a inteligência territorial já entregou para operações reais de alto impacto.
                 </p>
               </div>
-              
+
               <div className="grid gap-6">
                 {socialProof.map((item, idx) => (
                   <Card key={idx} className="glass border-border/50 transition-all hover:border-primary/30 hover:scale-[1.02]">
@@ -274,7 +416,7 @@ export default function LandingSimple() {
                 </div>
               </div>
             </div>
-            
+
             <div className="flex gap-8 font-mono text-xs font-bold uppercase tracking-widest text-muted-foreground">
               <a href="#" className="hover:text-primary transition-colors">Metodologia</a>
               <a href="#" className="hover:text-primary transition-colors">Privacidade</a>

@@ -63,14 +63,44 @@ export class Orchestrator {
    */
   async run(territory: Territory, options: CollectOptions = {}): Promise<OrchestratorResult> {
     const period = options.period ?? currentPeriod();
-    log.info({ territory: territory.slug, period }, "Orchestrator run started");
+
+    // Janela temporal padrão: T-24 meses até T (data da pesquisa).
+    // O DIT analisa a trajetória do território nos últimos 24 meses para
+    // produzir um STT acertivo — não apenas um snapshot momentâneo.
+    // Caller pode sobrescrever passando dateStart/dateEnd explícitos.
+    const referenceDate = options.dateEnd ? parseUsDate(options.dateEnd) : new Date();
+    const startBoundary = options.dateStart
+      ? parseUsDate(options.dateStart)
+      : (() => {
+          const d = new Date(referenceDate);
+          d.setMonth(d.getMonth() - 24);
+          d.setDate(1);
+          return d;
+        })();
+
+    const windowOpts: CollectOptions = {
+      ...options,
+      dateStart: options.dateStart ?? formatUsDate(startBoundary),
+      dateEnd: options.dateEnd ?? formatUsDate(referenceDate),
+    };
+
+    log.info(
+      {
+        territory: territory.slug,
+        period,
+        dateStart: windowOpts.dateStart,
+        dateEnd: windowOpts.dateEnd,
+        windowMonths: 24,
+      },
+      "Orchestrator run started — janela T-24mo"
+    );
 
     // 1. Fetch previous period scores for cumulative memory calculation
     const previousScores = await this._fetchPreviousScores(territory.id, period);
 
-    // 2. Run all 6 dimension agents in parallel
+    // 2. Run all 6 dimension agents in parallel — passando a janela temporal
     const dimResults = await Promise.allSettled(
-      this.dimensions.map((d) => d.run(territory, { ...options, previousScores }))
+      this.dimensions.map((d) => d.run(territory, { ...windowOpts, previousScores }))
     );
 
     const dimensions = {} as Record<DimensionId, DimensionResult>;
@@ -365,6 +395,18 @@ export class Orchestrator {
 function currentPeriod(): string {
   const now = new Date();
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+}
+
+/** Formato US "MM/DD/YYYY" usado por CollectOptions.dateStart / dateEnd. */
+function formatUsDate(d: Date): string {
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${mm}/${dd}/${d.getFullYear()}`;
+}
+
+function parseUsDate(s: string): Date {
+  const [mm, dd, yyyy] = s.split("/").map(Number);
+  return new Date(yyyy, (mm ?? 1) - 1, dd ?? 1);
 }
 
 function clampScore(v: number): number {

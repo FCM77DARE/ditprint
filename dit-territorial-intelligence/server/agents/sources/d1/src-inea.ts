@@ -1,69 +1,64 @@
+/**
+ * src-inea — INEA (RJ) via SerpAPI (Google)
+ *
+ * Específico para territórios fluminenses. Detecta RJ via state ou
+ * código IBGE (33xxxxx). Substitui stub por busca real via SerpAPI.
+ * Dimension: D1 (Ambiental).
+ */
+
 import { BaseSourceAgent } from "../../base-source";
-import type { RawSignal, CollectOptions } from "../../types";
+import type { CollectOptions, RawSignal } from "../../types";
 import type { Territory } from "../../../../drizzle/schema";
-import axios from "axios";
+import type { DimensionId, SourceId } from "../../../indicators";
 
 export class SrcInea extends BaseSourceAgent {
-  readonly id = "src-inea";
-  readonly dimension = "D1";
+  readonly id: SourceId = "src-inea";
+  readonly dimension: DimensionId = "D1";
   readonly name = "INEA - Instituto Estadual do Ambiente (RJ)";
 
   protected async fetchSignals(
     territory: Territory,
     options: CollectOptions
   ): Promise<RawSignal[]> {
-    const signals: RawSignal[] = [];
+    // INEA é específico para o Rio de Janeiro.
+    const ctx = territory.contextData as Record<string, unknown> | null;
+    const ibgeMunicipios = (ctx?.ibgeMunicipios as string[] | undefined) ?? [];
+    const isRJ =
+      territory.state === "RJ" ||
+      ibgeMunicipios.some((code) => typeof code === "string" && code.startsWith("33"));
+    if (!isRJ) return [];
 
-    // INEA é específico para o Rio de Janeiro
-    if (territory.state !== "RJ") return [];
+    const SERPAPI_KEY = process.env.SERPAPI_API_KEY ?? "";
+    if (!SERPAPI_KEY) return [];
+
+    const signals: RawSignal[] = [];
+    const query = `INEA ${territory.name}`;
+
+    let tbs = "";
+    if (options.dateStart && options.dateEnd) {
+      tbs = `&tbs=cdr:1,cd_min:${options.dateStart},cd_max:${options.dateEnd}`;
+    }
+    const url = `https://serpapi.com/search.json?engine=google&q=${encodeURIComponent(query)}&num=10${tbs}&api_key=${SERPAPI_KEY}`;
 
     try {
-      // O INEA possui o portal de licenciamento e o sistema de alertas de cheias
-      // Aqui simularíamos uma busca por licenças ou autos de infração no site do INEA
-      
-      // Simulação baseada no contexto do território
-      const isMacae = territory.slug.includes("macae") || territory.slug.includes("cabiunas");
-      
-      if (isMacae) {
+      const res = await fetch(url, { signal: options.signal });
+      if (!res.ok) return [];
+
+      const data = await res.json();
+      const results = data.organic_results ?? [];
+
+      for (const item of results) {
         signals.push({
-          title: "Monitoramento de Licenciamento INEA - Polo Gaslub/Macaé",
-          summary: "Análise de condicionantes ambientais para as operações no Porto de Macaé e Terminal de Cabiúnas. Status: Em conformidade, mas com atenção a efluentes.",
+          title: item.title,
+          summary: item.snippet,
+          url: item.link,
           sourceAgentId: this.id,
           publishedAt: new Date(),
-          rawValue: 0.5,
-          metadata: { agency: "INEA", region: "Macaé" }
+          metadata: { query },
         });
       }
-
-      // Alerta de Cheias (INEA/Guanabara)
-      if (territory.slug.includes("guanabara") || territory.slug.includes("caxias") || territory.slug.includes("mage")) {
-        signals.push({
-          title: "Sistema de Alerta de Cheias INEA: Estágio de Atenção",
-          summary: "Rios da Baixada Fluminense em estágio de atenção devido à previsão de chuvas moderadas. Monitoramento de transbordamento ativo.",
-          sourceAgentId: this.id,
-          publishedAt: new Date(),
-          rawValue: 0.7,
-          metadata: { type: "cheia", rivers: ["Sarapuí", "Iguaçu"] }
-        });
-      }
-
-      // Verificação de Hotspots Mandatários
-      const hotspots = (territory.contextData as any)?.environmentalHotspots || [];
-      for (const hotspot of hotspots) {
-        if (hotspot.includes("Santana") || hotspot.includes("Jurubatiba")) {
-          signals.push({
-            title: `Monitoramento INEA: Unidade de Conservação ${hotspot}`,
-            summary: `Vigilância ativa para ${hotspot}. Riscos identificados: Pressão por ocupação irregular e efluentes industriais. Status: Alerta de conformidade em análise.`,
-            sourceAgentId: this.id,
-            publishedAt: new Date(),
-            rawValue: 0.6,
-            metadata: { hotspot, priority: "high" }
-          });
-        }
-      }
-
-    } catch (error) {
-      this.log.error({ error, territory: territory.slug }, "Falha ao buscar dados do INEA");
+    } catch {
+      return [];
     }
 
     return signals;

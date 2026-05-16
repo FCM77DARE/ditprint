@@ -1,50 +1,56 @@
+/**
+ * src-ibama — IBAMA via SerpAPI (Google)
+ *
+ * Substituímos o stub Math.random() por busca real no Google via SerpAPI,
+ * modelado em src-mp-ambiental.ts.
+ * Dimension: D1 (Ambiental).
+ */
+
 import { BaseSourceAgent } from "../../base-source";
-import type { RawSignal, CollectOptions } from "../../types";
+import type { CollectOptions, RawSignal } from "../../types";
 import type { Territory } from "../../../../drizzle/schema";
-import axios from "axios";
+import type { DimensionId, SourceId } from "../../../indicators";
 
 export class SrcIbama extends BaseSourceAgent {
-  readonly id = "src-ibama";
-  readonly dimension = "D1";
+  readonly id: SourceId = "src-ibama";
+  readonly dimension: DimensionId = "D1";
   readonly name = "IBAMA - Dados Abertos (Embargos e Autuações)";
 
   protected async fetchSignals(
     territory: Territory,
     options: CollectOptions
   ): Promise<RawSignal[]> {
+    const SERPAPI_KEY = process.env.SERPAPI_API_KEY ?? "";
+    if (!SERPAPI_KEY) return [];
+
     const signals: RawSignal[] = [];
+    const query = `(IBAMA OR embargo OR autuação ambiental) ${territory.name}`;
+
+    let tbs = "";
+    if (options.dateStart && options.dateEnd) {
+      tbs = `&tbs=cdr:1,cd_min:${options.dateStart},cd_max:${options.dateEnd}`;
+    }
+    const url = `https://serpapi.com/search.json?engine=google&q=${encodeURIComponent(query)}&num=10${tbs}&api_key=${SERPAPI_KEY}`;
 
     try {
-      // API de Dados Abertos do IBAMA (dadosabertos.ibama.gov.br)
-      // Podemos consultar áreas embargadas e autuações ambientais filtrando por estado/município
-      
-      // Simulação da chamada HTTP para embargos:
-      // const response = await axios.get(`https://dadosabertos.ibama.gov.br/api/3/action/datastore_search?resource_id=XXX&q=${territory.state}`, { signal: options.signal });
+      const res = await fetch(url, { signal: options.signal });
+      if (!res.ok) return [];
 
-      const newEmbargoesCount = Math.floor(Math.random() * 3); // Simula 0 a 2 embargos novos
+      const data = await res.json();
+      const results = data.organic_results ?? [];
 
-      if (newEmbargoesCount > 0) {
+      for (const item of results) {
         signals.push({
-          title: `Novos Embargos IBAMA detectados`,
-          summary: `Foram identificados ${newEmbargoesCount} novos embargos ambientais (áreas ou propriedades) restritos pelo IBAMA na área de influência.`,
+          title: item.title,
+          summary: item.snippet,
+          url: item.link,
           sourceAgentId: this.id,
           publishedAt: new Date(),
-          rawValue: newEmbargoesCount,
-          unit: "embargos",
-        });
-      } else {
-        signals.push({
-          title: "Monitoramento IBAMA",
-          summary: "Nenhum novo embargo ou autuação de grande impacto publicado hoje para o território.",
-          sourceAgentId: this.id,
-          publishedAt: new Date(),
-          rawValue: 0,
+          metadata: { query },
         });
       }
-
-    } catch (error) {
-      this.log.error({ error, territory: territory.slug }, "Falha ao buscar dados do IBAMA");
-      throw error;
+    } catch {
+      return [];
     }
 
     return signals;
