@@ -26,20 +26,14 @@ export default function LandingSimple() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
-      setIsSearching(true);
-      setTimeout(() => {
-        // Gerar slug a partir da pesquisa (ex: "Baía de Guanabara" -> "baia-de-guanabara")
-        const slug = searchQuery
-          .toLowerCase()
-          .normalize("NFD")
-          .replace(/[\u0300-\u036f]/g, "")
-          .replace(/[^a-z0-9]+/g, "-")
-          .replace(/(^-|-$)/g, "");
-          
-        setLocation(`/territorio/${slug}`);
-      }, 1500);
-    }
+    const q = searchQuery.trim();
+    if (!q) return;
+    setIsSearching(true);
+    // A página de pesquisa rica (antiga land-dit.html, agora /pesquisa.html)
+    // assume a busca real: análise via /api/dit/analyze + relatório completo
+    // com setores, casos estratégicos, hotspots, recursos. O React mantém
+    // metodologia, dashboard, radar — tudo no mesmo domínio.
+    window.location.href = `/pesquisa.html?territory=${encodeURIComponent(q)}`;
   };
 
   const socialProof = [

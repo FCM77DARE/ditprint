@@ -5,8 +5,9 @@
   "outputDirectory": ".",
   "installCommand": "echo no-op",
   "cleanUrls": false,
-  "rewrites": [
-    { "source": "/", "destination": "/land-dit.html" }
+  "redirects": [
+    { "source": "/", "destination": "https://dit-api-production.up.railway.app/pesquisa.html", "permanent": false },
+    { "source": "/land-dit.html", "destination": "https://dit-api-production.up.railway.app/pesquisa.html", "permanent": false }
   ],
   "headers": [
     {
