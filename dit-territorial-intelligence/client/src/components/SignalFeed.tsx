@@ -119,8 +119,15 @@ export default function SignalFeed({
         <div className="max-h-[520px] overflow-y-auto">
           {signals.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-3 py-12 text-muted-foreground">
-              <Radio className="h-8 w-8 opacity-30" />
-              <p className="font-mono text-xs">Aguardando sinais de alto impacto...</p>
+              <Radio className="h-8 w-8 opacity-30 animate-pulse" />
+              <p className="font-mono text-xs">
+                {connected
+                  ? "Motor processando o próximo ciclo — primeiros sinais em instantes..."
+                  : "Conectando à malha de sinais..."}
+              </p>
+              <p className="font-mono text-[10px] text-muted-foreground/60">
+                Ciclo de coleta: a cada 4h · 47 territórios · 35 fontes ativas
+              </p>
             </div>
           ) : (
             <ul className="divide-y divide-border/20">

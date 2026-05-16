@@ -26,7 +26,7 @@ import { ALERT_THRESHOLD } from "./base-dimension";
 import { calculateSttWithLLM } from "../stt/calculator";
 import { detectAnomalies } from "../stt/anomalyDetector";
 import type { TerritoryContextData } from "../stt/types";
-import { dispatchAlert, dispatchAnomalyAlert } from "../alertEngine";
+import { dispatchAlert, dispatchAnomalyAlert, broadcastSignalToFeed } from "../alertEngine";
 import type { BaseDimensionAgent } from "./base-dimension";
 import { DimSocioambiental } from "./dimensions/dim-socioambiental";
 import { DimSocioeconomico } from "./dimensions/dim-socioeconomico";
@@ -177,6 +177,35 @@ export class Orchestrator {
         publishedAt: alert.publishedAt ?? undefined,
         alertType: "signal",
       }).catch((err) => log.warn({ err, signal: alert.title }, "Signal alert dispatch error"));
+    }
+
+    // 5b. Broadcast medium-impact signals (0.3 ≤ impact < 0.7) to the SSE feed only —
+    // sem email/push, sem DB extra: serve apenas para o ticker mostrar atividade
+    // real do motor em tempo real. Limita a top 5 por dimensão pra não floodar.
+    for (const [dimId, dim] of Object.entries(dimensions)) {
+      const mediumSignals = dim.signals
+        .filter((s) => !s.triggersAlert && s.impactScore >= 0.3)
+        .sort((a, b) => b.impactScore - a.impactScore)
+        .slice(0, 5);
+      for (const sig of mediumSignals) {
+        try {
+          broadcastSignalToFeed({
+            territoryId: territory.id,
+            territoryName: territory.name,
+            territorySlug: territory.slug,
+            signalTitle: sig.title,
+            signalSummary: sig.summary ?? undefined,
+            signalUrl: sig.url ?? undefined,
+            impactScore: sig.impactScore,
+            dimension: dimId as "D1" | "D2" | "D3" | "D4" | "D5" | "D6",
+            indicatorCode: sig.indicatorCode,
+            publishedAt: sig.publishedAt ?? undefined,
+            alertType: "signal",
+          });
+        } catch (err) {
+          log.debug({ err, signal: sig.title }, "Feed broadcast error (non-fatal)");
+        }
+      }
     }
 
     // 6. Run anomaly detection + dispatch anomaly alerts

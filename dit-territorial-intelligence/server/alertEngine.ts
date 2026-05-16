@@ -73,9 +73,9 @@ type SseClient = {
 
 const sseClients = new Map<string, SseClient>();
 
-// Buffer circular dos últimos 30 sinais (replay para novos clientes SSE).
+// Buffer circular dos últimos 100 sinais (replay para novos clientes SSE).
 // Sem isso, quem abre a tela entre ciclos de coleta (4h) vê só "Aguardando…".
-const SSE_REPLAY_LIMIT = 30;
+const SSE_REPLAY_LIMIT = 100;
 const signalBuffer: AlertPayload[] = [];
 
 function pushToBuffer(payload: AlertPayload): void {
@@ -131,6 +131,16 @@ function broadcastSse(payload: AlertPayload): void {
 }
 
 // ─── Public API ───────────────────────────────────────────────────────────────
+
+/**
+ * Broadcast a signal to the SSE feed only — no email/push, no DB write.
+ * Used by the Orchestrator for all medium/low-impact signals (0.3 ≤ impact < 0.7),
+ * so the live ticker reflects the engine's activity in real time without
+ * spamming subscribers.
+ */
+export function broadcastSignalToFeed(payload: AlertPayload): void {
+  broadcastSse(payload);
+}
 
 /**
  * Main entry point. Called by the Orchestrator for each high-impact signal,
