@@ -65,27 +65,130 @@ export const SECTORS_MAP: Record<string, Sector> = Object.fromEntries(
 );
 
 /**
- * Calcula score interno do setor a partir dos scores dimensionais.
- * É a soma ponderada de Di × contribuiçãoi.
+ * Avaliação de maturidade BASEADA EM EVIDÊNCIA (não em STT/tensão).
+ *
+ * Histórico do bug: o classificador antigo lia `dimScores` (escala de tensão
+ * 0-100 onde alto = escalada/pior) como se fosse "maior = mais maduro". Em
+ * municípios estáveis (STT baixo), todo setor saía Inexistente — exatamente
+ * o oposto do real.
+ *
+ * Agora cada setor olha pra:
+ *  - Recursos territoriais nas categorias relevantes
+ *  - Casos estratégicos com relevância ≥ POTENCIAL
+ *  - Hotspots georreferenciados
+ *  - Tipo de território (capital, hub conhecido)
  */
-export function computeSectorScore(
-  sector: Sector,
-  dimScores: Partial<Record<"D1" | "D2" | "D3" | "D4" | "D5" | "D6", number>>
-): number {
-  let weighted = 0;
-  let totalWeight = 0;
-  for (const [dimId, weight] of Object.entries(sector.dimensionContribution)) {
-    const score = dimScores[dimId as "D1"];
-    if (typeof score === "number") {
-      weighted += score * weight;
-      totalWeight += weight;
-    }
-  }
-  return totalWeight > 0 ? weighted / totalWeight : 0;
+
+import type { Resource, StrategicCaseResult, Hotspot } from "./types";
+
+export interface SectorEvidenceCtx {
+  resources: Resource[];
+  cases: StrategicCaseResult[];
+  hotspots: Hotspot[];
+  isCapital: boolean;
+  hasIbge: boolean;
 }
 
-/** Classifica maturidade a partir do score interno + sinais qualitativos. */
-export function classifyMaturity(score: number): "Alta Maturidade" | "Em Desenvolvimento" | "Latente" | "Inexistente" {
+interface SectorRule {
+  /** Categorias de recurso que contribuem para este setor. */
+  resourceCategories: Array<Resource["category"]>;
+  /** caseIds que indicam vetor estratégico relevante (S1). */
+  caseIds: string[];
+  /** Tipos de hotspot que reforçam maturidade do setor. */
+  hotspotTypes: Array<import("./types").HotspotType>;
+  /** Bônus quando o território é capital estadual. */
+  capitalBonus: number;
+  /** Score mínimo por existir no IBGE (base do município). */
+  baseline: number;
+}
+
+const SECTOR_RULES: Record<string, SectorRule> = {
+  S1: {
+    resourceCategories: ["minerais"],
+    caseIds: ["TERRAS_RARAS", "DATA_CENTERS"],
+    hotspotTypes: ["risco", "potencial"],
+    capitalBonus: 15,
+    baseline: 10,
+  },
+  S2: {
+    resourceCategories: ["agricolas", "minerais"],
+    caseIds: [],
+    hotspotTypes: [],
+    capitalBonus: 5,
+    baseline: 25, // toda cidade tem alguma base produtiva tradicional
+  },
+  S3: {
+    resourceCategories: [],
+    caseIds: [],
+    hotspotTypes: ["vulnerabilidade"],
+    capitalBonus: 10,
+    baseline: 30, // todo município tem dinâmica socioterritorial
+  },
+  S4: {
+    resourceCategories: ["hidricos", "florestais", "ambientais"],
+    caseIds: [],
+    hotspotTypes: [],
+    capitalBonus: 0,
+    baseline: 20,
+  },
+  S5: {
+    resourceCategories: ["energeticos"],
+    caseIds: ["DATA_CENTERS"],
+    hotspotTypes: [],
+    capitalBonus: 20,
+    baseline: 20,
+  },
+  S6: {
+    resourceCategories: [],
+    caseIds: [],
+    hotspotTypes: [],
+    capitalBonus: 30,
+    baseline: 15,
+  },
+};
+
+/**
+ * Score de maturidade do setor (0-100), derivado de evidência concreta.
+ * Resultado calibrado para que:
+ *  - município comum no IBGE caia em ~25-40 (Latente)
+ *  - cidade com 1-2 ativos relevantes vá pra ~45-65 (Em Desenvolvimento)
+ *  - hub confirmado (capital + recursos + caso) chegue a 70+ (Alta Maturidade)
+ */
+export function computeSectorScore(sector: Sector, ctx: SectorEvidenceCtx): number {
+  const rule = SECTOR_RULES[sector.id];
+  if (!rule) return 0;
+
+  let score = ctx.hasIbge ? rule.baseline : 0;
+
+  // Cada recurso na categoria relevante adiciona 8-15 pontos
+  const relevantResources = ctx.resources.filter(r =>
+    rule.resourceCategories.includes(r.category)
+  );
+  for (const r of relevantResources) {
+    score += r.abundance === "abundante" ? 15 : r.abundance === "presente" ? 10 : 5;
+  }
+
+  // Casos estratégicos
+  for (const c of ctx.cases) {
+    if (!rule.caseIds.includes(c.caseId)) continue;
+    if (c.relevance === "ESTRATÉGICO") score += 25;
+    else if (c.relevance === "POTENCIAL") score += 15;
+    else if (c.relevance === "LATENTE") score += 8;
+  }
+
+  // Hotspots reforçam
+  const relevantHotspots = ctx.hotspots.filter(h => rule.hotspotTypes.includes(h.type));
+  score += Math.min(relevantHotspots.length * 3, 12);
+
+  // Capital
+  if (ctx.isCapital) score += rule.capitalBonus;
+
+  return Math.min(Math.round(score), 100);
+}
+
+export function classifyMaturity(
+  score: number
+): "Alta Maturidade" | "Em Desenvolvimento" | "Latente" | "Inexistente" {
   if (score >= 70) return "Alta Maturidade";
   if (score >= 45) return "Em Desenvolvimento";
   if (score >= 20) return "Latente";

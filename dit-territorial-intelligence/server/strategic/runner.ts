@@ -12,13 +12,15 @@
  */
 
 import { logger } from "../_core/logger";
-import { SECTORS, computeSectorScore, classifyMaturity } from "./sectors";
+import { SECTORS, computeSectorScore, classifyMaturity, type SectorEvidenceCtx } from "./sectors";
 import { collectResources } from "./resources";
 import { collectOsmHotspots } from "./hotspots/osm-overpass";
 import { runAllCases } from "./cases";
 import type {
   Hotspot,
+  Resource,
   SectorResult,
+  StrategicCaseResult,
   StrategicLayerResult,
   TerritoryStrategicContext,
 } from "./types";
@@ -27,50 +29,91 @@ const log = logger.child({ module: "strategic.runner" });
 
 type DimScores = Partial<Record<"D1" | "D2" | "D3" | "D4" | "D5" | "D6", number>>;
 
+// 26 capitais brasileiras + DF (IBGE IDs)
+const CAPITAL_IBGE_IDS = new Set<number>([
+  1200401, 1302603, 1400100, 1501402, 1600303, 1721000, 2111300, 2211001,
+  2304400, 2408102, 2507507, 2611606, 2704302, 2800308, 2927408, 3106200,
+  3205309, 3304557, 3550308, 4106902, 4205407, 4314902, 5002704, 5103403,
+  5208707, 5300108,
+]);
+
+function describeEvidence(
+  sectorId: string,
+  resources: Resource[],
+  cases: StrategicCaseResult[]
+): string[] {
+  const out: string[] = [];
+  const matchRes = resources.filter(r => {
+    if (sectorId === "S2") return r.category === "agricolas" || r.category === "minerais";
+    if (sectorId === "S4")
+      return r.category === "hidricos" || r.category === "florestais" || r.category === "ambientais";
+    if (sectorId === "S5") return r.category === "energeticos";
+    if (sectorId === "S1") return r.category === "minerais";
+    return false;
+  });
+  for (const r of matchRes.slice(0, 3)) {
+    out.push(`${r.name} (${r.abundance})`);
+  }
+  for (const c of cases) {
+    if (sectorId === "S1" && (c.caseId === "TERRAS_RARAS" || c.caseId === "DATA_CENTERS")) {
+      out.push(`${c.caseId} → ${c.relevance}`);
+    }
+    if (sectorId === "S5" && c.caseId === "DATA_CENTERS") {
+      out.push(`Hub digital: ${c.relevance}`);
+    }
+  }
+  return out;
+}
+
 function buildSectorInsight(
   sectorName: string,
   maturity: string,
-  topDim: string
+  evidence: string[]
 ): string {
+  const evidenceStr = evidence.length > 0 ? ` Sinais: ${evidence.join("; ")}.` : "";
   const map: Record<string, string> = {
-    "Alta Maturidade": `${sectorName} apresenta alta maturidade, com base sólida em ${topDim}.`,
-    "Em Desenvolvimento": `${sectorName} mostra desenvolvimento ativo, ancorado em ${topDim}.`,
-    "Latente": `${sectorName} é latente — há condições parciais, principalmente em ${topDim}, mas requer investimento.`,
-    "Inexistente": `${sectorName} é inexistente ou marginal no território atual.`,
+    "Alta Maturidade": `${sectorName} apresenta alta maturidade no território.${evidenceStr}`,
+    "Em Desenvolvimento": `${sectorName} em desenvolvimento ativo.${evidenceStr}`,
+    "Latente": `${sectorName} com presença latente — base existe, oportunidades não consolidadas.${evidenceStr}`,
+    "Inexistente": `${sectorName} sem evidência relevante neste território.`,
   };
-  return map[maturity] ?? `${sectorName} em avaliação.`;
+  return map[maturity] ?? `${sectorName} em avaliação.${evidenceStr}`;
 }
 
-function computeSectors(dimScores: DimScores): SectorResult[] {
+function computeSectors(
+  ctx: TerritoryStrategicContext,
+  resources: Resource[],
+  cases: StrategicCaseResult[],
+  hotspots: Hotspot[]
+): SectorResult[] {
+  const evidenceCtx: SectorEvidenceCtx = {
+    resources,
+    cases,
+    hotspots,
+    isCapital: ctx.ibgeId ? CAPITAL_IBGE_IDS.has(ctx.ibgeId) : false,
+    hasIbge: !!ctx.ibgeId,
+  };
+
   return SECTORS.map(sector => {
-    const score = computeSectorScore(sector, dimScores);
-    const internalScore = Math.round(score * 100) / 100;
-    const maturity = classifyMaturity(internalScore);
-
-    // Encontra dimensão de maior contribuição para narrativa
-    const topDimEntry = Object.entries(sector.dimensionContribution)
-      .sort((a, b) => (b[1] ?? 0) - (a[1] ?? 0))[0];
-    const topDim = topDimEntry ? topDimEntry[0] : "D?";
-
-    const signals = Object.entries(sector.dimensionContribution).map(
-      ([dim, w]) => `${dim} (peso ${w}) → score ${dimScores[dim as "D1"] ?? "n/d"}`
-    );
+    const score = computeSectorScore(sector, evidenceCtx);
+    const maturity = classifyMaturity(score);
+    const evidence = describeEvidence(sector.id, resources, cases);
 
     return {
       sectorId: sector.id,
       name: sector.name,
       maturity,
-      maturityNote: `${maturity} — score interno ${internalScore.toFixed(1)}`,
-      internalScore,
-      insight: buildSectorInsight(sector.name, maturity, topDim),
-      signals,
+      maturityNote: `${maturity} — score evidencial ${score}`,
+      internalScore: score,
+      insight: buildSectorInsight(sector.name, maturity, evidence),
+      signals: evidence,
     };
   });
 }
 
 export async function runStrategicLayer(
   ctx: TerritoryStrategicContext,
-  dimScores: DimScores
+  _dimScores: DimScores
 ): Promise<StrategicLayerResult> {
   log.info({ territory: ctx.name, state: ctx.state }, "Strategic layer iniciado");
 
@@ -81,20 +124,30 @@ export async function runStrategicLayer(
     runAllCases(ctx),
   ]);
 
-  // Setores são puramente derivados — não precisam ser async
-  const sectors = computeSectors(dimScores);
+  // Casos estratégicos: só os que realmente se aplicam ao território.
+  // "NÃO APLICÁVEL" é noise — escondemos para não diluir o sinal.
+  const relevantCases = strategicCases.filter(c => c.relevance !== "NÃO APLICÁVEL");
 
-  // Consolida todos hotspots (OSM + cases) para o mapa unificado do frontend
-  const caseHotspots: Hotspot[] = strategicCases.flatMap(c => c.hotspots);
+  // Consolida todos hotspots (OSM + cases relevantes) para o mapa unificado
+  const caseHotspots: Hotspot[] = relevantCases.flatMap(c => c.hotspots);
   const allHotspots: Hotspot[] = [...caseHotspots, ...osmHotspots];
+
+  // Setores agora derivam de EVIDÊNCIA (recursos + casos + hotspots), não de STT.
+  // Mantemos todos os 6 sectorIds, mas filtramos os realmente "Inexistente"
+  // (sem nenhuma evidência) pra não mostrar boilerplate.
+  const sectors = computeSectors(ctx, resources, relevantCases, allHotspots).filter(
+    s => s.maturity !== "Inexistente"
+  );
 
   log.info(
     {
       territory: ctx.name,
-      sectors: sectors.length,
+      sectorsVisible: sectors.length,
+      sectorsFiltered: 6 - sectors.length,
       resources: resources.length,
       hotspots: allHotspots.length,
-      cases: strategicCases.length,
+      casesVisible: relevantCases.length,
+      casesFiltered: strategicCases.length - relevantCases.length,
     },
     "Strategic layer concluído"
   );
@@ -103,7 +156,7 @@ export async function runStrategicLayer(
     sectors,
     resources,
     hotspots: allHotspots,
-    strategicCases,
+    strategicCases: relevantCases,
     completedAt: new Date().toISOString(),
   };
 }

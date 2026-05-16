@@ -380,7 +380,7 @@
     <p class="proof-subtitle">De zero a inteligência territorial em menos de 60 segundos.</p>
     <div class="steps">
       <div class="step"><div class="step-num">01</div><div class="step-title">BUSQUE O TERRITÓRIO</div><p class="step-desc">Digite qualquer município, bairro ou região do Brasil. A IA coleta dados em tempo real de fontes oficiais e mídia regional.</p><div class="step-highlight">"Jardim Ana Clara, Caxias-RJ"</div></div>
-      <div class="step"><div class="step-num">02</div><div class="step-title">ACESSO POR PIX</div><p class="step-desc">R$9,90 via PIX. Sem cadastro, sem assinatura. Se o valor travar, o território provavelmente não é pra você.</p><div class="step-highlight">"Se não tem R$9,90, melhor não atuar nesse território."</div></div>
+      <div class="step"><div class="step-num">02</div><div class="step-title">ACESSO COM EMAIL</div><p class="step-desc">Informe seu email profissional. Acesso gratuito ao diagnóstico do ciclo atual. Você recebe atualizações do território e novos relatórios PRINT.</p><div class="step-highlight">"Decisão territorial começa por quem se identifica."</div></div>
       <div class="step"><div class="step-num">03</div><div class="step-title">DIT ENTREGUE</div><p class="step-desc">6 dimensões detalhadas: sinais críticos, sub-indicadores, cenário projetado e 4 recomendações acionáveis. Tudo em 60 segundos.</p><div class="step-highlight">STT · Situação Territorial Total</div></div>
     </div>
   </div>
@@ -427,29 +427,31 @@
   </div>
 </section>
 
-<!-- MODAL PIX -->
+<!-- MODAL EMAIL -->
 <div class="modal-overlay" id="modal">
   <div class="modal">
     <div class="modal-header">
       <div class="modal-territory-label">Território Identificado</div>
       <div class="modal-territory-name" id="modal-territory"></div>
       <div class="modal-product-line">
-        <div><div class="modal-product-name">Diagnóstico de Inteligência Territorial</div><div class="modal-price-label">Ciclo Atual · Acesso Único · 6 Dimensões</div></div>
-        <div><div class="modal-price">R$9,90</div></div>
+        <div><div class="modal-product-name">Diagnóstico de Inteligência Territorial</div><div class="modal-price-label">Ciclo Atual · Acesso · 6 Dimensões</div></div>
       </div>
     </div>
     <div class="modal-body">
-      <div class="qr-container"><div class="qr-wrap"><svg id="qr-svg" width="180" height="180" viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg"></svg></div></div>
-      <div class="pix-key-row">
-        <div class="pix-key-text" id="pix-key-text">00020126580014BR.GOV.BCB.PIX0136print-dit@comunicacao.com.br5204000053039865406990005802BR</div>
-        <button class="pix-key-copy" id="pix-copy-btn" onclick="copyPix()">COPIAR CHAVE</button>
+      <div style="font-size:14px;color:var(--grafite);line-height:1.6;margin-bottom:18px">
+        Informe seu email para acessar o diagnóstico. Você receberá atualizações sobre o território e novos relatórios PRINT.
       </div>
-      <div class="modal-warning">
-        <strong>"Se você não tem R$9,90,<br/>melhor não atuar nesse território."</strong><br/>
-        <span style="font-size:13px;opacity:.75">Inteligência territorial é investimento, não custo. Decisores que hesitam em R$9,90 hesitarão muito mais quando o território cobrar a conta.</span>
+      <label style="display:block;font-family:'DM Mono',monospace;font-size:11px;color:var(--grafite);letter-spacing:.15em;margin-bottom:6px;text-transform:uppercase">Email profissional</label>
+      <input type="email" id="email-input" placeholder="voce@empresa.com.br"
+        autocomplete="email"
+        style="width:100%;padding:14px 16px;background:white;border:1.5px solid var(--areia);border-radius:10px;font-family:'Nunito',sans-serif;font-size:15px;color:var(--grafite);outline:none;transition:border-color .2s;margin-bottom:8px">
+      <div id="email-error" style="display:none;color:var(--terra);font-size:12px;font-family:'DM Mono',monospace;margin-bottom:14px"></div>
+      <div class="modal-warning" style="margin-top:18px">
+        <strong>Sem cobrança nesta etapa.</strong><br/>
+        <span style="font-size:13px;opacity:.85">Acesso gratuito ao DIT do ciclo atual. Premium liberado para municípios estratégicos a partir do email cadastrado.</span>
       </div>
       <div class="modal-actions">
-        <button class="btn-confirm" id="confirm-btn">JÁ PAGUEI — ACESSAR DIT</button>
+        <button class="btn-confirm" id="confirm-btn">ACESSAR DIAGNÓSTICO</button>
         <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
       </div>
     </div>
@@ -591,13 +593,41 @@ document.getElementById('modal').addEventListener('click', function(e) { if(e.ta
 function openModal(territory) {
   pendingTerritory = territory;
   document.getElementById('modal-territory').textContent = territory.toUpperCase();
-  generateQR();
+  const inp = document.getElementById('email-input');
+  inp.value = '';
+  document.getElementById('email-error').style.display = 'none';
   document.getElementById('modal').classList.add('active');
+  setTimeout(() => inp.focus(), 100);
 }
 function closeModal() { document.getElementById('modal').classList.remove('active'); }
 
-// ── CONFIRMAR PAGAMENTO — dispara API ────────────────────────────────────────
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const LEAD_URL = API_BASE.replace(/\/$/,'') + '/api/dit/lead';
+
+// Enter no input dispara o confirmar
+document.getElementById('email-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('confirm-btn').click();
+});
+
+// ── CONFIRMAR EMAIL — salva lead + dispara análise ──────────────────────────
 document.getElementById('confirm-btn').addEventListener('click', async () => {
+  const email = (document.getElementById('email-input').value || '').trim().toLowerCase();
+  const errEl = document.getElementById('email-error');
+  if (!EMAIL_RE.test(email)) {
+    errEl.textContent = 'Informe um email válido';
+    errEl.style.display = 'block';
+    document.getElementById('email-input').focus();
+    return;
+  }
+  errEl.style.display = 'none';
+
+  // Persiste o lead de forma assíncrona — não bloqueia a análise.
+  fetch(LEAD_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, territory: pendingTerritory }),
+  }).catch(() => { /* não bloquear o fluxo se falhar */ });
+
   closeModal();
   startLoading(pendingTerritory);
 
@@ -605,7 +635,7 @@ document.getElementById('confirm-btn').addEventListener('click', async () => {
     const res = await fetch(API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ territory: pendingTerritory }),
+      body: JSON.stringify({ territory: pendingTerritory, email }),
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({ error: 'Erro desconhecido' }));

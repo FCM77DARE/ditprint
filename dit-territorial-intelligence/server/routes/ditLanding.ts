@@ -20,7 +20,7 @@ import { Router, Request, Response } from "express";
 import { ENV } from "../_core/env";
 import { logger } from "../_core/logger";
 import { getDb } from "../db";
-import { territories } from "../../drizzle/schema";
+import { territories, subscribers } from "../../drizzle/schema";
 import type { Territory } from "../../drizzle/schema";
 import { eq } from "drizzle-orm";
 import { orchestrator } from "../agents/orchestrator";
@@ -45,6 +45,72 @@ ditLandingRouter.options("*", (_req, res) => res.sendStatus(204));
 // ── HEALTH CHECK (Railway / monitoring) ───────────────────────────────────────
 ditLandingRouter.get("/health", (_req, res) => {
   res.json({ status: "ok", service: "dit-landing", ts: new Date().toISOString() });
+});
+
+// ── LEAD CAPTURE (email + território de interesse) ────────────────────────────
+// POST /api/dit/lead { email, territory }
+// Salva como subscriber (plan=free_alert). Idempotente por email.
+// Se o banco estiver indisponível, registra em log e devolve { saved:false }.
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const leadFallbackLog: Array<{ email: string; territory: string; ts: string }> = [];
+
+ditLandingRouter.post("/lead", async (req: Request, res: Response) => {
+  const ip = (req.ip ?? req.socket.remoteAddress ?? "unknown").slice(0, 50);
+  if (isRateLimited(ip)) {
+    res.status(429).json({ error: "Muitas requisições. Aguarde 1 minuto." });
+    return;
+  }
+
+  const { email, territory } = req.body as { email?: string; territory?: string };
+  const emailClean = (email ?? "").trim().toLowerCase().slice(0, 320);
+  const territoryClean = (territory ?? "").trim().slice(0, 120);
+
+  if (!emailClean || !EMAIL_RE.test(emailClean)) {
+    res.status(400).json({ error: "Email inválido" });
+    return;
+  }
+  if (!territoryClean) {
+    res.status(400).json({ error: "Território obrigatório" });
+    return;
+  }
+
+  const db = await getDb();
+  if (!db) {
+    // Sem banco: registra em memória + log estruturado pra captura via Railway logs.
+    leadFallbackLog.push({ email: emailClean, territory: territoryClean, ts: new Date().toISOString() });
+    log.info({ email: emailClean, territory: territoryClean, ip }, "[LEAD] capturado (sem DB)");
+    res.json({ saved: false, captured: true, message: "Registrado em fallback (sem DB)" });
+    return;
+  }
+
+  try {
+    // Upsert: se email já existe, só atualiza o território de interesse.
+    const existing = await db
+      .select()
+      .from(subscribers)
+      .where(eq(subscribers.email, emailClean))
+      .limit(1);
+
+    if (existing.length > 0) {
+      log.info({ email: emailClean, territory: territoryClean }, "[LEAD] já cadastrado");
+      res.json({ saved: true, isNew: false });
+      return;
+    }
+
+    await db.insert(subscribers).values({
+      name: emailClean.split("@")[0] || "Lead",
+      email: emailClean,
+      territoryInterest: territoryClean,
+      plan: "free_alert",
+      active: true,
+    });
+    log.info({ email: emailClean, territory: territoryClean }, "[LEAD] novo subscriber salvo");
+    res.json({ saved: true, isNew: true });
+  } catch (err) {
+    log.warn({ err: (err as Error).message, email: emailClean }, "[LEAD] falha ao salvar");
+    leadFallbackLog.push({ email: emailClean, territory: territoryClean, ts: new Date().toISOString() });
+    res.json({ saved: false, captured: true, error: (err as Error).message });
+  }
 });
 
 // ── CACHE (6h por território) ─────────────────────────────────────────────────
