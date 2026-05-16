@@ -92,13 +92,14 @@ async function startServer() {
   if (process.env.NODE_ENV === "development") {
     await setupVite(app, server);
   } else {
-    // Produção: Railway agora serve TUDO num único domínio — API + site
-    // React (metodologia, dashboard, radar) + página de pesquisa rica
-    // (/pesquisa.html, antes hospedada à parte no Vercel).
-    //
-    // Compat: a antiga URL /land-dit.html redireciona pra /pesquisa.html
-    // pra não quebrar links externos já compartilhados.
-    app.get("/land-dit.html", (_req, res) => res.redirect(301, "/pesquisa.html"));
+    // Produção: home React é a única tela de pesquisa.
+    // A página estática /pesquisa.html permanece no repositório como
+    // referência histórica do design, mas NÃO é servida — qualquer
+    // tentativa de acesso redireciona pra "/" (mesmo pra URLs antigas
+    // /land-dit.html já compartilhadas).
+    app.get(["/pesquisa.html", "/land-dit.html"], (_req, res) =>
+      res.redirect(301, "/")
+    );
     serveStatic(app);
   }
 
