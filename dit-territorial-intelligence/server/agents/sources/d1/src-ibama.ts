@@ -10,6 +10,7 @@ import { BaseSourceAgent } from "../../base-source";
 import type { CollectOptions, RawSignal } from "../../types";
 import type { Territory } from "../../../../drizzle/schema";
 import type { DimensionId, SourceId } from "../../../indicators";
+import { enrichGeoQuery, matchesTerritory } from "../../geo-filter";
 
 export class SrcIbama extends BaseSourceAgent {
   readonly id: SourceId = "src-ibama";
@@ -24,7 +25,7 @@ export class SrcIbama extends BaseSourceAgent {
     if (!SERPAPI_KEY) return [];
 
     const signals: RawSignal[] = [];
-    const query = `(IBAMA OR embargo OR autuação ambiental) ${territory.name}`;
+    const query = enrichGeoQuery(`(IBAMA OR embargo OR autuação ambiental)`, territory);
 
     let tbs = "";
     if (options.dateStart && options.dateEnd) {
@@ -40,6 +41,8 @@ export class SrcIbama extends BaseSourceAgent {
       const results = data.organic_results ?? [];
 
       for (const item of results) {
+        const combinedText = `${item.title ?? ""} ${item.snippet ?? ""}`;
+        if (!matchesTerritory(combinedText, territory)) continue;
         signals.push({
           title: item.title,
           summary: item.snippet,

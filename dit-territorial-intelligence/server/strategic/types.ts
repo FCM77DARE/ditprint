@@ -136,8 +136,14 @@ export interface TerritoryStrategicContext {
   name: string;
   /** Sigla UF */
   state: string;
+  /** Nome completo da UF (ex: "Bahia") — usado em queries de busca */
+  stateName?: string;
   /** Região (Norte, Nordeste, etc.) */
   region: string;
+  /** Mesorregião IBGE (ex: "Sul Baiano", "Metropolitana de Salvador") */
+  mesoregion?: string;
+  /** Microrregião IBGE (ex: "Valença") */
+  microregion?: string;
   /** ID IBGE */
   ibgeId: number;
   /** Centroide aproximado do município (lat, lng) */

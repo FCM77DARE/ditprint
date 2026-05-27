@@ -12,6 +12,7 @@ import { BaseSourceAgent } from "../../base-source";
 import type { CollectOptions, RawSignal } from "../../types";
 import type { Territory } from "../../../../drizzle/schema";
 import type { DimensionId, SourceId } from "../../../indicators";
+import { enrichGeoQuery, matchesTerritory } from "../../geo-filter";
 
 export class SrcOrcamentoParticipativo extends BaseSourceAgent {
   readonly id: SourceId = "src-orcamento-participativo";
@@ -35,11 +36,11 @@ export class SrcOrcamentoParticipativo extends BaseSourceAgent {
 
     const queries: Array<{ q: string; scope: string }> = [
       {
-        q: `(orçamento participativo OR "prestação de contas" OR "plano plurianual") "${query}"`,
+        q: enrichGeoQuery(`(orçamento participativo OR "prestação de contas" OR "plano plurianual")`, territory),
         scope: "geral",
       },
       {
-        q: `site:portaldatransparencia.gov.br "${query}"`,
+        q: enrichGeoQuery(`site:portaldatransparencia.gov.br`, territory),
         scope: "portal-transparencia",
       },
     ];
@@ -57,6 +58,8 @@ export class SrcOrcamentoParticipativo extends BaseSourceAgent {
         const results = data.organic_results ?? [];
 
         for (const item of results) {
+          const combinedText = `${item.title ?? ""} ${item.snippet ?? ""}`;
+          if (!matchesTerritory(combinedText, territory)) continue;
           signals.push({
             title: item.title,
             summary: item.snippet ?? "",
