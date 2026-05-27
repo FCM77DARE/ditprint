@@ -1,6 +1,7 @@
 import { BaseSourceAgent } from "../../base-source";
 import type { RawSignal, CollectOptions } from "../../types";
 import type { Territory } from "../../../../drizzle/schema";
+import { enrichGeoQuery, matchesTerritory } from "../../geo-filter";
 
 export class SrcFiocruzClima extends BaseSourceAgent {
   readonly id = "src-fiocruz-clima";
@@ -16,7 +17,7 @@ export class SrcFiocruzClima extends BaseSourceAgent {
 
     const signals: RawSignal[] = [];
     const query = territory.name;
-    const searchString = `site:fiocruz.br "${query}"`;
+    const searchString = enrichGeoQuery(`site:fiocruz.br`, territory);
     
     let tbs = "";
     if (options.dateStart && options.dateEnd) {
@@ -32,6 +33,8 @@ export class SrcFiocruzClima extends BaseSourceAgent {
       const results = data.organic_results ?? [];
 
       for (const item of results) {
+        const combinedText = `${item.title ?? ""} ${item.snippet ?? ""}`;
+        if (!matchesTerritory(combinedText, territory)) continue;
         signals.push({
           title: item.title,
           summary: item.snippet,

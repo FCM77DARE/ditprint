@@ -11,6 +11,7 @@ import { BaseSourceAgent } from "../../base-source";
 import type { CollectOptions, RawSignal } from "../../types";
 import type { Territory } from "../../../../drizzle/schema";
 import type { DimensionId, SourceId } from "../../../indicators";
+import { enrichGeoQuery, matchesTerritory, stateName } from "../../geo-filter";
 
 // Google News RSS base URL
 const GNEWS_BASE = "https://news.google.com/rss/search?hl=pt-BR&gl=BR&ceid=BR:pt-BR&q=";
@@ -39,11 +40,13 @@ export class SrcGoogleNews extends BaseSourceAgent {
 
     for (const rawQuery of queries.slice(0, 5)) {
       try {
-        // Garantir contexto geográfico para evitar "Santana" de outros estados
+        // FILTRO GEOGRÁFICO: força UF + "Brasil" na query — evita homônimos
+        // (ex: "Cairu" puro retorna cooperativa Cairu/RS; "São João" rebate
+        // em São João del Rei/MG). Ver server/agents/geo-filter.ts.
         const base = rawQuery.toLowerCase().includes(territory.name.toLowerCase())
           ? rawQuery
           : `${rawQuery} ${territory.name}`;
-        const query = base + dateOp;
+        const query = enrichGeoQuery(base, territory) + dateOp;
 
         const url = `${GNEWS_BASE}${encodeURIComponent(query)}&num=10`;
         const res = await fetch(url, {
@@ -60,13 +63,18 @@ export class SrcGoogleNews extends BaseSourceAgent {
           // Filtro client-side: descarta itens fora da janela T-24mo
           if (sinceDate && published < sinceDate) continue;
           if (untilDate && published > untilDate) continue;
+          // VALIDAÇÃO DE MATCH: descarta o item se nem título nem descrição
+          // mencionam o município ou a UF — significa que o motor entregou
+          // homônimo / fragmento parcial.
+          const combinedText = `${item.title} ${item.description}`;
+          if (!matchesTerritory(combinedText, territory)) continue;
           signals.push({
             title: item.title,
             summary: item.description,
             url: item.link,
             publishedAt: published,
             sourceAgentId: this.id,
-            metadata: { query },
+            metadata: { query, state: stateName(territory.state) },
           });
         }
       } catch {

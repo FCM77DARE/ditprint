@@ -175,7 +175,9 @@ interface IbgeMunicipio {
   id: number;
   nome: string;
   microrregiao?: {
+    nome?: string;
     mesorregiao?: {
+      nome?: string;
       UF?: {
         sigla?: string;
         nome?: string;
@@ -201,7 +203,10 @@ export interface ResolvedLocation {
   ibgeId: number;        // sempre o id do município pai (para stats downstream)
   municipality: string;  // município pai (== name quando kind === 'municipality')
   state: string;         // sigla UF
+  stateName?: string;    // nome completo UF ("Bahia") — usado em queries
   region: string;        // nome da região (Sudeste, Nordeste…)
+  mesoregion?: string;   // mesorregião IBGE ("Sul Baiano")
+  microregion?: string;  // microrregião IBGE ("Valença")
   centroid?: { lat: number; lng: number };
   bbox?: [number, number, number, number];
 }
@@ -252,9 +257,24 @@ function normalize(s: string): string {
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
-    .replace(/['’`´]/g, "")
+    // Apóstrofos: reto U+0027, esquerdo/direito U+2018/U+2019, modifier U+02BC,
+    // backtick U+0060, acute U+00B4. Todos viram nada.
+    .replace(/['‘’ʼ`´]/g, "")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+/**
+ * Variante de `normalize` que ADICIONALMENTE colapsa contrações portuguesas
+ * separadas por espaço: "Dias d Avila" → "dias davila"; "Sant Ana" → "santana".
+ *
+ * Bug fix (feedback equipe): quando o usuário digita "Dias d Ávila" (alguns
+ * teclados/autocomplete substituem o apóstrofo por espaço), normalize base
+ * produz "dias d avila", mas IBGE armazena "Dias d'Ávila" → "dias davila".
+ * Esta variante força "d avila" → "davila" pra bater.
+ */
+function normalizeCollapsed(s: string): string {
+  return normalize(s).replace(/\b([dnlmstv])\s+(?=[aeiou])/gi, "$1");
 }
 
 function parseTerritoryInput(raw: string): { name: string; state: string | null } {
@@ -296,9 +316,22 @@ async function loadAllDistritos(): Promise<IbgeDistrito[] | null> {
 }
 
 function pickMatches<T extends { nome: string }>(list: T[], target: string): T[] {
+  // Tentativa 1: match exato normalizado
   let hits = list.filter((x) => normalize(x.nome) === target);
-  if (hits.length === 0) hits = list.filter((x) => normalize(x.nome).startsWith(target));
-  if (hits.length === 0) hits = list.filter((x) => normalize(x.nome).includes(target));
+  if (hits.length > 0) return hits;
+
+  // Tentativa 2: contrações portuguesas colapsadas — bate "Dias d Ávila"
+  // (usuário) com "Dias d'Ávila" (IBGE).
+  const targetCollapsed = normalizeCollapsed(target);
+  hits = list.filter((x) => normalizeCollapsed(x.nome) === targetCollapsed);
+  if (hits.length > 0) return hits;
+
+  // Tentativa 3: prefix
+  hits = list.filter((x) => normalize(x.nome).startsWith(target));
+  if (hits.length > 0) return hits;
+
+  // Tentativa 4: includes (cuidado com homônimos)
+  hits = list.filter((x) => normalize(x.nome).includes(target));
   return hits;
 }
 
@@ -363,7 +396,10 @@ function buildLocation(
     ibgeId: parentMun.id,
     municipality: parentMun.nome,
     state: parentMun.microrregiao?.mesorregiao?.UF?.sigla ?? "",
+    stateName: parentMun.microrregiao?.mesorregiao?.UF?.nome ?? "",
     region: parentMun.microrregiao?.mesorregiao?.UF?.regiao?.nome ?? "",
+    mesoregion: parentMun.microrregiao?.mesorregiao?.nome ?? "",
+    microregion: parentMun.microrregiao?.nome ?? "",
     centroid: geo?.centroid,
     bbox: geo?.bbox,
   };
@@ -624,13 +660,21 @@ const DIMENSION_NAMES: Partial<Record<DimensionId, string>> = {
 
 // ── BUILD LLM PROMPT FROM ORCHESTRATOR DATA ───────────────────────────────────
 
+interface ReportPromptGeo {
+  state?: string;
+  stateName?: string;
+  mesoregion?: string;
+  microregion?: string;
+}
+
 function buildReportPrompt(
   territoryName: string,
   region: string,
   stt: number,
   dimensions: Partial<Record<DimensionId, DimensionResult>>,
   alertCount: number,
-  totalSignals: number
+  totalSignals: number,
+  geo: ReportPromptGeo = {}
 ): string {
   const { scenario, scenarioLabel, gaugeColor } = scenarioFromStt(stt);
 
@@ -661,9 +705,16 @@ function buildReportPrompt(
     })
     .join("\n\n");
 
+  const geoLine = [
+    geo.stateName ? `Estado: ${geo.stateName} (${geo.state})` : geo.state ? `UF: ${geo.state}` : null,
+    geo.mesoregion ? `Mesorregião IBGE: ${geo.mesoregion}` : null,
+    geo.microregion ? `Microrregião IBGE: ${geo.microregion}` : null,
+  ].filter(Boolean).join(" · ");
+
   return `Você é o sistema de relatórios do DIT PRINT Territorial Intelligence™.
 
 Os dados abaixo foram coletados pelo orquestrador com até 32 agentes reais rodando sobre o território "${territoryName}" (${region}).
+${geoLine ? `\nLocalização precisa: ${geoLine}` : ""}
 
 ═══ DADOS REAIS DO ORQUESTRADOR DIT ═══
 STT Global calculado: ${stt}/100 → Cenário: ${scenarioLabel}
@@ -675,7 +726,38 @@ ${dimBlocks}
 1. Os scores numéricos de dimensão (ex: D1=75) são CONFIDENCIAIS — NÃO os mencione como números. Use apenas rótulos qualitativos: "Alta Complexidade", "Vácuo Institucional", etc.
 2. O STT global (${stt}) PODE e DEVE ser mencionado — é o produto que o usuário pagou para ver.
 3. Use os sinais REAIS coletados acima como base da análise. Para dimensões sem dados coletados, fundamente com conhecimento territorial brasileiro.
-4. Seja ESPECÍFICO ao território — mencione contextos, fontes e dinâmicas reais. Nada genérico.
+
+═══ ESPECIFICIDADE OBRIGATÓRIA ═══
+Você está analisando "${territoryName}" — um lugar concreto, com história, cultura,
+economia e geografia próprios. Recomendações genéricas tipo "promover eventos
+culturais" ou "investir em saneamento" são PROIBIDAS porque se aplicam a qualquer
+município do Brasil. Em cada parágrafo, cite explicitamente:
+  • Pelo menos UM marco cultural, histórico ou produtivo específico do território
+    (nome próprio: ex. "Capital Baiana do Forró" em Senhor do Bonfim; "Festa de
+    Iemanjá" no Rio Vermelho; "MATOPIBA" no Oeste Baiano; "Cabruca de cacau" no
+    Sul Baiano; "Polo Petroquímico de Camaçari"; "Bacia de Campos" no Norte
+    Fluminense; "Reserva Sapiranga / Projeto Tamar" no litoral norte da BA; etc).
+  • Pelo menos UMA referência geográfica concreta (rio, bacia, APA, BR, bioma de
+    transição, baía, manguezal, distrito industrial — com nome próprio).
+  • Pelo menos UMA dinâmica social ou produtiva real do território (pesca
+    artesanal, turismo religioso, polo educacional, garimpo histórico, etc).
+
+Se você não conhece o suficiente sobre "${territoryName}" para citar marcos
+próprios, REDUZA a confiança das afirmações (use "indícios sugerem", "merece
+investigação local") em vez de inventar ou recorrer ao genérico.
+
+═══ CALENDÁRIO CULTURAL ═══
+Quando o território tiver evento sazonal de relevância nacional ou regional
+(São João, Carnaval, festas de padroeiro, festivais), cite-o como ATIVO
+estratégico — não só folclore. Ex: São João em Senhor do Bonfim/Cruz das Almas
+gera receita turística de R$ dezenas de milhões; Carnaval em Salvador/Olinda
+mobiliza logística e segurança em escala metropolitana; Festa do Bonfim
+movimenta o calendário religioso baiano.
+
+═══ HOTSPOTS ESPECÍFICOS ═══
+Quando referir-se a "tensões" ou "áreas a monitorar", NUNCA seja abstrato. Cite
+bairro, distrito, BR, rio, APA, comunidade, terra indígena com nome próprio.
+
 5. keySignals: use os sinais reais dos agentes. Se não houver dados reais suficientes, crie sinais plausíveis baseados no conhecimento do território com fontes reais (IBAMA, CEMADEN, IBGE, etc.).
 
 Responda APENAS com JSON válido, sem texto fora do JSON:
@@ -1010,7 +1092,10 @@ ditLandingRouter.post("/analyze", async (req: Request, res: Response) => {
     const strategicCtx: TerritoryStrategicContext = {
       name: resolvedName,
       state: loc?.state ?? "",
+      stateName: loc?.stateName ?? "",
       region: loc?.region ?? "",
+      mesoregion: loc?.mesoregion ?? "",
+      microregion: loc?.microregion ?? "",
       ibgeId: loc?.ibgeId ?? 0,
       centroid: geo?.centroid,
       bbox: geo?.bbox,
@@ -1033,7 +1118,13 @@ ditLandingRouter.post("/analyze", async (req: Request, res: Response) => {
             Math.round(orchestratorResult.stt),
             orchestratorResult.dimensions,
             orchestratorResult.alerts.length,
-            orchestratorResult.totalSignals
+            orchestratorResult.totalSignals,
+            {
+              state: loc?.state,
+              stateName: loc?.stateName,
+              mesoregion: loc?.mesoregion,
+              microregion: loc?.microregion,
+            }
           )
         )
       : callLLM(buildFallbackPrompt(resolvedName, region));

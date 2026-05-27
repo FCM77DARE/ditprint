@@ -13,6 +13,7 @@ import { BaseSourceAgent } from "../../base-source";
 import type { CollectOptions, RawSignal } from "../../types";
 import type { Territory } from "../../../../drizzle/schema";
 import type { DimensionId, SourceId } from "../../../indicators";
+import { enrichGeoQuery, matchesTerritory } from "../../geo-filter";
 
 const APIFY_TOKEN = process.env.APIFY_API_TOKEN ?? "";
 
@@ -26,19 +27,23 @@ export class SrcRedesSociais extends BaseSourceAgent {
     options: CollectOptions
   ): Promise<RawSignal[]> {
     const query = territory.name;
-    const searchString = `(site:twitter.com OR site:x.com OR site:instagram.com OR site:tiktok.com) "${query}"`;
+    const searchString = enrichGeoQuery(
+      `(site:twitter.com OR site:x.com OR site:instagram.com OR site:tiktok.com)`,
+      territory
+    );
 
     if (APIFY_TOKEN) {
-      const apify = await this.collectViaApify(searchString, query, options);
+      const apify = await this.collectViaApify(searchString, query, territory, options);
       if (apify.length > 0) return apify;
     }
 
-    return this.collectViaSerpApi(searchString, query, options);
+    return this.collectViaSerpApi(searchString, query, territory, options);
   }
 
   private async collectViaApify(
     searchString: string,
     query: string,
+    territory: Territory,
     options: CollectOptions
   ): Promise<RawSignal[]> {
     try {
@@ -75,6 +80,8 @@ export class SrcRedesSociais extends BaseSourceAgent {
       const signals: RawSignal[] = [];
       for (const item of items) {
         for (const result of item.organicResults ?? []) {
+          const combinedText = `${result.title ?? ""} ${result.description ?? ""}`;
+          if (!matchesTerritory(combinedText, territory)) continue;
           signals.push({
             title: `Redes Sociais: ${result.title}`,
             summary: result.description,
@@ -95,6 +102,7 @@ export class SrcRedesSociais extends BaseSourceAgent {
   private async collectViaSerpApi(
     searchString: string,
     query: string,
+    territory: Territory,
     options: CollectOptions
   ): Promise<RawSignal[]> {
     const SERPAPI_KEY = process.env.SERPAPI_API_KEY ?? "";
@@ -117,6 +125,8 @@ export class SrcRedesSociais extends BaseSourceAgent {
       const results = data.organic_results ?? [];
 
       for (const item of results) {
+        const combinedText = `${item.title ?? ""} ${item.snippet ?? ""}`;
+        if (!matchesTerritory(combinedText, territory)) continue;
         signals.push({
           title: `Redes Sociais: ${item.title}`,
           summary: item.snippet ?? "",

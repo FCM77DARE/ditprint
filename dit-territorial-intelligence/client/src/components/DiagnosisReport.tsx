@@ -278,6 +278,12 @@ export default function DiagnosisReport({ result: t }: Props) {
         .dit-report-root .gauge-wrap { text-align:center; min-width:200px; }
         .dit-report-root .gauge-stt { font-family:'Bebas Neue',sans-serif; font-size:18px; color:#6B9B7C; letter-spacing:.15em; margin-top:12px; }
         .dit-report-root .result-body { max-width:1100px; margin:0 auto; padding:64px 24px; background:#fff; }
+        .dit-report-root .stt-primer { background:#fff; border:1px solid #D4C9B8; border-radius:14px; padding:24px 28px; margin-bottom:32px; border-left:3px solid #6B9B7C; }
+        .dit-report-root .stt-primer-label { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.25em; color:#6B9B7C; text-transform:uppercase; margin-bottom:10px; font-weight:600; }
+        .dit-report-root .stt-primer-text { font-size:15px; line-height:1.65; color:#2C2C2C; margin:0 0 12px; }
+        .dit-report-root .stt-primer-text strong { color:#2D5340; font-weight:700; }
+        .dit-report-root .stt-primer-link { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:#5B8FA3; text-decoration:none; font-weight:600; }
+        .dit-report-root .stt-primer-link:hover { color:#2D5340; }
         .dit-report-root .exec-summary { background:#F5F1ED; border:1px solid #D4C9B8; border-radius:16px; padding:36px; margin-bottom:48px; border-left:4px solid #D4A574; }
         .dit-report-root .exec-summary-label { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.25em; color:#6B9B7C; text-transform:uppercase; margin-bottom:12px; }
         .dit-report-root .exec-summary-text { font-size:16px; line-height:1.75; color:#2C2C2C; }
@@ -491,6 +497,20 @@ export default function DiagnosisReport({ result: t }: Props) {
       </section>
 
       <div className="result-body">
+        {/* O QUE É O STT — primer rápido para quem nunca leu a Metodologia */}
+        <div className="stt-primer">
+          <div className="stt-primer-label">Como ler este resultado</div>
+          <p className="stt-primer-text">
+            O <strong>Score de Território Total (STT)</strong> é um índice proprietário
+            que avalia o grau de complexidade de um território a partir da análise
+            integrada de sete dimensões estruturais. <strong>Quanto maior o score,
+            maior a complexidade local.</strong>
+          </p>
+          <a href="/metodologia" className="stt-primer-link">
+            Saiba mais sobre nossa Metodologia →
+          </a>
+        </div>
+
         {/* Executive Summary */}
         {execSummary.length > 0 && (
           <div className="exec-summary">

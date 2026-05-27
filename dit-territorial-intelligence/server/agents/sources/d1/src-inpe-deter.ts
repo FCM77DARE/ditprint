@@ -11,6 +11,7 @@ import { BaseSourceAgent } from "../../base-source";
 import type { CollectOptions, RawSignal } from "../../types";
 import type { Territory } from "../../../../drizzle/schema";
 import type { DimensionId, SourceId } from "../../../indicators";
+import { enrichGeoQuery, matchesTerritory } from "../../geo-filter";
 
 export class SrcInpeDeter extends BaseSourceAgent {
   readonly id: SourceId = "src-inpe-deter";
@@ -25,7 +26,7 @@ export class SrcInpeDeter extends BaseSourceAgent {
     if (!SERPAPI_KEY) return [];
 
     const signals: RawSignal[] = [];
-    const query = `(desmatamento OR DETER OR INPE) ${territory.name}`;
+    const query = enrichGeoQuery(`(desmatamento OR DETER OR INPE)`, territory);
 
     let tbs = "";
     if (options.dateStart && options.dateEnd) {
@@ -41,6 +42,8 @@ export class SrcInpeDeter extends BaseSourceAgent {
       const results = data.organic_results ?? [];
 
       for (const item of results) {
+        const combinedText = `${item.title ?? ""} ${item.snippet ?? ""}`;
+        if (!matchesTerritory(combinedText, territory)) continue;
         signals.push({
           title: item.title,
           summary: item.snippet,

@@ -1,6 +1,7 @@
 import { BaseSourceAgent } from "../../base-source";
 import type { RawSignal, CollectOptions } from "../../types";
 import type { Territory } from "../../../../drizzle/schema";
+import { enrichGeoQuery, matchesTerritory } from "../../geo-filter";
 
 export class SrcInep extends BaseSourceAgent {
   readonly id = "src-inep";
@@ -16,7 +17,7 @@ export class SrcInep extends BaseSourceAgent {
 
     const signals: RawSignal[] = [];
     const query = territory.name;
-    const searchString = `site:inep.gov.br OR site:mec.gov.br "${query}"`;
+    const searchString = enrichGeoQuery(`site:inep.gov.br OR site:mec.gov.br`, territory);
     
     let tbs = "";
     if (options.dateStart && options.dateEnd) {
@@ -32,6 +33,8 @@ export class SrcInep extends BaseSourceAgent {
       const results = data.organic_results ?? [];
 
       for (const item of results) {
+        const combinedText = `${item.title ?? ""} ${item.snippet ?? ""}`;
+        if (!matchesTerritory(combinedText, territory)) continue;
         signals.push({
           title: item.title,
           summary: item.snippet,
