@@ -563,6 +563,44 @@ function makeSlug(name: string): string {
 
 // ── TERRITORY FIND OR CREATE ──────────────────────────────────────────────────
 
+/**
+ * Mapeamento UF → state_id na API Fogo Cruzado v2.
+ * Fonte: https://api.fogocruzado.org.br/api/v2/states
+ * (Hoje API cobre apenas RJ/PE/BA — demais estados retornam vazio.)
+ */
+const FOGO_CRUZADO_STATE_IDS: Record<string, string> = {
+  RJ: "813ca36b-91e3-4a18-b408-60b27a1942ef",
+  PE: "9d4b58a6-46d7-4d62-a4d6-08f1e3a9f01a",
+  BA: "1c39e4b1-49a8-4f4a-90a4-94d7e2b96c5f",
+};
+
+/**
+ * Gera o `contextData` JSON do território a partir do ResolvedLocation.
+ *
+ * Bug fix: 6 agentes (IBGE Censo/Renda/Habitação, PNUD-Atlas, Querido Diário,
+ * Fogo Cruzado) ficavam mudos pra qualquer município novo porque contextData
+ * vinha null. Agora populamos ibgeMunicipios, mesoregion, microregion etc.
+ * automaticamente a partir do lookup IBGE feito em resolveLocation.
+ */
+function buildContextData(loc: ResolvedLocation | null): Record<string, unknown> | null {
+  if (!loc || !loc.ibgeId) return null;
+  const ctx: Record<string, unknown> = {
+    ibgeMunicipios: [String(loc.ibgeId)],
+    ibgeId: String(loc.ibgeId),
+  };
+  if (loc.state) {
+    ctx.uf = loc.state;
+    const fc = FOGO_CRUZADO_STATE_IDS[loc.state];
+    if (fc) ctx.fogoCruzadoStateId = fc;
+  }
+  if (loc.stateName) ctx.stateName = loc.stateName;
+  if (loc.mesoregion) ctx.mesoregion = loc.mesoregion;
+  if (loc.microregion) ctx.microregion = loc.microregion;
+  if (loc.centroid) ctx.centroid = loc.centroid;
+  if (loc.bbox) ctx.bbox = loc.bbox;
+  return ctx;
+}
+
 async function findOrCreateTerritory(
   rawName: string,
   loc: ResolvedLocation | null
@@ -576,6 +614,8 @@ async function findOrCreateTerritory(
       : makeSlug(resolvedName);
   const slug = slugBase;
 
+  const contextData = buildContextData(loc);
+
   const db = await getDb();
 
   const fakeTerritory = (): Territory =>
@@ -586,7 +626,7 @@ async function findOrCreateTerritory(
       region: loc?.region ?? null,
       state: loc?.state ?? null,
       active: true,
-      contextData: null,
+      contextData,
       onboardingStatus: "ready",
       createdAt: new Date(),
     }) as unknown as Territory;
@@ -599,7 +639,29 @@ async function findOrCreateTerritory(
       .from(territories)
       .where(eq(territories.slug, slug))
       .limit(1);
-    if (existing.length > 0) return existing[0];
+    if (existing.length > 0) {
+      // Backfill: se território já existe mas contextData está vazio/incompleto,
+      // atualizamos com o lookup atual — destrava agentes IBGE/Querido Diário
+      // pra municípios criados antes deste fix.
+      const existingTerritory = existing[0];
+      const existingCtx = existingTerritory.contextData as Record<string, unknown> | null;
+      const needsBackfill =
+        !existingCtx ||
+        !existingCtx.ibgeMunicipios ||
+        (Array.isArray(existingCtx.ibgeMunicipios) && existingCtx.ibgeMunicipios.length === 0);
+      if (needsBackfill && contextData) {
+        try {
+          await db
+            .update(territories)
+            .set({ contextData })
+            .where(eq(territories.id, existingTerritory.id));
+          return { ...existingTerritory, contextData } as Territory;
+        } catch (uErr) {
+          log.warn({ err: (uErr as Error).message, slug }, "Backfill de contextData falhou");
+        }
+      }
+      return existingTerritory;
+    }
 
     await db.insert(territories).values({
       slug,
@@ -607,7 +669,7 @@ async function findOrCreateTerritory(
       region: loc?.region ?? undefined,
       state: loc?.state ?? undefined,
       active: true,
-      contextData: null,
+      contextData,
       onboardingStatus: "ready",
     });
 
