@@ -14,6 +14,7 @@ import { SrcGeniUff } from "../sources/d4/src-geni-uff";
 import { SrcIspSsp } from "../sources/d4/src-isp-ssp";
 import { SrcFunaiIphan } from "../sources/d4/src-funai-iphan";
 import { SrcUnicampTerr } from "../sources/d4/src-unicamp-terr";
+import { SrcIncraSipra } from "../sources/d4/src-incra-sipra";
 import { SrcGoogleNews } from "../sources/d6/src-google-news";
 
 export class DimDinamica extends BaseDimensionAgent {
@@ -26,6 +27,7 @@ export class DimDinamica extends BaseDimensionAgent {
     new SrcIspSsp(),
     new SrcFunaiIphan(),
     new SrcUnicampTerr(),
+    new SrcIncraSipra(),
     new SrcGoogleNews(),
   ];
 
@@ -99,7 +101,7 @@ export class DimDinamica extends BaseDimensionAgent {
     // 4.4.1.2 — Assentamentos rurais
     {
       indicatorCode: "4.4.1.2",
-      keywords: ["assentamento rural", "MST", "conflito agrário", "reforma agrária", "ocupação de terra", "INCRA", "sem-terra"],
+      keywords: ["assentamento", "assentamento rural", "MST", "conflito agrário", "reforma agrária", "ocupação de terra", "INCRA", "SIPRA", "sem-terra", "famílias assentadas", "projeto de assentamento"],
       baseImpact: 0.65,
     },
     // 4.4.1.3 — Reconhecimento territorial
