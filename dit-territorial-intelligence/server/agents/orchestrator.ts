@@ -240,7 +240,7 @@ export class Orchestrator {
     let consolidatedStt = stt;
     let historical: Awaited<ReturnType<typeof consolidateSttFromHistory>> = null;
     try {
-      historical = await consolidateSttFromHistory(territory.id);
+      historical = await consolidateSttFromHistory(territory.id, territory.slug);
       if (historical && historical.totalSignalsInWindow > 0) {
         // Substitui o snapshot pelo cumulativo de 24mo:
         // - Score por dimensão = média ponderada dos sinais do histórico
@@ -489,6 +489,40 @@ export class Orchestrator {
     signalsToPersist: ClassifiedSignal[]
   ) {
     if (signalsToPersist.length === 0) return;
+
+    // FALLBACK em DISCO: storage local sempre acionado pra garantir histórico
+    // mesmo sem MySQL conectado. Em prod hoje (Railway sem DATABASE_URL) este
+    // é o ÚNICO mecanismo persistente; quando o DB voltar, vira backup.
+    try {
+      const { persistSignalsToStore } = await import("../stt/signal-store");
+      const STRUCTURAL = new Set([
+        "src-ibge-censo", "src-ibge-renda", "src-ibge-habitacao",
+        "src-ipeadata", "src-pnud-atlas", "src-aneel-siga",
+        "src-incra-sipra", "src-snis", "src-inep", "src-inep-ideb",
+        "src-datasus-real", "src-cnuc",
+      ]);
+      await persistSignalsToStore(
+        territory.slug,
+        signalsToPersist.map((sig) => ({
+          source: sig.sourceAgentId,
+          dimension: dimensionFromSourceId(sig.sourceAgentId),
+          impact: sig.impactScore,
+          publishedAt: sig.publishedAt ?? new Date(),
+          title: sig.title,
+          summary: sig.summary,
+          url: sig.url,
+          indicatorCode: sig.indicatorCode,
+          structural:
+            STRUCTURAL.has(sig.sourceAgentId) ||
+            (sig.metadata as Record<string, unknown> | undefined)?.structural === true,
+          metadata: sig.metadata,
+        }))
+      );
+    } catch (err) {
+      log.warn({ err: (err as Error).message }, "Disk signal store falhou (não-fatal)");
+    }
+
+    // DB MySQL: tentativa primária se disponível.
     const db = await getDb();
     if (!db) return;
 

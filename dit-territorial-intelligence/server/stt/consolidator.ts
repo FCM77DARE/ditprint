@@ -37,6 +37,7 @@ import { and, eq, gte } from "drizzle-orm";
 import { logger } from "../_core/logger";
 import { DIMENSIONS_LIST } from "../indicators";
 import type { DimensionId } from "../indicators";
+import { readSignalsInWindow, type StoredSignal } from "./signal-store";
 
 const log = logger.child({ module: "stt-consolidator" });
 
@@ -113,52 +114,79 @@ function isStructural(sig: { source: string; metadata: unknown }): boolean {
  * dimensões zeradas — caller deve recorrer ao snapshot do orquestrador.
  */
 export async function consolidateSttFromHistory(
-  territoryId: number
+  territoryId: number,
+  territorySlug?: string
 ): Promise<ConsolidatedStt | null> {
   const db = await getDb();
-  if (!db) {
-    log.warn({ territoryId }, "DB indisponível — sem consolidação histórica");
-    return null;
-  }
-
   const cutoff = new Date(Date.now() - WINDOW_MS);
   const todayStart = new Date();
   todayStart.setUTCHours(0, 0, 0, 0);
 
-  try {
-    const rows = await db
-      .select()
-      .from(signalsTable)
-      .where(
-        and(
-          eq(signalsTable.territoryId, territoryId),
-          gte(signalsTable.publishedAt, cutoff)
-        )
-      );
+  // FONTE DE DADOS: MySQL (DB) é a primária; disco (.jsonl) é fallback
+  // quando DATABASE_URL não está configurado (caso Railway atual jun/2026).
+  let rows: Array<{
+    relatedIndex: string | null;
+    source: string;
+    publishedAt: Date | null;
+    llmImpactScore: number | null;
+    metadata: unknown;
+    createdAt: Date | null;
+  }> = [];
 
-    if (rows.length === 0) {
-      log.info({ territoryId }, "Sem sinais nos últimos 24mo — consolidação retorna zerada");
-      return {
-        stt: 0,
-        dimensions: { D1: 0, D2: 0, D3: 0, D4: 0, D5: 0, D6: 0, D7: 0 },
-        totalSignalsInWindow: 0,
-        totalSignalsToday: 0,
-        totalStructuralSignals: 0,
-        oldestSignalAt: null,
-        newestSignalAt: null,
-        effectiveWeightSum: 0,
-        dimensionDetail: {
-          D1: { signals: 0, structural: 0 },
-          D2: { signals: 0, structural: 0 },
-          D3: { signals: 0, structural: 0 },
-          D4: { signals: 0, structural: 0 },
-          D5: { signals: 0, structural: 0 },
-          D6: { signals: 0, structural: 0 },
-          D7: { signals: 0, structural: 0 },
-        },
-      };
+  if (db && territoryId > 0) {
+    try {
+      const dbRows = await db
+        .select()
+        .from(signalsTable)
+        .where(
+          and(
+            eq(signalsTable.territoryId, territoryId),
+            gte(signalsTable.publishedAt, cutoff)
+          )
+        );
+      rows = dbRows.map((r) => ({
+        relatedIndex: r.relatedIndex,
+        source: r.source,
+        publishedAt: r.publishedAt,
+        llmImpactScore: r.llmImpactScore,
+        metadata: r.metadata,
+        createdAt: r.createdAt,
+      }));
+    } catch (err) {
+      log.warn({ err, territoryId }, "Falha ler signals do DB — caindo no fallback disco");
     }
+  }
 
+  // FALLBACK DISCO: lê .jsonl quando DB indisponível ou retornou vazio.
+  if (rows.length === 0 && territorySlug) {
+    try {
+      const disk: StoredSignal[] = await readSignalsInWindow(territorySlug, WINDOW_MONTHS);
+      rows = disk.map((s) => ({
+        relatedIndex: s.dimension,
+        source: s.source,
+        publishedAt: new Date(s.publishedAt),
+        llmImpactScore: s.impact,
+        metadata: { ...(s.metadata ?? {}), structural: s.structural },
+        createdAt: new Date(s.storedAt),
+      }));
+      log.info(
+        { territorySlug, fromDisk: rows.length },
+        "Sinais lidos do storage em disco (fallback)"
+      );
+    } catch (err) {
+      log.warn({ err, territorySlug }, "Falha ler signals do disco");
+    }
+  }
+
+  if (rows.length === 0) {
+    log.info(
+      { territoryId, territorySlug },
+      "Sem sinais no histórico (DB + disco vazios) — consolidação retorna null"
+    );
+    return null;
+  }
+
+  try {
     // Acumuladores por dimensão.
     const dimAccum: Record<DimensionId, { num: number; den: number; count: number; struct: number }> = {
       D1: { num: 0, den: 0, count: 0, struct: 0 },
