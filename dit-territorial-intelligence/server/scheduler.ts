@@ -57,7 +57,40 @@ export async function runDailyCollection(): Promise<DailyCollectionResult[]> {
 
   try {
     const territories = await getAllTerritories();
-    const activeTerritories = territories.filter((t) => t.active);
+    let activeTerritories = territories.filter((t) => t.active);
+
+    // FALLBACK em DISCO: se o DB não retornou territórios (Railway prod sem
+    // DATABASE_URL), usa a lista persistida pelo /api/dit/analyze. Garante
+    // que o STT EVOLUA DIARIAMENTE mesmo sem MySQL.
+    if (activeTerritories.length === 0) {
+      try {
+        const { getStaleTerritories, markCollected } = await import("./stt/tracked-territories");
+        const stale = await getStaleTerritories(4); // não coletados nas últimas 4h
+        if (stale.length > 0) {
+          log.info(
+            { count: stale.length },
+            "DB sem territórios ativos — usando lista em disco (tracked-territories.json)"
+          );
+          activeTerritories = stale.map((t) => ({
+            id: 0,
+            slug: t.slug,
+            name: t.name,
+            region: t.region ?? null,
+            state: t.state ?? null,
+            active: true,
+            contextData: t.ibgeId
+              ? { ibgeMunicipios: [String(t.ibgeId)], ibgeId: String(t.ibgeId), uf: t.state }
+              : null,
+            onboardingStatus: "ready" as const,
+            createdAt: new Date(),
+          })) as unknown as typeof activeTerritories;
+        }
+        // Expose markCollected ao laço abaixo (closure)
+        (globalThis as Record<string, unknown>).__markTrackedCollected = markCollected;
+      } catch (e) {
+        log.warn({ err: (e as Error).message }, "Disk fallback de territórios falhou");
+      }
+    }
 
     for (const territory of activeTerritories) {
       const result: DailyCollectionResult = {
@@ -76,6 +109,29 @@ export async function runDailyCollection(): Promise<DailyCollectionResult[]> {
           { territory: territory.name, stt: orchResult.stt, alerts: orchResult.alerts.length },
           "Orchestrator pipeline complete"
         );
+
+        // Marca coleta autônoma na lista em disco (quando rodando sem DB)
+        try {
+          const markFn = (globalThis as Record<string, unknown>).__markTrackedCollected as
+            | ((s: string, stt?: number) => Promise<void>)
+            | undefined;
+          if (markFn) await markFn(territory.slug, orchResult.stt);
+        } catch {
+          /* não-fatal */
+        }
+
+        // Em modo fallback (sem DB / territory.id=0), o orchestrator.run JÁ
+        // persistiu sinais em disco via signal-store. Pular pipelines legacy
+        // (DB-dependentes) e snapshot diário neste modo.
+        const isDiskFallback = territory.id === 0;
+        if (isDiskFallback) {
+          log.debug(
+            { territory: territory.name },
+            "Modo fallback disco — pulando pipelines legacy e snapshot DB"
+          );
+          results.push(result);
+          continue;
+        }
 
         // 2. Legacy collection pipelines (RSS + structured data) — kept for compatibility
         //    until all source agents have full implementations.
