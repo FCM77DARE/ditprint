@@ -103,6 +103,25 @@ const MESO_RESOURCE_PROFILE: Record<string, Resource[]> = {
       sources: ["ANA"] },
   ],
 
+  // ── RIO GRANDE DO NORTE ─────────────────────────────────────────────────────
+  "RN|leste-potiguar": [
+    { category: "energeticos", name: "Energia Eólica (Litoral Norte)", abundance: "abundante",
+      notes: "Litoral norte do RN concentra os maiores parques eólicos onshore do Brasil — São Miguel do Gostoso, Rio do Fogo (Arizona I/II — Iberdrola/Força Eólica), Pedra Grande, João Câmara",
+      sources: ["ANEEL", "EPE", "ABEEólica"] },
+    { category: "agricolas", name: "Pesca Artesanal e Mariscagem", abundance: "abundante",
+      notes: "Comunidades pesqueiras tradicionais ao longo do litoral leste — peixe, lagosta, marisco, camarão",
+      sources: ["MPA", "MAPA", "EMATER-RN"] },
+    { category: "ambientais", name: "Recifes / Parrachos de Coral", abundance: "abundante",
+      notes: "Parrachos de Maracajaú, Rio do Fogo e Caraúbas — sistemas recifais de relevância internacional para biodiversidade marinha do Atlântico Sul",
+      sources: ["ICMBio", "MMA", "IDEMA"] },
+    { category: "ambientais", name: "Turismo Costeiro", abundance: "abundante",
+      notes: "Eixo Natal–Pipa–São Miguel do Gostoso — destino consolidado de turismo de natureza, sol e mar; kitesurf de classe mundial",
+      sources: ["EMPROTUR", "Setur-RN"] },
+    { category: "ambientais", name: "Mata Atlântica Costeira e Restingas", abundance: "presente",
+      notes: "Remanescentes de Mata Atlântica em pequenos enclaves litorâneos + ecossistemas de restinga e dunas vegetadas; pressão de expansão imobiliária e eólica",
+      sources: ["SOS Mata Atlântica", "ICMBio", "IDEMA"] },
+  ],
+
   // ── MINAS GERAIS ────────────────────────────────────────────────────────────
   "MG|metropolitana-de-belo-horizonte": [
     { category: "minerais", name: "Minério de Ferro (Quadrilátero Ferrífero)", abundance: "abundante",

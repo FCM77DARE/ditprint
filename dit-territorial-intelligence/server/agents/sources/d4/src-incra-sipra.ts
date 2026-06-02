@@ -21,9 +21,25 @@ import type { DimensionId, SourceId } from "../../../indicators";
 import { enrichGeoQuery, matchesTerritory, fold } from "../../geo-filter";
 
 // Resource ID público do SIPRA na plataforma de Dados Abertos do INCRA.
-// Pode ser substituído se a INCRA reindexar — buscar slug "sipra".
+// TODO confirmar via UI — sandbox 2026-06-02 bloqueou WebFetch/curl, não foi
+// possível validar UUID ao vivo. Quando falhar, fallback SerpAPI cobre o caso.
+// Revalidar via:
+//   curl 'https://dadosabertos.incra.gov.br/api/3/action/package_search?q=assentamento'
 const SIPRA_RESOURCE_ID = "2a01250d-cf02-49a8-b6a3-7b7f3a55c5c4";
 const CKAN_BASE = "https://dadosabertos.incra.gov.br/api/3/action/datastore_search";
+
+// Domínios oficiais reconhecidos para fallback agressivo.
+const OFFICIAL_HOSTS = ["incra.gov.br", "gov.br", "mda.gov.br"];
+
+function isOfficial(url?: string): boolean {
+  if (!url) return false;
+  try {
+    const host = new URL(url).hostname.toLowerCase();
+    return OFFICIAL_HOSTS.some((d) => host === d || host.endsWith("." + d));
+  } catch {
+    return false;
+  }
+}
 
 interface SipraRecord {
   nome_projeto?: string;
@@ -139,10 +155,12 @@ export class SrcIncraSipra extends BaseSourceAgent {
     if (!SERPAPI_KEY) return [];
 
     const signals: RawSignal[] = [];
-    const searchString = enrichGeoQuery(`site:incra.gov.br assentamento`, territory);
+    // Query mais aberta — sem aspas excessivas, cobre painel.incra e gov.br.
+    const baseQ = `(site:incra.gov.br OR site:gov.br OR site:painel.incra.gov.br) assentamento OR "projeto de assentamento" OR PA`;
+    const searchString = enrichGeoQuery(baseQ, territory);
     const url =
       `https://serpapi.com/search.json?engine=google&q=${encodeURIComponent(searchString)}` +
-      `&num=5&api_key=${SERPAPI_KEY}`;
+      `&num=10&api_key=${SERPAPI_KEY}`;
 
     try {
       const res = await fetch(url, { signal: options.signal });
@@ -152,14 +170,19 @@ export class SrcIncraSipra extends BaseSourceAgent {
 
       for (const item of results) {
         const combined = `${item.title ?? ""} ${item.snippet ?? ""}`;
-        if (!matchesTerritory(combined, territory)) continue;
+        // Domínio oficial: aceita direto. Outro: exige menção ao território.
+        if (!isOfficial(item.link) && !matchesTerritory(combined, territory)) continue;
         signals.push({
           title: `INCRA (SIPRA): ${item.title}`,
           summary: item.snippet,
           url: item.link,
           sourceAgentId: this.id,
           publishedAt: new Date(),
-          metadata: { fallback: "serpapi", territory: territory.name },
+          metadata: {
+            fallback: "serpapi",
+            territory: territory.name,
+            officialHost: isOfficial(item.link),
+          },
         });
       }
     } catch {
