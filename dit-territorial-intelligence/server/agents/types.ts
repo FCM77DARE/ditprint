@@ -89,6 +89,21 @@ export interface OrchestratorResult {
     sourcesEmpty: number;
     sourcesError: number;
   };
+  /** Consolidação histórica de 24 meses — o STT publicado é o cumulativo,
+   * NÃO o snapshot do dia. Frontend pode exibir "X sinais nos últimos 24 meses"
+   * e "Y sinais novos hoje" pra mostrar que o score é cumulativo, não fotográfico. */
+  historicalConsolidation?: {
+    stt: number;
+    signalsInWindow: number;
+    signalsToday: number;
+    structuralSignals: number;
+    oldestSignalAt: string | null;
+    newestSignalAt: string | null;
+    windowMonths: number;
+    halfLifeMonths: number;
+    /** STT calculado a partir do snapshot do dia (não publicado, só pra debug) */
+    snapshotSttForComparison: number;
+  } | null;
   /** ISO timestamp of when this run completed */
   completedAt: string;
 }
