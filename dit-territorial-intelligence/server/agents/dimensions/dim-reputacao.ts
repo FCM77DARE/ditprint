@@ -10,6 +10,9 @@ import { SrcGoogleNews } from "../sources/d6/src-google-news";
 import { SrcGoogleTrends } from "../sources/d6/src-google-trends";
 import { SrcRedesSociais } from "../sources/d6/src-redes-sociais";
 import { SrcUniversidades } from "../sources/d6/src-universidades";
+import { SrcYoutubeTerritorio } from "../sources/d6/src-youtube-territorio";
+import { SrcBlueskyTerritorio } from "../sources/d6/src-bluesky-territorio";
+import { SrcRedditBr } from "../sources/d6/src-reddit-br";
 
 export class DimReputacao extends BaseDimensionAgent {
   readonly id: DimensionId = "D6";
@@ -18,6 +21,9 @@ export class DimReputacao extends BaseDimensionAgent {
     new SrcGoogleTrends(),
     new SrcRedesSociais(),
     new SrcUniversidades(),
+    new SrcYoutubeTerritorio(),
+    new SrcBlueskyTerritorio(),
+    new SrcRedditBr(),
   ];
 
   readonly classificationRules: IndicatorKeywordRule[] = [
