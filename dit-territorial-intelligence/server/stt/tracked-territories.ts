@@ -19,7 +19,9 @@ import { logger } from "../_core/logger";
 
 const log = logger.child({ module: "tracked-territories" });
 
-const DATA_DIR = join(process.cwd(), "data");
+// DATA_DIR persistente: em prod Railway usa /data (volume montado).
+// Em dev local, usa ./data. Configurável por env var DATA_DIR.
+const DATA_DIR = process.env.DATA_DIR || join(process.cwd(), "data");
 const FILE = join(DATA_DIR, "tracked-territories.json");
 
 export interface TrackedTerritory {

@@ -121,7 +121,8 @@ ditLandingRouter.post("/lead", async (req: Request, res: Response) => {
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname as pathDirname, join } from "node:path";
 
-const CACHE_FILE = join(process.cwd(), "data", "dit-cache.json");
+// Cache persistente: prod Railway usa /data (volume montado), dev local ./data.
+const CACHE_FILE = join(process.env.DATA_DIR || join(process.cwd(), "data"), "dit-cache.json");
 const analysisCache = new Map<string, { result: unknown; ts: number }>();
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 

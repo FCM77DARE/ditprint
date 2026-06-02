@@ -23,7 +23,9 @@ import { logger } from "../_core/logger";
 
 const log = logger.child({ module: "signal-store" });
 
-const STORE_DIR = join(process.cwd(), "data", "signals");
+// STORE_DIR persistente: em prod Railway usa /data/signals (volume montado).
+// Em dev local, usa ./data/signals. Override por env var DATA_DIR.
+const STORE_DIR = join(process.env.DATA_DIR || join(process.cwd(), "data"), "signals");
 const WINDOW_MS = 24 * 30 * 24 * 60 * 60 * 1000; // 24 meses
 const MAX_PER_TERRITORY = 10_000;
 
