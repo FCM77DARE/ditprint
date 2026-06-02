@@ -27,6 +27,7 @@ import { calculateSttWithLLM } from "../stt/calculator";
 import { detectAnomalies } from "../stt/anomalyDetector";
 import type { TerritoryContextData } from "../stt/types";
 import { dispatchAlert, dispatchAnomalyAlert, broadcastSignalToFeed } from "../alertEngine";
+import { consolidateSttFromHistory } from "../stt/consolidator";
 import type { BaseDimensionAgent } from "./base-dimension";
 import { DimSocioambiental } from "./dimensions/dim-socioambiental";
 import { DimSocioeconomico } from "./dimensions/dim-socioeconomico";
@@ -230,6 +231,47 @@ export class Orchestrator {
     const signalsToPersist = allCollectedSignals.filter(s => s.impactScore >= 0.3 || s.triggersAlert);
     await this._persistSignals(territory, signalsToPersist);
 
+    // ─── 8b. CONSOLIDAÇÃO HISTÓRICA (24 MESES) ───────────────────────────────
+    // Metodologia PRINT: STT NÃO é fotografia do dia, é consolidação ponderada
+    // de TODOS os sinais nos últimos 24 meses, com decaimento exponencial
+    // (meia-vida 12mo). Estruturais (Censo, ANEEL etc) sem decaimento.
+    // Lê do banco DEPOIS de persistir os sinais novos = inclui a coleta atual.
+    let consolidatedDimensions: typeof dimensions = dimensions;
+    let consolidatedStt = stt;
+    let historical: Awaited<ReturnType<typeof consolidateSttFromHistory>> = null;
+    try {
+      historical = await consolidateSttFromHistory(territory.id);
+      if (historical && historical.totalSignalsInWindow > 0) {
+        // Substitui o snapshot pelo cumulativo de 24mo:
+        // - Score por dimensão = média ponderada dos sinais do histórico
+        // - STT global = Σ(D_i × W_i) recalculado
+        // O snapshot do dia ainda fica nas dim.signals (lista visível) — não
+        // mexemos isso pra não quebrar UI. Só o NÚMERO do score muda.
+        for (const id of ["D1", "D2", "D3", "D4", "D5", "D6"] as const) {
+          const histScore = historical.dimensions[id];
+          if (dimensions[id] && histScore > 0) {
+            // Atualiza score da dim com o cumulativo, preservando signals etc
+            (dimensions[id] as { score: number }).score = histScore;
+          }
+        }
+        consolidatedStt = historical.stt;
+        consolidatedDimensions = dimensions;
+        log.info(
+          {
+            territory: territory.slug,
+            snapshotStt: stt,
+            consolidatedStt: historical.stt,
+            signalsInWindow: historical.totalSignalsInWindow,
+            structural: historical.totalStructuralSignals,
+            today: historical.totalSignalsToday,
+          },
+          "STT consolidado de 24mo aplicado (substitui snapshot)"
+        );
+      }
+    } catch (err) {
+      log.warn({ err, territory: territory.slug }, "Consolidação histórica falhou — mantendo snapshot");
+    }
+
     // ─── Coverage Score ──────────────────────────────────────────────────────
     // Métrica honesta de "quanto da malha falou pra este território".
     // Pra cada dimensão, conta as fontes que retornaram >= 1 sinal real
@@ -259,12 +301,26 @@ export class Orchestrator {
       territoryId: territory.id,
       territorySlug: territory.slug,
       period,
-      stt,
-      dimensions,
+      // STT publicado é o CONSOLIDADO de 24 meses (não o snapshot).
+      stt: consolidatedStt,
+      dimensions: consolidatedDimensions,
       alerts,
       totalSignals: totalSignalsCount,
       coverageScore: Math.round(coverageScore * 1000) / 1000,
       coverageDetail: { totalSources, sourcesWithSignals, sourcesEmpty, sourcesError },
+      historicalConsolidation: historical
+        ? {
+            stt: historical.stt,
+            signalsInWindow: historical.totalSignalsInWindow,
+            signalsToday: historical.totalSignalsToday,
+            structuralSignals: historical.totalStructuralSignals,
+            oldestSignalAt: historical.oldestSignalAt?.toISOString() ?? null,
+            newestSignalAt: historical.newestSignalAt?.toISOString() ?? null,
+            windowMonths: 24,
+            halfLifeMonths: 12,
+            snapshotSttForComparison: stt,
+          }
+        : null,
       completedAt: new Date().toISOString(),
     };
 

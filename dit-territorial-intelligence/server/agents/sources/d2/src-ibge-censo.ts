@@ -39,7 +39,7 @@ export class SrcIbgeCenso extends BaseSourceAgent {
                   publishedAt: new Date(),
                   rawValue: populacao,
                   unit: "habitantes",
-                  metadata: { ibgeId, agregado: 793, variavel: 93, ano: 2022 },
+                  metadata: { ibgeId, agregado: 793, variavel: 93, ano: 2022, structural: true },
                 });
               }
             }
@@ -70,7 +70,7 @@ export class SrcIbgeCenso extends BaseSourceAgent {
                   publishedAt: new Date(),
                   rawValue: densidade,
                   unit: "hab/km²",
-                  metadata: { ibgeId, agregado: 1301, variavel: 615, periodo: ultimo },
+                  metadata: { ibgeId, agregado: 1301, variavel: 615, periodo: ultimo, structural: true },
                 });
               }
             }
