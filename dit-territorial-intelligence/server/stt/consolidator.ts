@@ -1,34 +1,37 @@
 /**
  * STT Consolidator — Cálculo cumulativo do Score de Território Total.
  *
- * METODOLOGIA PRINT (fixada 02/06/2026 a partir de feedback da fundadora):
+ * METODOLOGIA PRINT — "COMPLEXIDADE RESIDUAL" (fixada 02/06/2026 v2):
  *
- *   O STT NÃO É uma fotografia dos sinais coletados HOJE. É a consolidação
- *   ponderada de TODOS os sinais detectados nos últimos 24 meses, lidos do
- *   banco, com decaimento exponencial por idade do sinal.
+ *   PRINCÍPIO INVERTIDO: todo território começa em STT = 100 (complexidade
+ *   máxima por desconhecimento). Sinais coletados podem REDUZIR a complexidade
+ *   conforme o motor consegue "explicar" aspectos do território.
  *
- *   Resultado: o STT varia DIARIAMENTE conforme novos sinais entram (cada
- *   coleta adiciona ao histórico), mas dentro do dia o resultado é estável
- *   (cache diário). Município pesquisado hoje tem o mesmo STT durante o dia,
- *   amanhã muda quando a coleta noturna trouxer manchete nova.
+ *   Por que invertido:
+ *     • Sem dado = território DESCONHECIDO = COMPLEXO até prova em contrário
+ *     • Cada sinal que entra é "evidência que reduz a opacidade"
+ *     • Sinais TENSIONANTES (alerta, conflito, autuação) NÃO reduzem — só
+ *       confirmam que a complexidade alta É REAL ali
+ *     • Sinais RESOLUTIVOS (IBGE Censo, ANEEL, INCRA, programa BNDES,
+ *       parceria acadêmica) reduzem por revelar a estrutura do território
  *
  *   Modelo:
  *
- *     peso(sinal) = sinal.structural ? 1.0 : 2^(-meses_atrás / 12)
+ *     peso_temporal(sinal) = sinal.structural ? 1.0 : 2^(-meses_atrás / 12)
  *
- *     D_i = Σ (sinal.impact × indicador.weight × peso) / Σ (indicador.weight × peso)
- *     STT = Σ (D_i × W_i), onde Σ W_i = 1.0
+ *     Pra cada dimensão D_i:
+ *       D_i = 100
+ *       para cada sinal s:
+ *         delta = s.impact × peso_temporal × FATOR_RESOLUTIVO
+ *         se s.tipo == 'resolutivo':  D_i -= delta
+ *         se s.tipo == 'tensionante': D_i += delta × FATOR_TENSAO  (mantém alto)
+ *       D_i = clamp(0, 100)
  *
- *   Decaimento exponencial com meia-vida de 12 meses:
- *     • Sinal de hoje: peso 1.0
- *     • Sinal de 6m atrás: ≈0.71
- *     • Sinal de 12m atrás: 0.5  (meia-vida)
- *     • Sinal de 18m atrás: ≈0.35
- *     • Sinal de 24m atrás: 0.25
+ *     STT = Σ (D_i × W_i), pesos PRINT (D1=22%, D2=15%, etc)
  *
- *   Sinais estruturais (Censo IBGE, ANEEL SIGA, INCRA SIPRA, etc) são
- *   point-in-time e VÁLIDOS enquanto não sobrescritos por dado mais recente
- *   do mesmo agente — entram com peso 1.0 sempre.
+ *   Resultado: município com vácuo de coleta (Rio do Fogo) fica alto (~85-95)
+ *   refletindo "desconhecimento + tensões reais"; município muito coberto
+ *   com dados positivos baixa pra ~30-50.
  */
 
 import { getDb } from "../db";
@@ -53,6 +56,60 @@ const HALF_LIFE_MONTHS = 12;
 const DIM_WEIGHTS: Record<DimensionId, number> = {
   D1: 0.22, D2: 0.15, D3: 0.15, D4: 0.22, D5: 0.15, D6: 0.11, D7: 0,
 };
+
+// Quanto cada sinal RESOLUTIVO de impact=1.0 reduz a dimensão (em pontos).
+// Calibrado pra que ~8-10 sinais resolutivos fortes (impact ≥ 0.6) zerem a
+// dimensão (saem de 100 para 0). Municípios bem cobertos chegam a 30-50;
+// vazios ficam em 90-100.
+const FATOR_RESOLUTIVO = 20;
+
+// Quanto cada sinal TENSIONANTE de impact=1.0 acrescenta (mantém alta).
+// Pequeno — função primária é NÃO reduzir; ajuste pra cima só pra sinais
+// muito graves (impact alto + structural false + dimensão crítica).
+const FATOR_TENSAO = 4;
+
+// Fontes RESOLUTIVAS: dados estruturados que "explicam" aspectos do território.
+const RESOLUTIVE_SOURCES = new Set<string>([
+  "src-ibge-censo",
+  "src-ibge-renda",
+  "src-ibge-habitacao",
+  "src-ipeadata",
+  "src-pnud-atlas",
+  "src-aneel-siga",
+  "src-incra-sipra",
+  "src-snis",
+  "src-inep",
+  "src-inep-ideb",
+  "src-datasus-real",
+  "src-cnuc",
+  "src-querido-diario",
+  "src-universidades",
+]);
+
+// Fontes TENSIONANTES: sinais que CONFIRMAM/REFORÇAM complexidade.
+// Não reduzem (e podem aumentar levemente) o score da dimensão.
+const TENSIONING_SOURCES = new Set<string>([
+  "src-mp-ambiental",
+  "src-ibama",
+  "src-cemaden",
+  "src-inmet",
+  "src-fogo-cruzado",
+  "src-isp-ssp",
+  "src-judiciario",
+  "src-geni-uff",
+  "src-inpe-deter",
+]);
+
+/** Decide polaridade do sinal: resolutivo, tensionante ou neutro (Google News etc) */
+function signalPolarity(source: string, impact: number): "resolutive" | "tensioning" | "neutral" {
+  if (RESOLUTIVE_SOURCES.has(source)) return "resolutive";
+  if (TENSIONING_SOURCES.has(source)) return "tensioning";
+  // Google News, SerpAPI genérico: neutral — mas se impact >= 0.7 (triggersAlert)
+  // tratamos como tensionante porque foi classificado como alerta.
+  if (impact >= 0.7) return "tensioning";
+  // Neutros baixo-impacto contam como leve resolutivo (mostraram dado coletável).
+  return "neutral";
+}
 
 export interface ConsolidatedStt {
   stt: number;
@@ -187,15 +244,25 @@ export async function consolidateSttFromHistory(
   }
 
   try {
-    // Acumuladores por dimensão.
-    const dimAccum: Record<DimensionId, { num: number; den: number; count: number; struct: number }> = {
-      D1: { num: 0, den: 0, count: 0, struct: 0 },
-      D2: { num: 0, den: 0, count: 0, struct: 0 },
-      D3: { num: 0, den: 0, count: 0, struct: 0 },
-      D4: { num: 0, den: 0, count: 0, struct: 0 },
-      D5: { num: 0, den: 0, count: 0, struct: 0 },
-      D6: { num: 0, den: 0, count: 0, struct: 0 },
-      D7: { num: 0, den: 0, count: 0, struct: 0 },
+    // Acumuladores por dimensão — modelo "Complexidade Residual":
+    // baseline = 100; sinais resolutivos subtraem, tensionantes adicionam.
+    const dimAccum: Record<
+      DimensionId,
+      {
+        score: number; // começa em 100
+        count: number;
+        struct: number;
+        resolutive: number;
+        tensioning: number;
+      }
+    > = {
+      D1: { score: 100, count: 0, struct: 0, resolutive: 0, tensioning: 0 },
+      D2: { score: 100, count: 0, struct: 0, resolutive: 0, tensioning: 0 },
+      D3: { score: 100, count: 0, struct: 0, resolutive: 0, tensioning: 0 },
+      D4: { score: 100, count: 0, struct: 0, resolutive: 0, tensioning: 0 },
+      D5: { score: 100, count: 0, struct: 0, resolutive: 0, tensioning: 0 },
+      D6: { score: 100, count: 0, struct: 0, resolutive: 0, tensioning: 0 },
+      D7: { score: 100, count: 0, struct: 0, resolutive: 0, tensioning: 0 },
     };
 
     let totalStructural = 0;
@@ -215,11 +282,27 @@ export async function consolidateSttFromHistory(
       const impact = Number(row.llmImpactScore ?? 0);
       if (!Number.isFinite(impact) || impact <= 0) continue;
 
-      // Impact 0-1 → escala 0-100 pro score da dimensão.
-      const scaled = impact * 100;
+      const polarity = signalPolarity(row.source, impact);
 
-      dimAccum[dim].num += scaled * w;
-      dimAccum[dim].den += w;
+      // Modelo invertido:
+      //  resolutive  → subtrai do score (resolve aspecto do território)
+      //  tensioning  → adiciona ao score (confirma complexidade)
+      //  neutral     → resolutivo fraco (sinal foi coletado, mas é genérico)
+      if (polarity === "resolutive") {
+        const delta = impact * w * FATOR_RESOLUTIVO;
+        dimAccum[dim].score -= delta;
+        dimAccum[dim].resolutive += 1;
+      } else if (polarity === "tensioning") {
+        const delta = impact * w * FATOR_TENSAO;
+        dimAccum[dim].score += delta;
+        dimAccum[dim].tensioning += 1;
+      } else {
+        // Neutral: efeito leve resolutivo (1/3 do fator)
+        const delta = impact * w * (FATOR_RESOLUTIVO / 3);
+        dimAccum[dim].score -= delta;
+        dimAccum[dim].resolutive += 1;
+      }
+
       dimAccum[dim].count += 1;
       if (structural) {
         dimAccum[dim].struct += 1;
@@ -235,11 +318,11 @@ export async function consolidateSttFromHistory(
       if (row.createdAt && row.createdAt >= todayStart) totalToday += 1;
     }
 
-    // Score por dimensão = média ponderada (0-100).
-    const dimensions: Record<DimensionId, number> = { D1: 0, D2: 0, D3: 0, D4: 0, D5: 0, D6: 0, D7: 0 };
+    // Score por dimensão = clamp(0, 100). Sem sinais = score continua 100.
+    const dimensions: Record<DimensionId, number> = { D1: 100, D2: 100, D3: 100, D4: 100, D5: 100, D6: 100, D7: 100 };
     for (const id of Object.keys(dimAccum) as DimensionId[]) {
-      const { num, den } = dimAccum[id];
-      dimensions[id] = den > 0 ? Math.round((num / den) * 10) / 10 : 0;
+      const s = dimAccum[id].score;
+      dimensions[id] = Math.max(0, Math.min(100, Math.round(s * 10) / 10));
     }
 
     // STT global = Σ (D_i × W_i) com pesos PRINT (D1=22%, D2=15%, etc).
