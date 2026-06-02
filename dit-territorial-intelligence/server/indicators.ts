@@ -75,6 +75,9 @@ export const SOURCE_IDS = {
   GOOGLE_TRENDS: "src-google-trends",
   REDES_SOCIAIS: "src-redes-sociais",
   UNIVERSIDADES: "src-universidades",
+  YOUTUBE_TERRITORIO: "src-youtube-territorio",
+  BLUESKY_TERRITORIO: "src-bluesky-territorio",
+  REDDIT_BR: "src-reddit-br",
 } as const;
 
 export type SourceId = typeof SOURCE_IDS[keyof typeof SOURCE_IDS];

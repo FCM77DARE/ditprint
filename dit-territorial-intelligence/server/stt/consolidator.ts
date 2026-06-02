@@ -84,6 +84,12 @@ const RESOLUTIVE_SOURCES = new Set<string>([
   "src-cnuc",
   "src-querido-diario",
   "src-universidades",
+  // Mídia social — coleta de presença e discussão revela o território
+  // (vlogs locais, posts, debate em fóruns). Resolutivos leves: mostram
+  // que existe vida pública, atores, vozes. Sentimento será camada à parte.
+  "src-youtube-territorio",
+  "src-bluesky-territorio",
+  "src-reddit-br",
 ]);
 
 // Fontes TENSIONANTES: sinais que CONFIRMAM/REFORÇAM complexidade.
