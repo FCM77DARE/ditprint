@@ -15,6 +15,9 @@ import { SrcMapaEmpresas } from "../sources/d3/src-mapa-empresas";
 import { SrcAnttPortos } from "../sources/d3/src-antt-portos";
 import { SrcSinir } from "../sources/d3/src-sinir";
 import { SrcAneelSiga } from "../sources/d3/src-aneel-siga";
+import { SrcSnis } from "../sources/d3/src-snis";
+import { SrcDatasusReal } from "../sources/d3/src-datasus-real";
+import { SrcInepIdeb } from "../sources/d3/src-inep-ideb";
 import { SrcGoogleNews } from "../sources/d6/src-google-news";
 
 export class DimInfraestrutura extends BaseDimensionAgent {
@@ -28,6 +31,9 @@ export class DimInfraestrutura extends BaseDimensionAgent {
     new SrcAnttPortos(),
     new SrcSinir(),
     new SrcAneelSiga(),
+    new SrcSnis(),
+    new SrcDatasusReal(),
+    new SrcInepIdeb(),
     new SrcGoogleNews(),
   ];
 
@@ -35,19 +41,19 @@ export class DimInfraestrutura extends BaseDimensionAgent {
     // 3.1.1.1 — Saneamento
     {
       indicatorCode: "3.1.1.1",
-      keywords: ["saneamento", "água tratada", "esgoto", "abastecimento de água", "rede coletora", "SNIS", "SINASA", "sistema de esgoto", "infraestrutura", "obras", "serviços públicos", "alagoinhas"],
+      keywords: ["saneamento", "água tratada", "esgoto", "abastecimento de água", "rede coletora", "SNIS", "SINASA", "sistema de esgoto", "infraestrutura", "obras", "serviços públicos", "alagoinhas", "cobertura de água", "cobertura de esgoto", "esgoto tratado", "IN055", "IN056", "IN046", "esgoto a céu aberto"],
       baseImpact: 0.35,
     },
     // 3.1.1.2 — Saúde
     {
       indicatorCode: "3.1.1.2",
-      keywords: ["saúde pública", "UBS", "unidade básica de saúde", "hospital municipal", "leitos", "mortalidade infantil", "surto", "epidemia", "datasus"],
+      keywords: ["saúde pública", "UBS", "unidade básica de saúde", "hospital municipal", "leitos", "mortalidade infantil", "surto", "epidemia", "datasus", "ESF", "cobertura ESF", "estratégia saúde da família", "leitos SUS", "PCDaS"],
       baseImpact: 0.6,
     },
     // 3.1.1.3 — Educação
     {
       indicatorCode: "3.1.1.3",
-      keywords: ["IDEB", "educação básica", "alfabetização", "analfabetismo", "evasão escolar", "matrícula escolar", "INEP"],
+      keywords: ["IDEB", "educação básica", "alfabetização", "analfabetismo", "evasão escolar", "matrícula escolar", "INEP", "nota IDEB", "anos iniciais", "anos finais", "qualidade da educação"],
       baseImpact: 0.5,
     },
     // 3.1.1.4 — Habitação

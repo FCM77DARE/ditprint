@@ -1081,12 +1081,24 @@ ditLandingRouter.post("/analyze", async (req: Request, res: Response) => {
   const territoryClean = territory.trim().slice(0, 120);
   const cacheKey = todayKey(makeSlug(territoryClean));
 
+  // `?force=true` pula o cache diário — útil pra QA depois de deploys que
+  // adicionam fontes ou corrigem bugs de coleta. Sem isso, o cache em disco
+  // continua servindo o resultado antigo do dia inteiro.
+  const forceRefresh =
+    String(req.query.force ?? "").toLowerCase() === "true" ||
+    String((req.body as { force?: string }).force ?? "").toLowerCase() === "true";
+
   // Cache hit (lock diário — mesmo território no mesmo dia UTC = mesmo STT)
-  const cached = analysisCache.get(cacheKey);
-  if (cached && Date.now() - cached.ts < CACHE_TTL_MS) {
-    log.info({ territory: territoryClean }, "Cache hit — retornando DIT em cache (lock diário)");
-    res.json(cached.result);
-    return;
+  if (!forceRefresh) {
+    const cached = analysisCache.get(cacheKey);
+    if (cached && Date.now() - cached.ts < CACHE_TTL_MS) {
+      log.info({ territory: territoryClean }, "Cache hit — retornando DIT em cache (lock diário)");
+      res.json(cached.result);
+      return;
+    }
+  } else {
+    log.info({ territory: territoryClean }, "Cache bypass (force=true) — recoleta DIT");
+    analysisCache.delete(cacheKey);
   }
 
   log.info({ territory: territoryClean, ip }, "Iniciando análise DIT com orquestrador real");

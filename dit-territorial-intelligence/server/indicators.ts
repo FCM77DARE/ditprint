@@ -50,9 +50,13 @@ export const SOURCE_IDS = {
   ANTT_PORTOS: "src-antt-portos",
   SINIR: "src-sinir",
   ANEEL_SIGA: "src-aneel-siga",
+  SNIS: "src-snis",
+  DATASUS_REAL: "src-datasus-real",
+  INEP_IDEB: "src-inep-ideb",
 
   // D4 — Dinâmica Territorial
   PLANO_DIRETOR: "src-plano-diretor",
+  INCRA_SIPRA: "src-incra-sipra",
   JUDICIARIO: "src-judiciario",
   FOGO_CRUZADO: "src-fogo-cruzado",
   GENI_UFF: "src-geni-uff",
