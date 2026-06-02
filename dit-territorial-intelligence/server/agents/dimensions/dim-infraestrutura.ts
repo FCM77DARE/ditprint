@@ -14,6 +14,7 @@ import { SrcIbgeHabitacao } from "../sources/d3/src-ibge-habitacao";
 import { SrcMapaEmpresas } from "../sources/d3/src-mapa-empresas";
 import { SrcAnttPortos } from "../sources/d3/src-antt-portos";
 import { SrcSinir } from "../sources/d3/src-sinir";
+import { SrcAneelSiga } from "../sources/d3/src-aneel-siga";
 import { SrcGoogleNews } from "../sources/d6/src-google-news";
 
 export class DimInfraestrutura extends BaseDimensionAgent {
@@ -26,6 +27,7 @@ export class DimInfraestrutura extends BaseDimensionAgent {
     new SrcMapaEmpresas(),
     new SrcAnttPortos(),
     new SrcSinir(),
+    new SrcAneelSiga(),
     new SrcGoogleNews(),
   ];
 
@@ -95,6 +97,17 @@ export class DimInfraestrutura extends BaseDimensionAgent {
       indicatorCode: "3.3.1.3",
       keywords: ["aeroporto", "terminal aéreo", "ANAC", "pista de pouso", "ampliação do aeroporto"],
       baseImpact: 0.35,
+    },
+    // 3.3.1.4 — Geração energética (parques eólicos, solares, hidrelétricas, térmicas)
+    // ANEEL SIGA detecta empreendimentos por município de forma estruturada.
+    {
+      indicatorCode: "3.3.1.4",
+      keywords: [
+        "ANEEL", "empreendimento", "energia eólica", "parque eólico", "energia solar",
+        "usina solar", "hidrelétrica", "usina térmica", "geração", "MW",
+        "potência", "outorga", "fonte combustível",
+      ],
+      baseImpact: 0.55,
     },
   ];
 }

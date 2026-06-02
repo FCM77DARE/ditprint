@@ -49,6 +49,7 @@ export const SOURCE_IDS = {
   MAPA_EMPRESAS: "src-mapa-empresas",
   ANTT_PORTOS: "src-antt-portos",
   SINIR: "src-sinir",
+  ANEEL_SIGA: "src-aneel-siga",
 
   // D4 — Dinâmica Territorial
   PLANO_DIRETOR: "src-plano-diretor",
