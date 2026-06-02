@@ -1249,6 +1249,28 @@ ditLandingRouter.post("/analyze", async (req: Request, res: Response) => {
     // 6. Cache e retorno — persistido em disco para sobreviver a redeploys
     analysisCache.set(cacheKey, { result, ts: Date.now() });
     persistCacheToDisk();
+
+    // 7. REGISTRO DE RASTREAMENTO — todo território pesquisado entra na lista
+    // de coleta autônoma do scheduler (rodando a cada 4h). Isso é o que faz
+    // o STT EVOLUIR DIARIAMENTE em vez de ser snapshot do dia da pesquisa.
+    try {
+      const { trackTerritory } = await import("../stt/tracked-territories");
+      const sttForCache =
+        typeof (result as { stt?: unknown }).stt === "number"
+          ? ((result as { stt: number }).stt)
+          : undefined;
+      await trackTerritory({
+        slug: makeSlug(territoryClean),
+        name: resolvedName,
+        state: loc?.state,
+        region: loc?.region,
+        ibgeId: loc?.ibgeId,
+        lastSttSeen: sttForCache,
+      });
+    } catch (trackErr) {
+      log.warn({ err: (trackErr as Error).message }, "Falha ao registrar tracked territory");
+    }
+
     log.info({ territory: resolvedName }, "DIT análise concluída e entregue");
     res.json(result);
 
