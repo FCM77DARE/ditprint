@@ -230,6 +230,31 @@ export class Orchestrator {
     const signalsToPersist = allCollectedSignals.filter(s => s.impactScore >= 0.3 || s.triggersAlert);
     await this._persistSignals(territory, signalsToPersist);
 
+    // ─── Coverage Score ──────────────────────────────────────────────────────
+    // Métrica honesta de "quanto da malha falou pra este território".
+    // Pra cada dimensão, conta as fontes que retornaram >= 1 sinal real
+    // (signals.length > 0) ou tiveram erro. Cobertura = sinais/(sinais+empty).
+    // Fontes com erro NÃO penalizam (não é culpa do território).
+    let totalSources = 0;
+    let sourcesWithSignals = 0;
+    let sourcesEmpty = 0;
+    let sourcesError = 0;
+    for (const dim of Object.values(dimensions)) {
+      if (!dim) continue;
+      const dimSourceCount = dim.sourcesOk + dim.sourcesError;
+      totalSources += dimSourceCount;
+      sourcesError += dim.sourcesError;
+      // Fontes "ok" que efetivamente trouxeram >= 1 sinal pro território.
+      const sourcesWithRealSignals = new Set(
+        dim.signals.map((s) => s.sourceAgentId)
+      ).size;
+      sourcesWithSignals += sourcesWithRealSignals;
+      sourcesEmpty += Math.max(0, dim.sourcesOk - sourcesWithRealSignals);
+    }
+    const effectiveSources = sourcesWithSignals + sourcesEmpty;
+    const coverageScore =
+      effectiveSources > 0 ? sourcesWithSignals / effectiveSources : 0;
+
     const result: OrchestratorResult = {
       territoryId: territory.id,
       territorySlug: territory.slug,
@@ -238,8 +263,21 @@ export class Orchestrator {
       dimensions,
       alerts,
       totalSignals: totalSignalsCount,
+      coverageScore: Math.round(coverageScore * 1000) / 1000,
+      coverageDetail: { totalSources, sourcesWithSignals, sourcesEmpty, sourcesError },
       completedAt: new Date().toISOString(),
     };
+
+    log.info(
+      {
+        territory: territory.slug,
+        coverage: coverageScore,
+        sourcesWithSignals,
+        sourcesEmpty,
+        sourcesError,
+      },
+      "Coverage Score calculado"
+    );
 
     return result;
   }

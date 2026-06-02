@@ -22,9 +22,31 @@ import type { DimensionId, SourceId } from "../../../indicators";
 import { enrichGeoQuery, matchesTerritory, fold } from "../../geo-filter";
 
 // Resource ID do SNIS Série Histórica - municípios (água/esgoto).
-// Pode ser substituído se o portal reindexar; o slug oficial é "snis-ag-es".
+// TODO confirmar via UI — sandbox 2026-06-02 bloqueou WebFetch/curl. Quando
+// CKAN falhar, fallback SerpAPI cobre. Revalidar:
+//   curl 'https://dados.gov.br/api/3/action/package_search?q=SNIS'
+// e pegar resource id do CSV "Série Histórica - Municípios" (slug snis-ag-es).
 const SNIS_RESOURCE_ID = "0a6f57fd-fbc8-4a31-9a96-9a8e22b6e4ee";
 const CKAN_BASE = "https://dados.gov.br/dados/api/publico/datastore_search";
+
+// Domínios oficiais de saneamento.
+const OFFICIAL_HOSTS = [
+  "snis.gov.br",
+  "mdr.gov.br",
+  "cidades.gov.br",
+  "gov.br",
+  "ana.gov.br",
+];
+
+function isOfficial(url?: string): boolean {
+  if (!url) return false;
+  try {
+    const host = new URL(url).hostname.toLowerCase();
+    return OFFICIAL_HOSTS.some((d) => host === d || host.endsWith("." + d));
+  } catch {
+    return false;
+  }
+}
 
 interface SnisRecord {
   ano?: string | number;
@@ -153,13 +175,14 @@ export class SrcSnis extends BaseSourceAgent {
     if (!SERPAPI_KEY) return [];
 
     const signals: RawSignal[] = [];
-    const searchString = enrichGeoQuery(
-      `site:app4.mdr.gov.br OR "SNIS" saneamento esgoto`,
-      territory
-    );
+    // Query aberta — abrange snis.gov.br, MDR e gov.br institucional.
+    const baseQ =
+      `(site:snis.gov.br OR site:mdr.gov.br OR site:gov.br OR site:cidades.gov.br) ` +
+      `SNIS saneamento esgoto água cobertura`;
+    const searchString = enrichGeoQuery(baseQ, territory);
     const url =
       `https://serpapi.com/search.json?engine=google&q=${encodeURIComponent(searchString)}` +
-      `&num=5&api_key=${SERPAPI_KEY}`;
+      `&num=10&api_key=${SERPAPI_KEY}`;
 
     try {
       const res = await fetch(url, { signal: options.signal });
@@ -169,14 +192,19 @@ export class SrcSnis extends BaseSourceAgent {
 
       for (const item of results) {
         const combined = `${item.title ?? ""} ${item.snippet ?? ""}`;
-        if (!matchesTerritory(combined, territory)) continue;
+        // Domínios oficiais não exigem matchesTerritory — confiamos no site.
+        if (!isOfficial(item.link) && !matchesTerritory(combined, territory)) continue;
         signals.push({
           title: `SNIS: ${item.title}`,
           summary: item.snippet,
           url: item.link,
           sourceAgentId: this.id,
           publishedAt: new Date(),
-          metadata: { fallback: "serpapi", territory: territory.name },
+          metadata: {
+            fallback: "serpapi",
+            territory: territory.name,
+            officialHost: isOfficial(item.link),
+          },
         });
       }
     } catch {

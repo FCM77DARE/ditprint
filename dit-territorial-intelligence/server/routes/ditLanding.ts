@@ -1226,6 +1226,11 @@ ditLandingRouter.post("/analyze", async (req: Request, res: Response) => {
     const baseExtra = {
       resolution,
       territoryGeo: geo ? { centroid: geo.centroid, bbox: geo.bbox } : null,
+      // Coverage Score: % de fontes que falaram pra este território. STT baixo
+      // com coverage baixo ≠ estabilidade — é vácuo de coleta. Front-end exibe
+      // banner explicativo quando coverage < 0.5.
+      coverageScore: orchestratorResult?.coverageScore ?? null,
+      coverageDetail: orchestratorResult?.coverageDetail ?? null,
     };
     const result =
       strategic && typeof llmReport === "object" && llmReport !== null

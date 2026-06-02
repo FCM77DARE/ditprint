@@ -78,6 +78,17 @@ export interface OrchestratorResult {
   alerts: ClassifiedSignal[];
   /** Total signals collected across all dimensions */
   totalSignals: number;
+  /** Coverage Score (0–1): fração de fontes que entregaram pelo menos 1 sinal real
+   * pro território. Essencial pra interpretar STT: município pequeno com baixa
+   * cobertura tende a ter STT artificialmente baixo (vácuo ≠ estabilidade). */
+  coverageScore?: number;
+  /** Detalhe da cobertura: total de fontes ativadas, fontes com retorno, com erro */
+  coverageDetail?: {
+    totalSources: number;
+    sourcesWithSignals: number;
+    sourcesEmpty: number;
+    sourcesError: number;
+  };
   /** ISO timestamp of when this run completed */
   completedAt: string;
 }

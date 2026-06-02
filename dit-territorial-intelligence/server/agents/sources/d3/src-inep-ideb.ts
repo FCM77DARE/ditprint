@@ -18,8 +18,30 @@ import type { DimensionId, SourceId } from "../../../indicators";
 import { enrichGeoQuery, matchesTerritory, fold } from "../../geo-filter";
 
 // Resource ID do IDEB municipal no dados.gov.br.
+// TODO confirmar via UI — sandbox 2026-06-02 bloqueou WebFetch/curl. Quando
+// CKAN falhar, fallback SerpAPI cobre (qedu.org.br tem cobertura municipal
+// excelente). Revalidar:
+//   curl 'https://dados.gov.br/api/3/action/package_search?q=IDEB'
 const IDEB_RESOURCE_ID = "f1a3e7c2-9d1c-4a0f-9d8c-3a7c6f1e2b3d";
 const CKAN_BASE = "https://dados.gov.br/dados/api/publico/datastore_search";
+
+// Domínios oficiais educacionais (qedu inclui — dado público confiável).
+const OFFICIAL_HOSTS = [
+  "inep.gov.br",
+  "mec.gov.br",
+  "gov.br",
+  "qedu.org.br",
+];
+
+function isOfficial(url?: string): boolean {
+  if (!url) return false;
+  try {
+    const host = new URL(url).hostname.toLowerCase();
+    return OFFICIAL_HOSTS.some((d) => host === d || host.endsWith("." + d));
+  } catch {
+    return false;
+  }
+}
 
 interface IdebRecord {
   ano?: string | number;
@@ -129,13 +151,14 @@ export class SrcInepIdeb extends BaseSourceAgent {
     if (!SERPAPI_KEY) return [];
 
     const signals: RawSignal[] = [];
-    const searchString = enrichGeoQuery(
-      `site:inep.gov.br OR site:qedu.org.br IDEB nota`,
-      territory
-    );
+    // Query aberta — qedu cobre TODO município, inclusive pequenos.
+    const baseQ =
+      `(site:inep.gov.br OR site:qedu.org.br OR site:gov.br OR site:mec.gov.br) ` +
+      `IDEB nota educação básica`;
+    const searchString = enrichGeoQuery(baseQ, territory);
     const url =
       `https://serpapi.com/search.json?engine=google&q=${encodeURIComponent(searchString)}` +
-      `&num=5&api_key=${SERPAPI_KEY}`;
+      `&num=10&api_key=${SERPAPI_KEY}`;
 
     try {
       const res = await fetch(url, { signal: options.signal });
@@ -145,14 +168,18 @@ export class SrcInepIdeb extends BaseSourceAgent {
 
       for (const item of results) {
         const combined = `${item.title ?? ""} ${item.snippet ?? ""}`;
-        if (!matchesTerritory(combined, territory)) continue;
+        if (!isOfficial(item.link) && !matchesTerritory(combined, territory)) continue;
         signals.push({
           title: `INEP IDEB: ${item.title}`,
           summary: item.snippet,
           url: item.link,
           sourceAgentId: this.id,
           publishedAt: new Date(),
-          metadata: { fallback: "serpapi", territory: territory.name },
+          metadata: {
+            fallback: "serpapi",
+            territory: territory.name,
+            officialHost: isOfficial(item.link),
+          },
         });
       }
     } catch {
