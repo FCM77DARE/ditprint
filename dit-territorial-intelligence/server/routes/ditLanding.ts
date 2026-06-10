@@ -993,7 +993,7 @@ async function callLLMAnthropicClaude(prompt: string): Promise<unknown> {
         "Seja específico, concreto e útil para decisores de negócios no Brasil.",
       messages: [{ role: "user", content: prompt }],
     }),
-    signal: AbortSignal.timeout(58000),
+    signal: AbortSignal.timeout(150000),
   });
 
   if (!res.ok) {
@@ -1037,7 +1037,7 @@ async function callLLMOpenAI(prompt: string): Promise<unknown> {
       max_tokens: 4096,
       temperature: 0,
     }),
-    signal: AbortSignal.timeout(58000),
+    signal: AbortSignal.timeout(150000),
   });
 
   if (!res.ok) {
@@ -1138,7 +1138,7 @@ ditLandingRouter.post("/analyze", async (req: Request, res: Response) => {
       orchestratorResult = await Promise.race([
         orchestrator.run(territoryRecord),
         new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error("Orchestrator timeout (85s)")), 85000)
+          setTimeout(() => reject(new Error("Orchestrator timeout (140s)")), 140000)
         ),
       ]);
       log.info(
