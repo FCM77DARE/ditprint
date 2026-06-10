@@ -107,6 +107,15 @@ export async function createDashboardAdmin(name: string, email: string, password
 }
 
 export async function loginDashboardAdmin(email: string, password: string) {
+  // Fallback quando o banco não está disponível (ex: Railway sem DATABASE_URL).
+  // Variáveis DASHBOARD_ADMIN_EMAIL e DASHBOARD_ADMIN_PASS permitem acesso
+  // de emergência sem banco. Configure via `railway variables --set`.
+  const envEmail = process.env.DASHBOARD_ADMIN_EMAIL;
+  const envPass  = process.env.DASHBOARD_ADMIN_PASS;
+  if (envEmail && envPass && email === envEmail && password === envPass) {
+    return { id: 0, email: envEmail, name: "Admin", active: true, lastLoginAt: new Date(), passwordHash: "" };
+  }
+
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   const [admin] = await db.select().from(dashboardAdmins).where(eq(dashboardAdmins.email, email)).limit(1);
