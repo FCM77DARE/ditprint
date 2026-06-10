@@ -251,42 +251,123 @@ function mesoKey(state: string, mesoregion: string): string {
   return `${state}|${slugify(mesoregion)}`;
 }
 
+function microKey(state: string, microregion: string): string {
+  if (!state || !microregion) return "";
+  return `${state}|micro|${slugify(microregion)}`;
+}
+
+// ─── PERFIL POR MICRORREGIÃO ──────────────────────────────────────────────────
+// Granularidade mais fina que a mesorregião — essencial para evitar que
+// municípios litorâneos recebam recursos do sertão e vice-versa.
+// Chave: `${UF}|micro|${microrregião normalizada}`
+
+const MICRO_RESOURCE_PROFILE: Record<string, Resource[]> = {
+  // RN — Litoral Nordeste (Rio do Fogo, São Miguel do Gostoso, Touros)
+  "RN|micro|litoral-nordeste": [
+    { category: "energeticos", name: "Energia Eólica Litoral Norte RN", abundance: "abundante",
+      notes: "Cluster eólico de Rio do Fogo, São Miguel do Gostoso, Pedra Grande — cinturão mais denso do RN",
+      sources: ["ANEEL SIGA", "EPE"] },
+    { category: "agricolas", name: "Pesca Artesanal (lagosta, peixe, camarão)", abundance: "abundante",
+      notes: "Base econômica das comunidades costeiras — Rio do Fogo, Touros, São Bento do Norte",
+      sources: ["MPA", "EMATER-RN"] },
+    { category: "ambientais", name: "Parrachos de Coral", abundance: "abundante",
+      notes: "Recifes submersos de Maracajaú, Rio do Fogo e Caraúbas — mergulho de relevância internacional",
+      sources: ["ICMBio", "IDEMA"] },
+    { category: "ambientais", name: "Restingas e Dunas Costeiras", abundance: "presente",
+      notes: "Ecossistemas de transição mar-terra ao longo do litoral norte potiguar",
+      sources: ["ICMBio", "IDEMA"] },
+  ],
+  // RN — Litoral Sul (Tibau do Sul, Pipa, Nísia Floresta)
+  "RN|micro|litoral-sul": [
+    { category: "ambientais", name: "Falésias e Praias de Pipa", abundance: "abundante",
+      notes: "Eixo turístico consolidado — Tibau do Sul, Pipa. Destino internacional de turismo de praia.",
+      sources: ["Setur-RN", "EMPROTUR"] },
+    { category: "ambientais", name: "APA Bonfim-Guaraíras", abundance: "abundante",
+      notes: "Área de Proteção Ambiental com manguezais, dunas e lagoas costeiras",
+      sources: ["ICMBio", "IDEMA"] },
+  ],
+  // RN — Mossoró (interior, não litoral)
+  "RN|micro|mossoro": [
+    { category: "energeticos", name: "Petróleo Terrestre (Bacia Potiguar)", abundance: "abundante",
+      notes: "Mossoró é o maior polo de petróleo terrestre do BR — Petrobras E&P",
+      sources: ["ANP", "Petrobras"] },
+    { category: "agricolas", name: "Fruticultura Irrigada (melão, melancia)", abundance: "abundante",
+      notes: "Polo nacional de exportação de melão — Alto Vale do Açu / Mossoró",
+      sources: ["CONAB", "MAPA"] },
+    { category: "minerais", name: "Sal Marinho", abundance: "abundante",
+      notes: "Rio Grande do Norte é o maior produtor de sal do Brasil",
+      sources: ["CIESAL", "ANM"] },
+  ],
+  // AL — Maceió (capital litorânea)
+  "AL|micro|maceio": [
+    { category: "hidricos", name: "Sistema Estuarino Mundaú-Manguaba", abundance: "abundante",
+      notes: "Complexo lagunar Sítio Ramsar — pesca artesanal (sururu), turismo aquático",
+      sources: ["ICMBio", "IBAMA", "Ramsar"] },
+    { category: "ambientais", name: "Praias Urbanas e Piscinas Naturais", abundance: "abundante",
+      notes: "22 km de orla urbana — Pajuçara, Ponta Verde, Jatiúca. Piscinas naturais a 2 km da costa.",
+      sources: ["Setur-AL", "EMBRATUR"] },
+    { category: "energeticos", name: "Polo Cloroquímico (Pontal da Barra)", abundance: "presente",
+      notes: "Indústria de cloro e PVC — operação parcialmente suspensa pós-Caso Braskem",
+      sources: ["ANP", "ABIQUIM"] },
+  ],
+  // BA — Morro do Chapéu (centro-norte ba, chapada)
+  "BA|micro|morro-do-chapeu": [
+    { category: "ambientais", name: "Geoparque Mundial UNESCO (21 geosítios)", abundance: "abundante",
+      notes: "Lapa Doce, Brejões, Cachoeira do Ferro Doido, Morrão — reconhecimento UNESCO 2021/2024",
+      sources: ["UNESCO", "UFBA"] },
+    { category: "hidricos", name: "Aquífero Cárstico Salitre", abundance: "abundante",
+      notes: "Sistema cárstico subjacente ao platô — alimenta cavernas e abastecimento regional",
+      sources: ["CPRM", "ANA"] },
+    { category: "minerais", name: "Cromo e Ouro (pequeno porte)", abundance: "presente",
+      notes: "Eixo Mundo Novo–Várzea Nova–Morro do Chapéu — mineração ativa e garimpo histórico",
+      sources: ["ANM", "SIGMINE"] },
+  ],
+};
+
 // ─── PUBLIC API ───────────────────────────────────────────────────────────────
 
 export async function collectResources(
   ctx: TerritoryStrategicContext
 ): Promise<Resource[]> {
-  // 1. Override municipal — ganha sempre
+  // Hierarquia de precisão (mais específico ganha):
+  // 1. Override municipal (slug-UF) — só o que é genuíno daquele município
+  // 2. Perfil microrregional — ~5-15 municípios com perfil similar
+  // 3. Perfil mesorregional — ~20-60 municípios
+  // 4. Perfil estadual — só resources genuinamente state-wide
+  // 5. Nota "em construção" quando nada encontrado
+
   const muniOverrides = MUNICIPALITY_OVERRIDES[muniKey(ctx.name, ctx.state)] ?? [];
 
-  // 2. Perfil mesorregional — onde temos dados, é a granularidade certa
-  const mesoProfile = ctx.mesoregion
+  const microProfile = ctx.microregion
+    ? MICRO_RESOURCE_PROFILE[microKey(ctx.state, ctx.microregion)] ?? []
+    : [];
+
+  const mesoProfile = ctx.mesoregion && microProfile.length === 0
     ? MESO_RESOURCE_PROFILE[mesoKey(ctx.state, ctx.mesoregion)] ?? []
     : [];
 
-  // 3. Perfil estadual — só recursos genuinamente state-wide
   const ufProfile = UF_RESOURCE_PROFILE[ctx.state] ?? [];
 
-  // Merge: município > mesorregião > UF, deduplicado por nome.
+  // Merge: UF → meso → micro → município (mais específico sobrescreve)
   const merged = new Map<string, Resource>();
   for (const r of ufProfile) merged.set(r.name, r);
   for (const r of mesoProfile) merged.set(r.name, r);
+  for (const r of microProfile) merged.set(r.name, r);
   for (const r of muniOverrides) merged.set(r.name, r);
 
   const result = Array.from(merged.values());
 
-  // Quando NÃO temos NADA mapeado, retornamos uma única nota explicativa
-  // em vez de fingir conhecimento. Melhor honesto que enganador.
   if (result.length === 0) {
     return [
       {
         category: "ambientais",
-        name: "Mapeamento regional em construção",
+        name: "Mapeamento municipal em construção",
         abundance: "limitado",
         notes:
-          `Recursos específicos para ${ctx.name}${ctx.mesoregion ? ` (${ctx.mesoregion})` : ""} ` +
-          `ainda não estão na base curada do DIT. ` +
-          `Em breve: consulta direta a SIGMINE (ANM), ANEEL, INMET e ICMBio por bounding box.`,
+          `Recursos específicos para ${ctx.name}` +
+          (ctx.microregion ? ` (${ctx.microregion})` : ctx.mesoregion ? ` (${ctx.mesoregion})` : "") +
+          ` ainda não estão na base curada do DIT. ` +
+          `Em breve: consulta direta a SIGMINE (ANM), ANEEL, INMET e ICMBio por bounding box municipal.`,
         sources: ["IBGE", "Base interna DIT"],
       },
     ];

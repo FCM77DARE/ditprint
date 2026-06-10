@@ -1062,6 +1062,64 @@ async function callLLM(prompt: string): Promise<unknown> {
   return callLLMOpenAI(prompt);
 }
 
+// ── ROTA ISCA (free preview) ──────────────────────────────────────────────────
+// POST /api/dit/isca — retorna só o teaser do DIT completo.
+// Se o DIT completo não estiver em cache, roda o analyze completo primeiro
+// e deriva a isca a partir dele. Assim STT da isca === STT do DIT completo.
+
+ditLandingRouter.post("/isca", async (req: Request, res: Response) => {
+  const ip = (req.ip ?? req.socket.remoteAddress ?? "unknown").slice(0, 50);
+  if (isRateLimited(ip)) {
+    res.status(429).json({ error: "Muitas requisições. Aguarde 1 minuto." });
+    return;
+  }
+
+  const { territory } = req.body as { territory?: string };
+  if (!territory || territory.trim().length < 2) {
+    res.status(400).json({ error: "Nome do território obrigatório (mínimo 2 caracteres)" });
+    return;
+  }
+
+  const territoryClean = territory.trim().slice(0, 120);
+  const fullCacheKey = todayKey(makeSlug(territoryClean));
+  const iscaCacheKey = `isca:${fullCacheKey}`;
+
+  // Serve isca do cache se disponível
+  const cached = analysisCache.get(iscaCacheKey);
+  if (cached && Date.now() - cached.ts < CACHE_TTL_MS) {
+    log.info({ territory: territoryClean }, "Isca — cache hit");
+    res.json(cached.result);
+    return;
+  }
+
+  // DIT completo não está em cache — precisa gerar o completo primeiro,
+  // pois a isca é derivada dele (garante consistência do STT).
+  log.info({ territory: territoryClean }, "Isca — rodando DIT completo para derivar isca");
+  try {
+    // Chama a própria lógica do /analyze via forward interno
+    const analyzeUrl = `http://localhost:${process.env.PORT ?? 3000}/api/dit/analyze`;
+    const r = await fetch(analyzeUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-forwarded-for": ip },
+      body: JSON.stringify({ territory: territoryClean }),
+      signal: AbortSignal.timeout(150000),
+    });
+    if (!r.ok) throw new Error(`Analyze failed: ${r.status}`);
+    // Após o analyze, a isca estará no cache — serve do cache
+    const iscaCached = analysisCache.get(iscaCacheKey);
+    if (iscaCached) {
+      res.json(iscaCached.result);
+    } else {
+      // Fallback improvável: retorna o full result
+      const full = await r.json();
+      res.json(full);
+    }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    res.status(500).json({ error: msg });
+  }
+});
+
 // ── ROTA PRINCIPAL ────────────────────────────────────────────────────────────
 
 ditLandingRouter.post("/analyze", async (req: Request, res: Response) => {
@@ -1247,8 +1305,51 @@ ditLandingRouter.post("/analyze", async (req: Request, res: Response) => {
           ? { ...(llmReport as Record<string, unknown>), ...baseExtra }
           : llmReport;
 
-    // 6. Cache e retorno — persistido em disco para sobreviver a redeploys
+    // 6. Salva o DIT COMPLETO em cache — sempre antes de qualquer retorno.
+    // Esta é a base canônica. A "isca" (free preview) é derivada DAQUI,
+    // garantindo consistência absoluta: STT da isca === STT do DIT completo.
     analysisCache.set(cacheKey, { result, ts: Date.now() });
+    persistCacheToDisk();
+
+    // 6b. Gera isca (free preview) derivada do DIT completo.
+    // Contém: STT, cenário, 1 parágrafo do executiveSummary, 3 sinais,
+    // nomes das dimensões com complexidade (sem insights), previsão resumida.
+    // Sem: insights detalhados, recomendações completas, recursos, hotspots,
+    // casos estratégicos. Isca é salva junto mas enviada só quando solicitada.
+    const fullResult = result as Record<string, unknown>;
+    const iscaResult = {
+      territory: fullResult.territory,
+      region: fullResult.region,
+      stt: fullResult.stt,
+      scenario: fullResult.scenario,
+      scenarioLabel: fullResult.scenarioLabel,
+      gaugeColor: fullResult.gaugeColor,
+      resolution: fullResult.resolution,
+      coverageScore: fullResult.coverageScore,
+      // 1 parágrafo de síntese
+      executiveSummaryTeaser: Array.isArray(fullResult.executiveSummary)
+        ? (fullResult.executiveSummary as string[])[0] ?? ""
+        : "",
+      // Dimensões: só código, nome e complexidade (sem insights, sem signals)
+      dimensionsTeaser: Array.isArray(fullResult.dimensions)
+        ? (fullResult.dimensions as Array<{ code: string; name: string; complexity: string }>)
+            .map((d) => ({ code: d.code, name: d.name, complexity: d.complexity }))
+        : [],
+      // 3 sinais mais críticos
+      keySignalsTeaser: Array.isArray(fullResult.keySignals)
+        ? (fullResult.keySignals as unknown[]).slice(0, 3)
+        : [],
+      // 1 risco e 1 oportunidade da previsão
+      forecastTeaser: fullResult.forecast
+        ? {
+            horizon: (fullResult.forecast as { horizon?: string }).horizon,
+            risks: ((fullResult.forecast as { risks?: string[] }).risks ?? []).slice(0, 2),
+          }
+        : null,
+      isIsca: true,
+      fullDitAvailable: true,
+    };
+    analysisCache.set(`isca:${cacheKey}`, { result: iscaResult, ts: Date.now() });
     persistCacheToDisk();
 
     // 7. REGISTRO DE RASTREAMENTO — todo território pesquisado entra na lista
