@@ -66,7 +66,7 @@ async function startServer() {
   // Authenticated clients (dashboard / subscriber portal) receive live AlertPayload events.
   app.get("/api/alerts/stream", (req, res) => {
     res.setHeader("Content-Type", "text/event-stream");
-    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Cache-Control", "no-cache, no-transform");
     res.setHeader("Connection", "keep-alive");
     res.setHeader("X-Accel-Buffering", "no"); // disable Nginx buffering
     res.flushHeaders();
@@ -74,8 +74,24 @@ async function startServer() {
     const territoryId = req.query.territoryId ? parseInt(req.query.territoryId as string) : undefined;
     const clientId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
-    // Send a heartbeat comment every 25s to keep the connection alive through proxies
-    const heartbeat = setInterval(() => { res.write(": heartbeat\n\n"); }, 25000);
+    // Evento "hello" imediato — força `EventSource.onmessage` do cliente a
+    // disparar AGORA, confirmando a conexão como "ao vivo" mesmo se o buffer
+    // de replay estiver vazio (container reiniciou recentemente).
+    res.write(`data: ${JSON.stringify({
+      alertType: "signal",
+      dimension: "GERAL",
+      territoryId: 0,
+      territoryName: "DIT Engine",
+      territorySlug: "system",
+      signalTitle: "Conectado à malha de monitoramento PRINT",
+      impactScore: 0,
+    })}\n\n`);
+
+    // Heartbeat 15s — sufficient pra atravessar idle timeout Railway/proxies
+    // (Railway dropa em 60s sem tráfego; 15s dá margem 4x).
+    const heartbeat = setInterval(() => {
+      try { res.write(": heartbeat\n\n"); } catch { /* connection gone */ }
+    }, 15000);
 
     const unregister = registerSseClient(
       clientId,

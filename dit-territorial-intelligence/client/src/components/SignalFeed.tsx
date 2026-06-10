@@ -82,12 +82,25 @@ export default function SignalFeed({
     esRef.current = es;
 
     es.onopen = () => setConnected(true);
-    es.onerror = () => setConnected(false);
+
+    // EventSource auto-reconecta em caso de erro temporário (Railway pode
+    // cortar conexão idle, browser pode pausar aba). Só marca como desconectado
+    // se a conexão fechou DEFINITIVAMENTE (readyState === CLOSED).
+    // Caso contrário, mantém "ao vivo" enquanto reconecta.
+    es.onerror = () => {
+      if (es.readyState === EventSource.CLOSED) {
+        setConnected(false);
+      }
+      // readyState === CONNECTING (0) ou OPEN (1): mantém connected=true,
+      // o browser está reconectando automaticamente.
+    };
 
     es.onmessage = (event) => {
       try {
         const payload = JSON.parse(event.data) as AlertPayload;
         setSignals((prev) => [{ ...payload, receivedAt: new Date() }, ...prev].slice(0, maxItems));
+        // Qualquer mensagem recebida confirma que estamos ao vivo
+        setConnected(true);
       } catch {
         // ignore parse errors
       }
