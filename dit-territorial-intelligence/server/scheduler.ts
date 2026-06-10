@@ -60,18 +60,41 @@ export async function runDailyCollection(): Promise<DailyCollectionResult[]> {
     let activeTerritories = territories.filter((t) => t.active);
 
     // FALLBACK em DISCO: se o DB não retornou territórios (Railway prod sem
-    // DATABASE_URL), usa a lista persistida pelo /api/dit/analyze. Garante
-    // que o STT EVOLUA DIARIAMENTE mesmo sem MySQL.
+    // DATABASE_URL), usa DUAS fontes em disco:
+    //   1. tracked-territories.json (territórios pesquisados na home)
+    //   2. dit-snapshots/ (territórios que têm DIT salvo — fonte primária)
+    // Garante que o STT EVOLUA DIARIAMENTE mesmo sem MySQL.
     if (activeTerritories.length === 0) {
       try {
         const { getStaleTerritories, markCollected } = await import("./stt/tracked-territories");
+        const { listTrackedSlugs } = await import("./stt/dit-snapshot-store");
+
+        // Fonte primária: territórios com DIT snapshot salvo
+        const snapshotSlugs = await listTrackedSlugs();
+
         const stale = await getStaleTerritories(4); // não coletados nas últimas 4h
-        if (stale.length > 0) {
+
+        // Merge: tracked-territories + snapshot slugs (sem duplicatas)
+        const allSlugs = new Set([...stale.map((t) => t.slug), ...snapshotSlugs]);
+        const trackedMap = new Map(stale.map((t) => [t.slug, t]));
+
+        const mergedTerritories = Array.from(allSlugs).map((slug) => {
+          const tracked = trackedMap.get(slug);
+          return {
+            slug,
+            name: tracked?.name ?? slug.replace(/-/g, " "),
+            region: tracked?.region,
+            state: tracked?.state,
+            ibgeId: tracked?.ibgeId,
+          };
+        });
+
+        if (mergedTerritories.length > 0) {
           log.info(
-            { count: stale.length },
-            "DB sem territórios ativos — usando lista em disco (tracked-territories.json)"
+            { count: mergedTerritories.length, fromSnapshots: snapshotSlugs.length, fromTracked: stale.length },
+            "DB sem territórios ativos — usando lista em disco (tracked + snapshots)"
           );
-          activeTerritories = stale.map((t) => ({
+          activeTerritories = mergedTerritories.map((t) => ({
             id: 0,
             slug: t.slug,
             name: t.name,

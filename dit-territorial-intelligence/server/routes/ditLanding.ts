@@ -1067,6 +1067,43 @@ async function callLLM(prompt: string): Promise<unknown> {
 // Se o DIT completo não estiver em cache, roda o analyze completo primeiro
 // e deriva a isca a partir dele. Assim STT da isca === STT do DIT completo.
 
+// ── HISTÓRICO STT (para dashboard / gráfico de tendência) ──────────────────
+// GET /api/dit/history/:slug — retorna histórico de scores por data.
+
+ditLandingRouter.get("/history/:slug", async (req: Request, res: Response) => {
+  try {
+    const { slug } = req.params;
+    if (!slug) { res.status(400).json({ error: "slug obrigatório" }); return; }
+    const { getSttHistory } = await import("../stt/dit-snapshot-store");
+    const history = await getSttHistory(slug);
+    res.json({ slug, history });
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+});
+
+// ── LISTA DE TERRITÓRIOS MONITORADOS ────────────────────────────────────────
+// GET /api/dit/monitored — lista todos os territórios com DIT salvo.
+
+ditLandingRouter.get("/monitored", async (_req: Request, res: Response) => {
+  try {
+    const { listTrackedSlugs, getSttHistory } = await import("../stt/dit-snapshot-store");
+    const slugs = await listTrackedSlugs();
+    const list = await Promise.all(
+      slugs.map(async (slug) => {
+        const history = await getSttHistory(slug);
+        const latest = history[history.length - 1];
+        return { slug, latestStt: latest?.stt, latestScenario: latest?.scenario, latestDate: latest?.date, totalDays: history.length };
+      })
+    );
+    res.json({ count: list.length, territories: list });
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+});
+
+// ── ROTA ISCA (free preview) ──────────────────────────────────────────────────
+
 ditLandingRouter.post("/isca", async (req: Request, res: Response) => {
   const ip = (req.ip ?? req.socket.remoteAddress ?? "unknown").slice(0, 50);
   if (isRateLimited(ip)) {
@@ -1310,6 +1347,32 @@ ditLandingRouter.post("/analyze", async (req: Request, res: Response) => {
     // garantindo consistência absoluta: STT da isca === STT do DIT completo.
     analysisCache.set(cacheKey, { result, ts: Date.now() });
     persistCacheToDisk();
+
+    // 6a. SNAPSHOT PERMANENTE — salva DIT completo em disco por data.
+    // Diferente do cache (24h em memória), o snapshot sobrevive para sempre:
+    // - Auditabilidade: "qual era o STT ontem?"
+    // - Scheduler usa para não reprocessar o que já foi computado hoje
+    // - Base para gráfico de tendência STT no dashboard
+    // - Garante que 24 meses de HISTÓRICO DE SCORES esteja disponível
+    try {
+      const { saveDitSnapshot } = await import("../stt/dit-snapshot-store");
+      const resultObj = result as Record<string, unknown>;
+      const sttVal = typeof resultObj.stt === "number" ? resultObj.stt : 0;
+      const scenarioVal = typeof resultObj.scenario === "string" ? resultObj.scenario : "estabilidade";
+      const signalCount = orchestratorResult?.totalSignals ?? 0;
+      const coverage = orchestratorResult?.coverageScore;
+      await saveDitSnapshot(
+        makeSlug(territoryClean),
+        resolvedName,
+        result,
+        sttVal,
+        scenarioVal,
+        signalCount,
+        coverage
+      );
+    } catch (snapErr) {
+      log.warn({ err: (snapErr as Error).message }, "Falha ao salvar DIT snapshot (não-fatal)");
+    }
 
     // 6b. Gera isca (free preview) derivada do DIT completo.
     // Contém: STT, cenário, 1 parágrafo do executiveSummary, 3 sinais,
