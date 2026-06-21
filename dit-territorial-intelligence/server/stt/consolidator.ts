@@ -277,6 +277,12 @@ export async function consolidateSttFromHistory(
     let oldest: Date | null = null;
     let newest: Date | null = null;
 
+    // Carrega pesos aprendidos para a região (multiplier por fonte)
+    // Default 1.0 quando agente não tem histórico (não penaliza inicial)
+    const { getSourceWeight } = await import("./learning-engine");
+    const territoryRegion = territorySlug ? rows.find((r) => r.source)?.source ? null : null : null;
+    void territoryRegion;
+
     for (const row of rows) {
       const dim = (row.relatedIndex ?? "GERAL") as DimensionId | "GERAL";
       if (dim === "GERAL" || !(dim in DIM_WEIGHTS)) continue;
@@ -288,23 +294,27 @@ export async function consolidateSttFromHistory(
       const impact = Number(row.llmImpactScore ?? 0);
       if (!Number.isFinite(impact) || impact <= 0) continue;
 
-      const polarity = signalPolarity(row.source, impact);
+      // APRENDIZADO: multiplier do agente (0.5 a 1.5) baseado em histórico de avgImpact
+      const learnedWeight = await getSourceWeight(row.source, null);
+      const weightedImpact = impact * learnedWeight;
+
+      const polarity = signalPolarity(row.source, weightedImpact);
 
       // Modelo invertido:
       //  resolutive  → subtrai do score (resolve aspecto do território)
       //  tensioning  → adiciona ao score (confirma complexidade)
       //  neutral     → resolutivo fraco (sinal foi coletado, mas é genérico)
       if (polarity === "resolutive") {
-        const delta = impact * w * FATOR_RESOLUTIVO;
+        const delta = weightedImpact * w * FATOR_RESOLUTIVO;
         dimAccum[dim].score -= delta;
         dimAccum[dim].resolutive += 1;
       } else if (polarity === "tensioning") {
-        const delta = impact * w * FATOR_TENSAO;
+        const delta = weightedImpact * w * FATOR_TENSAO;
         dimAccum[dim].score += delta;
         dimAccum[dim].tensioning += 1;
       } else {
         // Neutral: efeito leve resolutivo (1/3 do fator)
-        const delta = impact * w * (FATOR_RESOLUTIVO / 3);
+        const delta = weightedImpact * w * (FATOR_RESOLUTIVO / 3);
         dimAccum[dim].score -= delta;
         dimAccum[dim].resolutive += 1;
       }

@@ -231,6 +231,26 @@ export class Orchestrator {
     const signalsToPersist = allCollectedSignals.filter(s => s.impactScore >= 0.3 || s.triggersAlert);
     await this._persistSignals(territory, signalsToPersist);
 
+    // 8a. APRENDIZADO AUTÔNOMO — cada coleta atualiza pesos e perfis
+    // Source weighting adaptativo + território profile pra extrapolação
+    try {
+      const { recordSignalEmission, updateTerritoryProfile } = await import("../stt/learning-engine");
+      for (const sig of signalsToPersist) {
+        await recordSignalEmission(sig.sourceAgentId, sig.impactScore, territory.region ?? null);
+      }
+      const ctx = territory.contextData as Record<string, unknown> | null;
+      const popDensity = typeof ctx?.populationDensity === "number" ? ctx.populationDensity : undefined;
+      await updateTerritoryProfile(
+        territory.slug,
+        territory.state ?? "",
+        territory.region ?? "",
+        signalsToPersist.map((s) => ({ source: s.sourceAgentId, impact: s.impactScore })),
+        popDensity !== undefined ? { populationDensity: popDensity } : null
+      );
+    } catch (err) {
+      log.warn({ err: (err as Error).message }, "Learning engine update falhou (não-fatal)");
+    }
+
     // ─── 8b. CONSOLIDAÇÃO HISTÓRICA (24 MESES) ───────────────────────────────
     // Metodologia PRINT: STT NÃO é fotografia do dia, é consolidação ponderada
     // de TODOS os sinais nos últimos 24 meses, com decaimento exponencial

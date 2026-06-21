@@ -1110,6 +1110,37 @@ async function callLLM(prompt: string): Promise<unknown> {
 // Se o DIT completo não estiver em cache, roda o analyze completo primeiro
 // e deriva a isca a partir dele. Assim STT da isca === STT do DIT completo.
 
+// ── APRENDIZADO AUTÔNOMO ──────────────────────────────────────────────────
+// GET /api/dit/learning/stats — visualiza estado do aprendizado
+// POST /api/dit/learning/feedback — registra feedback manual de sinal
+
+ditLandingRouter.get("/learning/stats", async (_req: Request, res: Response) => {
+  try {
+    const { getLearningStats } = await import("../stt/learning-engine");
+    res.json(await getLearningStats());
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+});
+
+ditLandingRouter.post("/learning/feedback", async (req: Request, res: Response) => {
+  try {
+    const { signalHash, source, territorySlug, rating } = req.body as {
+      signalHash?: string; source?: string; territorySlug?: string;
+      rating?: "relevant" | "irrelevant";
+    };
+    if (!signalHash || !source || !territorySlug || (rating !== "relevant" && rating !== "irrelevant")) {
+      res.status(400).json({ error: "signalHash, source, territorySlug, rating obrigatórios" });
+      return;
+    }
+    const { recordFeedback } = await import("../stt/learning-engine");
+    await recordFeedback(signalHash, source, territorySlug, rating);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+});
+
 // ── HISTÓRICO STT (para dashboard / gráfico de tendência) ──────────────────
 // GET /api/dit/history/:slug — retorna histórico de scores por data.
 
