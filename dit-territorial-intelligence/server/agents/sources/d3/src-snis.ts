@@ -20,6 +20,7 @@ import type { CollectOptions, RawSignal } from "../../types";
 import type { Territory } from "../../../../drizzle/schema";
 import type { DimensionId, SourceId } from "../../../indicators";
 import { enrichGeoQuery, matchesTerritory, fold } from "../../geo-filter";
+import { serpapiCachedFetch } from "../../serpapi-quota";
 
 // Resource ID do SNIS Série Histórica - municípios (água/esgoto).
 // TODO confirmar via UI — sandbox 2026-06-02 bloqueou WebFetch/curl. Quando
@@ -185,9 +186,10 @@ export class SrcSnis extends BaseSourceAgent {
       `&num=10&api_key=${SERPAPI_KEY}`;
 
     try {
-      const res = await fetch(url, { signal: options.signal });
-      if (!res.ok) return [];
-      const data = await res.json();
+      const data = (await serpapiCachedFetch(url, options.signal)) as
+        | { organic_results?: Array<{ title: string; snippet?: string; link: string }> }
+        | null;
+      if (!data) return [];
       const results = data.organic_results ?? [];
 
       for (const item of results) {

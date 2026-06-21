@@ -13,6 +13,7 @@ import type { CollectOptions, RawSignal } from "../../types";
 import type { Territory } from "../../../../drizzle/schema";
 import type { DimensionId, SourceId } from "../../../indicators";
 import { enrichGeoQuery, matchesTerritory } from "../../geo-filter";
+import { serpapiCachedFetch } from "../../serpapi-quota";
 
 export class SrcOrcamentoParticipativo extends BaseSourceAgent {
   readonly id: SourceId = "src-orcamento-participativo";
@@ -49,12 +50,10 @@ export class SrcOrcamentoParticipativo extends BaseSourceAgent {
       const url = `https://serpapi.com/search.json?engine=google&q=${encodeURIComponent(q)}&num=5${tbs}&api_key=${SERPAPI_KEY}`;
 
       try {
-        const res = await fetch(url, { signal: options.signal });
-        if (!res.ok) continue;
-
-        const data = (await res.json()) as {
-          organic_results?: Array<{ title: string; snippet?: string; link: string }>;
-        };
+        const data = (await serpapiCachedFetch(url, options.signal)) as
+          | { organic_results?: Array<{ title: string; snippet?: string; link: string }> }
+          | null;
+        if (!data) continue;
         const results = data.organic_results ?? [];
 
         for (const item of results) {

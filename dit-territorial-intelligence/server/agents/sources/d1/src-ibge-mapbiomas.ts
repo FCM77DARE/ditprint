@@ -2,6 +2,7 @@ import { BaseSourceAgent } from "../../base-source";
 import type { RawSignal, CollectOptions } from "../../types";
 import type { Territory } from "../../../../drizzle/schema";
 import { enrichGeoQuery, matchesTerritory } from "../../geo-filter";
+import { serpapiCachedFetch } from "../../serpapi-quota";
 
 export class SrcIbgeMapbiomas extends BaseSourceAgent {
   readonly id = "src-ibge-mapbiomas";
@@ -26,10 +27,10 @@ export class SrcIbgeMapbiomas extends BaseSourceAgent {
     const url = `https://serpapi.com/search.json?engine=google&q=${encodeURIComponent(searchString)}&num=3${tbs}&api_key=${SERPAPI_KEY}`;
 
     try {
-      const res = await fetch(url, { signal: options.signal });
-      if (!res.ok) return [];
-
-      const data = await res.json();
+      const data = (await serpapiCachedFetch(url, options.signal)) as
+        | { organic_results?: Array<{ title: string; snippet?: string; link: string }> }
+        | null;
+      if (!data) return [];
       const results = data.organic_results ?? [];
 
       for (const item of results) {

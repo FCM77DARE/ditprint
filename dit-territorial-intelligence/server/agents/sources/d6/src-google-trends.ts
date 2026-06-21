@@ -12,6 +12,7 @@ import { BaseSourceAgent } from "../../base-source";
 import type { CollectOptions, RawSignal } from "../../types";
 import type { Territory } from "../../../../drizzle/schema";
 import type { DimensionId, SourceId } from "../../../indicators";
+import { serpapiCachedFetch } from "../../serpapi-quota";
 
 const SERPAPI_KEY = process.env.SERPAPI_API_KEY ?? "";
 
@@ -39,14 +40,14 @@ export class SrcGoogleTrends extends BaseSourceAgent {
       `&geo=BR&api_key=${SERPAPI_KEY}`;
 
     try {
-      const res = await fetch(url, { signal: options.signal });
-      if (!res.ok) return [];
-
-      const data = (await res.json()) as {
-        interest_over_time?: {
-          timeline_data?: Array<{ date: string; values: Array<{ value: number }> }>;
-        };
-      };
+      const data = (await serpapiCachedFetch(url, options.signal)) as
+        | {
+            interest_over_time?: {
+              timeline_data?: Array<{ date: string; values: Array<{ value: number }> }>;
+            };
+          }
+        | null;
+      if (!data) return [];
 
       const timeline = data.interest_over_time?.timeline_data ?? [];
       if (!timeline.length) return [];
