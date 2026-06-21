@@ -971,9 +971,48 @@ Responda APENAS com JSON válido:
 }
 
 // ── LLM CALL ─────────────────────────────────────────────────────────────────
-// Prioridade: Anthropic → OpenAI/Forge
+// Prioridade: OpenRouter → Anthropic → OpenAI
+// OpenRouter unifica acesso a todos os modelos pelo mesmo endpoint OpenAI-compat.
 
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY ?? "";
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY ?? "";
+
+async function callLLMOpenRouter(prompt: string): Promise<unknown> {
+  const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+      "HTTP-Referer": "https://dit-api-production.up.railway.app",
+      "X-Title": "DIT PRINT Territorial Intelligence",
+    },
+    body: JSON.stringify({
+      model: "openai/gpt-4o",          // Melhor custo-benefício no OpenRouter
+      temperature: 0,
+      response_format: { type: "json_object" },
+      messages: [
+        {
+          role: "system",
+          content: "Você é o sistema de relatórios do DIT PRINT Territorial Intelligence™. Responda SEMPRE com JSON válido e completo, sem nenhum texto fora do JSON. Seja específico, concreto e útil para decisores de negócios no Brasil.",
+        },
+        { role: "user", content: prompt },
+      ],
+    }),
+    signal: AbortSignal.timeout(150000),
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`OpenRouter error ${res.status}: ${errText.slice(0, 200)}`);
+  }
+
+  const data = (await res.json()) as {
+    choices?: Array<{ message?: { content?: string } }>;
+  };
+  const content = data.choices?.[0]?.message?.content;
+  if (!content) throw new Error("OpenRouter retornou resposta vazia");
+  return JSON.parse(content);
+}
 
 async function callLLMAnthropicClaude(prompt: string): Promise<unknown> {
   const res = await fetch("https://api.anthropic.com/v1/messages", {
@@ -1054,11 +1093,15 @@ async function callLLMOpenAI(prompt: string): Promise<unknown> {
 }
 
 async function callLLM(prompt: string): Promise<unknown> {
+  if (OPENROUTER_API_KEY.length > 20) {
+    log.info("Usando OpenRouter (gpt-4o) para relatório DIT");
+    return callLLMOpenRouter(prompt);
+  }
   if (ANTHROPIC_API_KEY.length > 20) {
     log.info("Usando Anthropic Claude para relatório DIT");
     return callLLMAnthropicClaude(prompt);
   }
-  log.info("Usando OpenAI para relatório DIT");
+  log.info("Usando OpenAI direto para relatório DIT");
   return callLLMOpenAI(prompt);
 }
 
