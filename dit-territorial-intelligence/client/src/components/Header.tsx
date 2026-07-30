@@ -8,28 +8,32 @@
 
 import { Link } from "wouter";
 import { Button } from "./ui/button";
-import { Zap, Sun, Moon, LayoutDashboard, Map } from "lucide-react";
+import { Sun, Moon, LayoutDashboard, Map } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 
 export default function Header() {
   const { theme, toggleTheme } = useTheme();
+  const logoSrc = theme === "dark" ? "/brand/print-logo-white.png" : "/brand/print-logo.png";
 
   return (
     <header className="fixed top-0 z-50 w-full border-b border-border/40 glass">
       <div className="container">
         <div className="flex h-20 items-center justify-between">
-          {/* Logo */}
+          {/* Logo — wordmark oficial PRINT (brandbook) */}
           <Link href="/">
             <div className="flex items-center gap-3 transition-all hover:opacity-80">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/20 glow">
-                <Zap className="h-5 w-5 text-primary" fill="currentColor" />
-              </div>
-              <div className="flex flex-col">
-                <span className="font-display text-xl font-bold leading-none tracking-tight text-foreground">
-                  PRINT
+              <img
+                src={logoSrc}
+                alt="PRINT"
+                className="h-7 w-auto"
+                loading="eager"
+              />
+              <div className="hidden sm:flex flex-col pl-3 border-l border-border/40">
+                <span className="font-mono text-[9px] font-medium leading-none tracking-[0.2em] text-accent uppercase">
+                  Territorial
                 </span>
-                <span className="font-mono text-[9px] font-medium leading-none tracking-widest text-accent">
-                  TERRITORIAL INTELLIGENCE
+                <span className="font-mono text-[9px] font-medium leading-none tracking-[0.2em] text-muted-foreground uppercase mt-1">
+                  Intelligence
                 </span>
               </div>
             </div>

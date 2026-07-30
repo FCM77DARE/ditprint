@@ -8,7 +8,6 @@ import DiagnosisReport, { type DitAnalyzeResult } from "@/components/DiagnosisRe
 import {
   Search,
   ArrowRight,
-  Zap,
   ShieldCheck,
   BarChart3,
   AlertTriangle,
@@ -127,7 +126,7 @@ export default function LandingSimple() {
     {
       id: "radar",
       title: "Radar Territorial™",
-      description: "Monitoramento contínuo com alertas mensais de ativação. Não seja pego de surpresa por mudanças no território.",
+      description: "Monitoramento contínuo com sinalizações mensais de ativação. Antecipe mudanças no território com clareza e tempo.",
       icon: Radio,
       path: "/radar",
       color: "text-primary"
@@ -407,12 +406,11 @@ export default function LandingSimple() {
           <div className="flex flex-col items-center justify-between gap-10 md:flex-row">
             <div className="flex flex-col items-center gap-3 md:items-start">
               <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/20 glow">
-                  <Zap className="h-6 w-6 text-primary" fill="currentColor" />
-                </div>
-                <div className="flex flex-col">
-                  <span className="font-display text-2xl font-bold leading-none tracking-tight">PRINT</span>
-                  <span className="font-mono text-[10px] font-medium leading-none tracking-widest text-accent uppercase">Territorial Intelligence</span>
+                <img src="/brand/print-logo.png" alt="PRINT" className="h-9 w-auto dark:hidden" />
+                <img src="/brand/print-logo-white.png" alt="PRINT" className="h-9 w-auto hidden dark:block" />
+                <div className="flex flex-col pl-3 border-l border-border/40">
+                  <span className="font-mono text-[10px] font-medium leading-none tracking-[0.2em] text-accent uppercase">Territorial</span>
+                  <span className="font-mono text-[10px] font-medium leading-none tracking-[0.2em] text-muted-foreground uppercase mt-1">Intelligence</span>
                 </div>
               </div>
             </div>

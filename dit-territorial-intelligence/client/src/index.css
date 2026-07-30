@@ -41,9 +41,10 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
-  /* PRINT Brandbook — Nunito as web substitute for Nexa */
-  --font-display: "Nunito", system-ui, sans-serif;
-  --font-body: "Nunito", system-ui, sans-serif;
+  /* PRINT Brandbook — Manrope como substituta web da Nexa
+     (geometria e proporções muito próximas do Nexa Extra Bold) */
+  --font-display: "Manrope", system-ui, sans-serif;
+  --font-body: "Manrope", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", monospace;
 }
 
