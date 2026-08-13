@@ -1392,28 +1392,45 @@ ditLandingRouter.post("/analyze", async (req: Request, res: Response) => {
         }
       : null;
 
-    // Merge: LLM produz o relatório executivo; strategic layer adiciona dados estruturados
+    // Merge: LLM produz o relatório executivo; strategic layer adiciona dados
+    // estruturados. STT/scenario/dimensões SEMPRE vêm do orchestrator (fonte
+    // canônica). LLM pode "inventar" um STT diferente no free-form output —
+    // sobrescrevemos aqui para garantir consistência com o consolidator 24mo.
     const baseExtra = {
       resolution,
       territoryGeo: geo ? { centroid: geo.centroid, bbox: geo.bbox } : null,
-      // Coverage Score: % de fontes que falaram pra este território. STT baixo
-      // com coverage baixo ≠ estabilidade — é vácuo de coleta. Front-end exibe
-      // banner explicativo quando coverage < 0.5.
       coverageScore: orchestratorResult?.coverageScore ?? null,
       coverageDetail: orchestratorResult?.coverageDetail ?? null,
     };
+
+    // Override canônico do orchestrator sobre o output do LLM
+    const canonicalOverride = orchestratorResult
+      ? (() => {
+          const sc = scenarioFromStt(orchestratorResult.stt);
+          return {
+            stt: Math.round(orchestratorResult.stt),
+            scenario: sc.scenario,
+            scenarioLabel: sc.scenarioLabel,
+            gaugeColor: sc.gaugeColor,
+            totalSignalsCount: orchestratorResult.totalSignals,
+            alertsCount: orchestratorResult.alerts.length,
+          };
+        })()
+      : {};
+
     const result =
       strategic && typeof llmReport === "object" && llmReport !== null
         ? {
             ...(llmReport as Record<string, unknown>),
             ...baseExtra,
+            ...canonicalOverride,
             sectors: strategic.sectors,
             resources: strategic.resources,
             hotspots: strategic.hotspots,
             strategicCases: strategic.strategicCases,
           }
         : typeof llmReport === "object" && llmReport !== null
-          ? { ...(llmReport as Record<string, unknown>), ...baseExtra }
+          ? { ...(llmReport as Record<string, unknown>), ...baseExtra, ...canonicalOverride }
           : llmReport;
 
     // 6. Salva o DIT COMPLETO em cache — sempre antes de qualquer retorno.
