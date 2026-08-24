@@ -105,3 +105,6 @@ temp/
 *.db
 *.sqlite
 *.sqlite3
+
+# Dados locais do learning-engine (em producao e o volume Railway em /data)
+.data/
