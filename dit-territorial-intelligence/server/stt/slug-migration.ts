@@ -62,6 +62,16 @@ function makeSlug(s: string): string {
   return normalize(s).replace(/\s+/g, "-");
 }
 
+/**
+ * Colapsa contração portuguesa separada por espaço: "dias d avila" vira
+ * "dias davila". O slug antigo perdia o apóstrofo de "Dias d'Ávila" e virava
+ * `dias-d-avila`, que não batia com nada na malha do IBGE — e Dias d'Ávila é
+ * território real do polo de Camaçari, não caso de laboratório.
+ */
+function normalizeCollapsed(s: string): string {
+  return normalize(s).replace(/\b([dnlmstv])\s+(?=[aeiou])/gi, "$1");
+}
+
 const UF_SUFIXOS: Record<string, string> = {
   ac: "AC", al: "AL", ap: "AP", am: "AM", ba: "BA", ce: "CE", df: "DF",
   es: "ES", go: "GO", ma: "MA", mt: "MT", ms: "MS", mg: "MG", pa: "PA",
@@ -102,11 +112,14 @@ export async function migrateCanonicalSlugs(
 
   // índice: nome normalizado → lista de municípios com esse nome
   const porNome = new Map<string, IbgeMunicipio[]>();
-  for (const m of municipios) {
-    const k = normalize(m.nome);
+  const add = (k: string, m: IbgeMunicipio) => {
     const arr = porNome.get(k) ?? [];
-    arr.push(m);
+    if (!arr.includes(m)) arr.push(m);
     porNome.set(k, arr);
+  };
+  for (const m of municipios) {
+    add(normalize(m.nome), m);
+    add(normalizeCollapsed(m.nome), m);
   }
 
   const dirs = (await fs.readdir(BASE_DIR, { withFileTypes: true }))
@@ -139,14 +152,33 @@ export async function migrateCanonicalSlugs(
       }
     }
 
-    const candidatos = porNome.get(normalize(nome.replace(/-/g, " "))) ?? [];
+    const nomeTexto = nome.replace(/-/g, " ");
+    const candidatos =
+      porNome.get(normalize(nomeTexto)) ??
+      porNome.get(normalizeCollapsed(nomeTexto)) ??
+      [];
     const filtrados = uf
       ? candidatos.filter((m) => m.microrregiao?.mesorregiao?.UF?.sigla === uf)
       : candidatos;
 
-    const escolhido = filtrados.length === 1 ? filtrados[0]
+    let escolhido = filtrados.length === 1 ? filtrados[0]
       : candidatos.length === 1 ? candidatos[0]
       : null;
+
+    // Último recurso: slug truncado por acento perdido ("Caarapó" virou
+    // "caarap"). Só aceita com UF declarada E prefixo único naquela UF —
+    // sem essas duas travas, prefixo casa território errado, e território
+    // errado no relatório é pior que território sem histórico.
+    if (!escolhido && uf) {
+      const alvo = normalize(nomeTexto);
+      const porPrefixo = municipios.filter(
+        (m) =>
+          m.microrregiao?.mesorregiao?.UF?.sigla === uf &&
+          normalize(m.nome).startsWith(alvo) &&
+          alvo.length >= 4
+      );
+      if (porPrefixo.length === 1) escolhido = porPrefixo[0];
+    }
 
     if (!escolhido) {
       semResolucao.push(slug);
