@@ -162,11 +162,12 @@ async function ensureCanonicalSlugs(): Promise<void> {
   try {
     const { migrateCanonicalSlugs } = await import("../stt/slug-migration");
     const report = await migrateCanonicalSlugs({ apply: true });
-    if (report.merged > 0 || report.renamed > 0) {
+    if (report.merged > 0 || report.renamed > 0 || report.purged.length > 0) {
       logger.info(
         {
           fundidos: report.merged,
           renomeados: report.renamed,
+          purgados: report.purged,
           semResolucao: report.unresolved,
         },
         "Slugs canônicos aplicados — séries históricas reunificadas"

@@ -83,12 +83,40 @@ const UF_SUFIXOS: Record<string, string> = {
   "mato-grosso-do-sul": "MS", "santa-catarina": "SC",
 };
 
+/**
+ * Territórios a remover do snapshot store, com o motivo declarado.
+ *
+ * Não é limpeza cosmética: enquanto estão lá, aparecem em /monitored como
+ * território de verdade, entram na conta que a PRINT mostra e o scheduler
+ * gasta cota coletando para eles.
+ *
+ * Cada linha diz por que sai. Remoção sem motivo escrito não entra aqui —
+ * quem ler daqui a seis meses precisa poder conferir a decisão.
+ */
+const PURGA: Array<{ slug: string; motivo: string }> = [
+  {
+    slug: "gatinhos",
+    motivo:
+      "Entrada de teste. 1 dia, 2 sinais, cobertura 3,9% — sob o piso atual " +
+      "(35%) nem seria emitido. O STT 97 é artefato do modelo antigo, que " +
+      "premiava ausência de dado.",
+  },
+  {
+    slug: "lajeado",
+    motivo:
+      "Duplicata de lajeado-4311403 (Lajeado/RS): mesma coleta de 13/08/2026, " +
+      "com 4 minutos de diferença (140 sinais contra 146). O canônico tem mais " +
+      "sinal e mais cobertura; este não acrescenta ponto nenhum à série.",
+  },
+];
+
 export interface SlugMigrationReport {
   dirsFound: number;
   resolved: number;
   unresolved: string[];
   merged: number;
   renamed: number;
+  purged: string[];
   applied: boolean;
 }
 
@@ -102,7 +130,46 @@ export async function migrateCanonicalSlugs(
   const APPLY = opts.apply === true;
   const console = { log: opts.log ?? (() => {}) };
   if (!existsSync(BASE_DIR)) {
-    return { dirsFound: 0, resolved: 0, unresolved: [], merged: 0, renamed: 0, applied: APPLY };
+    return { dirsFound: 0, resolved: 0, unresolved: [], merged: 0, renamed: 0, purged: [], applied: APPLY };
+  }
+
+  // Purga declarada — antes de tudo, para não migrar o que vai sair.
+  //
+  // UMA VEZ SÓ, marcada em disco. Sem a marca, a lista rodaria em todo boot e
+  // um território legítimo criado depois com um desses nomes sumiria sozinho,
+  // sem ninguém entender por quê. Apagar é irreversível; repetir apagamento
+  // automático é pior ainda.
+  const purged: string[] = [];
+  const marcaPurga = join(BASE_DIR, ".purga-aplicada.json");
+  const jaPurgado: string[] = existsSync(marcaPurga)
+    ? (JSON.parse(await fs.readFile(marcaPurga, "utf8")) as { slugs?: string[] }).slugs ?? []
+    : [];
+
+  for (const { slug, motivo } of PURGA) {
+    if (jaPurgado.includes(slug)) continue;
+    const dir = join(BASE_DIR, slug);
+    if (!existsSync(dir)) {
+      // Não existe e nunca foi purgado: marca como resolvido e segue.
+      purged.push(slug);
+      continue;
+    }
+    console.log(`  PURGA  ${slug} — ${motivo}`);
+    if (APPLY) {
+      await fs.rm(dir, { recursive: true, force: true });
+    }
+    purged.push(slug);
+  }
+
+  if (APPLY && purged.length > 0) {
+    await fs.writeFile(
+      marcaPurga,
+      JSON.stringify({
+        slugs: Array.from(new Set([...jaPurgado, ...purged])),
+        aplicadaEm: new Date().toISOString(),
+        motivos: PURGA.map((x) => `${x.slug}: ${x.motivo}`),
+      }),
+      "utf8"
+    );
   }
 
   const res = await fetch(
@@ -123,6 +190,7 @@ export async function migrateCanonicalSlugs(
     add(normalizeCollapsed(m.nome), m);
   }
 
+  // Lido depois da purga, senão a migração ainda enxerga o que acabou de sair.
   const dirs = (await fs.readdir(BASE_DIR, { withFileTypes: true }))
     .filter((d) => d.isDirectory())
     .map((d) => d.name);
@@ -302,6 +370,7 @@ export async function migrateCanonicalSlugs(
     unresolved: semResolucao,
     merged: fundidos,
     renamed: renomeados,
+    purged,
     applied: APPLY,
   };
 }
