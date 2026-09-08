@@ -58,7 +58,15 @@ export class SrcYoutubeTerritorio extends BaseSourceAgent {
         signal: options.signal,
       });
       if (!res.ok) {
-        this.log.debug({ status: res.status }, "YouTube API non-OK response");
+        // Era `debug`, e por isso a falha não aparecia em produção: o agente
+        // ficava mudo e a cobertura caía sem ninguém saber por quê. Fonte que
+        // falha tem que dizer que falhou — silêncio é indistinguível de
+        // "não há nada sobre este território".
+        const corpo = await res.text().catch(() => "");
+        this.log.warn(
+          { status: res.status, corpo: corpo.slice(0, 300) },
+          "YouTube Data API recusou a consulta"
+        );
         return [];
       }
       const data = (await res.json()) as YoutubeSearchResponse;
