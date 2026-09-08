@@ -21,6 +21,7 @@ import { promises as fs, existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
 import { logger } from "../_core/logger";
+import { canSpend, consume } from "../_core/budget";
 
 const log = logger.child({ module: "serpapi-quota" });
 
@@ -151,7 +152,18 @@ export async function serpapiCachedFetch(
     return cached;
   }
 
-  // 2. Tem cota?
+  // 2a. Teto global de gasto — vem antes da cota do próprio SerpAPI porque é
+  // o limite que protege a conta inteira, não só este recurso.
+  const budget = await canSpend("serpapi");
+  if (!budget.ok) {
+    log.info(
+      { reason: budget.reason, dailyUsed: budget.dailyUsed, monthlyUsed: budget.monthlyUsed },
+      "Orçamento global de busca esgotado — agente retorna []"
+    );
+    return null;
+  }
+
+  // 2b. Tem cota?
   const quota = await canConsume();
   if (!quota.ok) {
     log.info(
@@ -170,6 +182,7 @@ export async function serpapiCachedFetch(
     }
     const data = await res.json();
     await recordConsumption();
+    await consume("serpapi");
     await writeCache(hash, data);
     const newQuota = await readUsage();
     log.info(

@@ -598,21 +598,35 @@ IMPORTANTE:
 
   // Salvar no histórico de índices
   const period = new Date().toISOString().substring(0, 7);
+  // ÍNDICES LEGADOS (ITT/ICS/IVS/IVE/ICI)
+  //
+  // Modelo anterior às 6 dimensões PRINT. As colunas continuam na tabela
+  // index_history, mas nada mais as calcula — este trecho referenciava as
+  // variáveis `itt`, `ics`, `ivs`, `ive` e `ici`, que não existem mais em
+  // lugar nenhum. Era ReferenceError garantido em runtime toda vez que a
+  // coleta chegasse aqui, e o TypeScript vinha apontando isso.
+  //
+  // Gravamos zero de propósito: é a leitura honesta de "não medimos mais
+  // isso". Inventar um número a partir das dimensões seria fabricar série
+  // histórica. O score que vale é o STT e as dimensões, gravados em
+  // stt_scores e indicator_scores.
+  const LEGADO = 0;
+
   await insertIndexHistory({
     territoryId: territory.id,
     period,
     stt,
-    itt,
-    ics,
-    ivs,
-    ive,
-    ici,
+    itt: LEGADO,
+    ics: LEGADO,
+    ivs: LEGADO,
+    ive: LEGADO,
+    ici: LEGADO,
     sttDelta: variation,
-    ittDelta: prevHistory ? parseFloat((itt - (prevHistory.itt ?? 0)).toFixed(1)) : 0,
-    icsDelta: prevHistory ? parseFloat((ics - (prevHistory.ics ?? 0)).toFixed(1)) : 0,
-    ivsDelta: prevHistory ? parseFloat((ivs - (prevHistory.ivs ?? 0)).toFixed(1)) : 0,
-    iveDelta: prevHistory ? parseFloat((ive - (prevHistory.ive ?? 0)).toFixed(1)) : 0,
-    iciDelta: prevHistory ? parseFloat((ici - (prevHistory.ici ?? 0)).toFixed(1)) : 0,
+    ittDelta: LEGADO,
+    icsDelta: LEGADO,
+    ivsDelta: LEGADO,
+    iveDelta: LEGADO,
+    iciDelta: LEGADO,
     activatedIndex,
     scenario,
     signalCount: pendingSignals.length,

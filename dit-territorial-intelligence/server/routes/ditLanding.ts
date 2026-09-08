@@ -27,6 +27,8 @@ import { orchestrator } from "../agents/orchestrator";
 import type { DimensionResult } from "../agents/types";
 import type { DimensionId } from "../indicators";
 import { runStrategicLayer } from "../strategic/runner";
+import { canSpend, consume, getBudgetStatus } from "../_core/budget";
+import { getStructuralStatus } from "../structural/store";
 import type { TerritoryStrategicContext } from "../strategic/types";
 
 const log = logger.child({ module: "dit-landing" });
@@ -44,6 +46,24 @@ const log = logger.child({ module: "dit-landing" });
  * base — quando ela subir, este piso pode subir junto.
  */
 const MIN_COVERAGE = Number(process.env.DIT_MIN_COVERAGE ?? "0.35");
+
+/**
+ * Gerador aberto ligado ou desligado.
+ *
+ * DESLIGADO (padrão de lançamento): só território já monitorado devolve DIT.
+ * Qualquer outro vira captura de lead — "solicitar diagnóstico" — em vez de
+ * disparar coleta e LLM na hora.
+ *
+ * Isso resolve três coisas de uma vez, e é a única decisão que não dá para
+ * tomar depois porque define o que o mercado vê primeiro:
+ *   custo     não existe consulta anônima disparando ~24 buscas pagas;
+ *   cota      a coleta fica concentrada nos territórios que a PRINT escolheu;
+ *   verdade   o que vai ao ar passou por publicação humana, como a
+ *             metodologia sempre disse (fila de publicação + SttPublishPanel).
+ *
+ * Religar é `DIT_PUBLIC_ANALYZE=true`, sem deploy.
+ */
+const PUBLIC_ANALYZE = String(process.env.DIT_PUBLIC_ANALYZE ?? "false").toLowerCase() === "true";
 
 /**
  * Slug canônico do território = código IBGE do município (+ distrito/localidade).
@@ -72,6 +92,25 @@ ditLandingRouter.options("*", (_req, res) => res.sendStatus(204));
 // ── HEALTH CHECK (Railway / monitoring) ───────────────────────────────────────
 ditLandingRouter.get("/health", (_req, res) => {
   res.json({ status: "ok", service: "dit-landing", ts: new Date().toISOString() });
+});
+
+/**
+ * Estado operacional — orçamento consumido e idade da camada estrutural.
+ * É o painel que responde "quanto já gastamos hoje" e "o dado de base está
+ * velho?" sem precisar abrir a conta do fornecedor.
+ */
+ditLandingRouter.get("/ops", async (_req: Request, res: Response) => {
+  const [budget, structural] = await Promise.all([
+    getBudgetStatus(),
+    getStructuralStatus(),
+  ]);
+  res.json({
+    publicAnalyze: PUBLIC_ANALYZE,
+    minCoverage: MIN_COVERAGE,
+    budget,
+    structural,
+    ts: new Date().toISOString(),
+  });
 });
 
 // ── LEAD CAPTURE (email + território de interesse) ────────────────────────────
@@ -1240,6 +1279,21 @@ ditLandingRouter.post("/isca", async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * Território já tem DIT publicado? Consulta o snapshot store, que é a mesma
+ * base que alimenta /monitored — o que está no ar é o que já foi coletado e
+ * publicado, não o que alguém digitou.
+ */
+async function isMonitored(slug: string): Promise<boolean> {
+  try {
+    const { listTrackedSlugs } = await import("../stt/dit-snapshot-store");
+    const slugs = await listTrackedSlugs();
+    return slugs.includes(slug);
+  } catch {
+    return false;
+  }
+}
+
 // ── ROTA PRINCIPAL ────────────────────────────────────────────────────────────
 
 ditLandingRouter.post("/analyze", async (req: Request, res: Response) => {
@@ -1301,6 +1355,54 @@ ditLandingRouter.post("/analyze", async (req: Request, res: Response) => {
 
     const slug = canonicalSlug(loc);
     const cacheKey = todayKey(slug);
+
+    // 1b. PORTA DO LANÇAMENTO — território fora da lista monitorada não
+    // dispara coleta. Vira pedido, e o pedido é o funil (Radar por assinatura,
+    // Diagnóstico por ticket). Cache do dia continua sendo servido: quem já
+    // tem DIT publicado hoje recebe normalmente.
+    if (!PUBLIC_ANALYZE) {
+      const jaTemDit = analysisCache.has(cacheKey) || (await isMonitored(slug));
+      if (!jaTemDit) {
+        log.info({ territory: slug, ip }, "Território fora do escopo monitorado — vira lead");
+        res.status(200).json({
+          status: "sob_demanda",
+          territory: loc.name,
+          region:
+            loc.kind === "municipality"
+              ? `${loc.name}, ${loc.state} — ${loc.region}`
+              : `${loc.name} (${loc.municipality}), ${loc.state} — ${loc.region}`,
+          slug,
+          resolution: {
+            kind: loc.kind,
+            name: loc.name,
+            municipality: loc.municipality,
+            state: loc.state,
+            region: loc.region,
+            ibgeId: loc.ibgeId,
+          },
+          message:
+            `${loc.name} ainda não está no Radar. O DIT deste território é ` +
+            "produzido sob demanda, com coleta dedicada e publicação analisada.",
+          cta: "solicitar_diagnostico",
+        });
+        return;
+      }
+    }
+
+    // 1c. TETO DE GASTO — protege a conta inteira, não só um recurso.
+    const analyzeBudget = await canSpend("analyze");
+    if (!analyzeBudget.ok) {
+      log.warn({ territory: slug, budget: analyzeBudget }, "Orçamento de análise esgotado");
+      res.status(429).json({
+        error: "Limite de análises atingido",
+        detail:
+          "O DIT atingiu o teto de análises do período. " +
+          "Territórios já publicados continuam disponíveis.",
+        status: "orcamento_esgotado",
+        retryAfter: "24h",
+      });
+      return;
+    }
 
     // Cache hit (lock diário — mesmo território no mesmo dia UTC = mesmo STT)
     if (!forceRefresh) {
@@ -1452,6 +1554,22 @@ ditLandingRouter.post("/analyze", async (req: Request, res: Response) => {
       : {};
 
     // 5. Build prompt + call LLM para relatório executivo (em paralelo com strategic layer)
+    const llmBudget = await canSpend("llm_report");
+    if (!llmBudget.ok) {
+      log.warn({ territory: slug, budget: llmBudget }, "Orçamento de LLM esgotado");
+      res.status(429).json({
+        error: "Limite de relatórios atingido",
+        detail:
+          "A coleta deste território rodou, mas o teto de geração de relatório " +
+          "do período foi atingido. O diagnóstico sai no próximo ciclo.",
+        status: "orcamento_esgotado",
+        coverageScore: orchestratorResult.coverageScore ?? null,
+      });
+      return;
+    }
+    await consume("analyze");
+    await consume("llm_report");
+
     const llmPromise: Promise<unknown> = callLLM(
           buildReportPrompt(
             resolvedName,

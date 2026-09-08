@@ -14,10 +14,22 @@ import type { DimensionId, SourceId } from "../../../indicators";
 
 const GNEWS_BASE = "https://news.google.com/rss/search?hl=pt-BR&gl=BR&ceid=BR:pt-BR&q=";
 
+/**
+ * NOMENCLATURA (08/09/2026)
+ *
+ * O nome exibido descreve o MÉTODO, não o órgão. Este agente não consulta a
+ * base do órgão citado: ele faz busca aberta (Google, via SerpAPI ou RSS) por
+ * termos relacionados. O sinal que sai daqui é notícia sobre o assunto, não
+ * registro oficial.
+ *
+ * A distinção não é cosmética: o relatório do DIT é lido por decisor que abre
+ * a fonte. Crachá de órgão em cima de resultado de busca é o tipo de coisa que
+ * encerra a conversa.
+ */
 export class SrcCemaden extends BaseSourceAgent {
   readonly id: SourceId = "src-cemaden";
   readonly dimension: DimensionId = "D1";
-  readonly name = "CEMADEN - Centro Nacional de Monitoramento e Alertas de Desastres Naturais";
+  readonly name = "Cobertura de imprensa — desastres e alertas (CEMADEN)";
 
   protected async fetchSignals(
     territory: Territory,

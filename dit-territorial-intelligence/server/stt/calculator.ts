@@ -28,7 +28,7 @@ const PREMISES_DIR = join(import.meta.dirname ?? __dirname, "..", "premises");
 
 // ─── Dimension weight map (same as indicators.ts) ─────────────────────────────
 const DIM_WEIGHTS: Record<DimensionId, number> = {
-  D1: 0.22, D2: 0.15, D3: 0.15, D4: 0.22, D5: 0.15, D6: 0.11,
+  D1: 0.22, D2: 0.15, D3: 0.15, D4: 0.22, D5: 0.15, D6: 0.11, D7: 0,
 };
 
 // ─── Public API ───────────────────────────────────────────────────────────────
@@ -87,6 +87,7 @@ export async function calculateSttWithLLM(
       D4: clampScore(llmOutput.d4Score),
       D5: clampScore(llmOutput.d5Score),
       D6: clampScore(llmOutput.d6Score),
+      D7: clampScore(llmOutput.d7Score ?? 0),
     };
 
     const llmRecalculatedStt = calculateSTT(llmScores);
@@ -176,6 +177,8 @@ interface LLMOutput {
   d4Score: number;
   d5Score: number;
   d6Score: number;
+  /** D7 · Recursos entrou depois; o LLM pode não devolver. */
+  d7Score?: number;
   calculatedStt: number;
   activatedDimension: string;
   executiveNote: string;
@@ -324,7 +327,7 @@ async function loadPremises(): Promise<Partial<Record<DimensionId, string>>> {
 function buildScoreMap(
   dimensionScores: SttCalculatorInput["dimensionScores"]
 ): Record<DimensionId, number> {
-  const map: Record<DimensionId, number> = { D1: 0, D2: 0, D3: 0, D4: 0, D5: 0, D6: 0 };
+  const map: Record<DimensionId, number> = { D1: 0, D2: 0, D3: 0, D4: 0, D5: 0, D6: 0 , D7: 0};
   for (const d of dimensionScores) {
     map[d.id] = clampScore(d.score);
   }

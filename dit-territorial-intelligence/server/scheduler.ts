@@ -17,11 +17,24 @@ import { runStructuredDataPipeline } from "./dataCollector";
 import { orchestrator } from "./agents/orchestrator";
 import { notifyOwner } from "./_core/notification";
 import { logger } from "./_core/logger";
+import { canSpend } from "./_core/budget";
 
 const log = logger.child({ module: "scheduler" });
 
-// Intervalo padrão: 4 horas em ms (6 ciclos/dia → sinais ao vivo no ticker)
-const COLLECTION_INTERVAL_MS = 4 * 60 * 60 * 1000;
+/**
+ * Intervalo de coleta.
+ *
+ * Era de 4 horas: 6 ciclos/dia × 31 territórios = 186 orquestrações/dia, cada
+ * uma disparando ~24 agentes de busca paga. Dava ~4.400 buscas/dia contra um
+ * limite de 50/dia — o quota manager cortava quase tudo e a malha rodava
+ * praticamente cega todos os dias. Era essa a origem da cobertura de 15-24%.
+ *
+ * Um ciclo por dia é o que cabe no orçamento e é o que a promessa de série
+ * histórica precisa: um ponto por território por dia, de verdade, em vez de
+ * seis tentativas por dia que não completam.
+ */
+const COLLECTION_INTERVAL_MS =
+  Number(process.env.COLLECTION_INTERVAL_HOURS ?? "24") * 60 * 60 * 1000;
 
 // Controle de estado
 let schedulerTimer: ReturnType<typeof setTimeout> | null = null;
@@ -116,6 +129,19 @@ export async function runDailyCollection(): Promise<DailyCollectionResult[]> {
     }
 
     for (const territory of activeTerritories) {
+      // Teto de gasto antes de cada território. Sem isso, uma rodada com muitos
+      // territórios consome a cota inteira do mês nos primeiros da lista e
+      // deixa o resto da malha cega até virar o mês — que é o que vinha
+      // acontecendo.
+      const budget = await canSpend("analyze");
+      if (!budget.ok) {
+        log.warn(
+          { budget, restantes: activeTerritories.length - results.length },
+          "Orçamento esgotado no meio da rodada — coleta interrompida"
+        );
+        break;
+      }
+
       const result: DailyCollectionResult = {
         territorySlug: territory.slug,
         territoryName: territory.name,

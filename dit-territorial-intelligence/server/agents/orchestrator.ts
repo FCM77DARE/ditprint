@@ -617,6 +617,7 @@ function buildDimensionScoreMap(
     D4: dimensions.D4?.score ?? 0,
     D5: dimensions.D5?.score ?? 0,
     D6: dimensions.D6?.score ?? 0,
+    D7: dimensions.D7?.score ?? 0,
   };
 }
 

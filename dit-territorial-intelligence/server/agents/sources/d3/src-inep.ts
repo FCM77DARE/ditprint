@@ -4,10 +4,22 @@ import type { Territory } from "../../../../drizzle/schema";
 import { enrichGeoQuery, matchesTerritory } from "../../geo-filter";
 import { serpapiCachedFetch } from "../../serpapi-quota";
 
+/**
+ * NOMENCLATURA (08/09/2026)
+ *
+ * O nome exibido descreve o MÉTODO, não o órgão. Este agente não consulta a
+ * base do órgão citado: ele faz busca aberta (Google, via SerpAPI ou RSS) por
+ * termos relacionados. O sinal que sai daqui é notícia sobre o assunto, não
+ * registro oficial.
+ *
+ * A distinção não é cosmética: o relatório do DIT é lido por decisor que abre
+ * a fonte. Crachá de órgão em cima de resultado de busca é o tipo de coisa que
+ * encerra a conversa.
+ */
 export class SrcInep extends BaseSourceAgent {
   readonly id = "src-inep";
   readonly dimension = "D3";
-  readonly name = "INEP - Infraestrutura Escolar";
+  readonly name = "Busca aberta — infraestrutura escolar (INEP)";
 
   protected async fetchSignals(
     territory: Territory,

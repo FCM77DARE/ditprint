@@ -905,14 +905,19 @@ function SttPanel({ territory }: { territory: Territory }) {
                   </div>
                 </div>
 
-                {/* Sub-índices */}
-                <div className="grid grid-cols-5 gap-2">
+                {/* Dimensões PRINT — o bloco anterior exibia ITT/ICS/IVS/IVE/ICI,
+                    do modelo de 5 índices que foi substituído. Nada mais
+                    calculava esses valores, então o painel mostrava campos
+                    vazios ao analista que decide a publicação. */}
+                <div className="grid grid-cols-7 gap-2">
                   {([
-                    { key: "calculatedItt", label: "ITT" },
-                    { key: "calculatedIcs", label: "ICS" },
-                    { key: "calculatedIvs", label: "IVS" },
-                    { key: "calculatedIve", label: "IVE" },
-                    { key: "calculatedIci", label: "ICI" },
+                    { key: "calculatedD1", label: "D1" },
+                    { key: "calculatedD2", label: "D2" },
+                    { key: "calculatedD3", label: "D3" },
+                    { key: "calculatedD4", label: "D4" },
+                    { key: "calculatedD5", label: "D5" },
+                    { key: "calculatedD6", label: "D6" },
+                    { key: "calculatedD7", label: "D7" },
                   ] as const).map(({ key, label }) => (
                     <div key={key} className="rounded-lg border border-border/60 bg-white p-2 text-center">
                       <p className="text-xs font-bold text-muted-foreground">{label}</p>

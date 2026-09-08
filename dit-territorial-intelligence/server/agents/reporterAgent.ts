@@ -173,7 +173,17 @@ ${relevantSignals.slice(0, 100).map(s => s.title).join("\n")}`;
       messages: [{ role: "user", content: entitiesPrompt }],
       response_format: { type: "json_object" }
     });
-    const entitiesData = JSON.parse(entitiesResponse.choices[0].message.content || "{}");
+    // O content da resposta pode vir como string ou como lista de blocos.
+    const entitiesRaw = entitiesResponse.choices[0].message.content;
+    const entitiesText =
+      typeof entitiesRaw === "string"
+        ? entitiesRaw
+        : Array.isArray(entitiesRaw)
+          ? entitiesRaw
+              .map((b) => (b.type === "text" ? b.text : ""))
+              .join("")
+          : "";
+    const entitiesData = JSON.parse(entitiesText || "{}");
 
     const premises = await this._loadPremises();
 

@@ -111,7 +111,12 @@ export class SrcOrcamentoParticipativo extends BaseSourceAgent {
 
   private getIbgeId(territory: Territory): number | null {
     const ctx = (territory.contextData ?? null) as Record<string, unknown> | null;
-    const raw = ctx?.ibgeId ?? ctx?.ibgeCode ?? territory.ibgeId;
+    // O schema de `territories` não tem coluna ibgeId — o código do
+    // município vem em contextData, gravado na resolução do território.
+    const raw =
+      ctx?.ibgeId ??
+      ctx?.ibgeCode ??
+      (Array.isArray(ctx?.ibgeMunicipios) ? (ctx.ibgeMunicipios as unknown[])[0] : undefined);
     const n = typeof raw === "string" ? parseInt(raw, 10) : Number(raw);
     return Number.isFinite(n) && n > 0 ? n : null;
   }

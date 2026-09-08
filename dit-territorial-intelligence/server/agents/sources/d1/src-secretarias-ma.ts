@@ -1,5 +1,5 @@
 /**
- * src-secretarias-ma — Secretarias Estaduais de Meio Ambiente via SerpAPI
+ * src-secretarias-ma — Busca aberta — secretarias estaduais de meio ambiente via SerpAPI
  *
  * Busca por notícias e atos das secretarias estaduais relacionadas ao
  * meio ambiente. Modelado em src-mp-ambiental.ts.
@@ -13,10 +13,22 @@ import type { DimensionId, SourceId } from "../../../indicators";
 import { enrichGeoQuery, matchesTerritory } from "../../geo-filter";
 import { serpapiCachedFetch } from "../../serpapi-quota";
 
+/**
+ * NOMENCLATURA (08/09/2026)
+ *
+ * O nome exibido descreve o MÉTODO, não o órgão. Este agente não consulta a
+ * base do órgão citado: ele faz busca aberta (Google, via SerpAPI ou RSS) por
+ * termos relacionados. O sinal que sai daqui é notícia sobre o assunto, não
+ * registro oficial.
+ *
+ * A distinção não é cosmética: o relatório do DIT é lido por decisor que abre
+ * a fonte. Crachá de órgão em cima de resultado de busca é o tipo de coisa que
+ * encerra a conversa.
+ */
 export class SrcSecretariasMa extends BaseSourceAgent {
   readonly id: SourceId = "src-secretarias-ma";
   readonly dimension: DimensionId = "D1";
-  readonly name = "Secretarias Estaduais de Meio Ambiente";
+  readonly name = "Busca aberta — secretarias estaduais de meio ambiente";
 
   protected async fetchSignals(
     territory: Territory,

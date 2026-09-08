@@ -283,6 +283,17 @@ IMPORTANTE: Retorne APENAS o JSON válido, sem markdown, sem explicações adici
         territoryId: z.number(),
         period: z.string(),
         stt: z.number().min(0).max(100),
+        // Dimensões PRINT — a tabela stt_scores já tinha as colunas
+        // d1Score..d7Score; só este schema de entrada tinha ficado no modelo
+        // antigo, e o painel de publicação não conseguia gravá-las.
+        d1Score: z.number().optional(),
+        d2Score: z.number().optional(),
+        d3Score: z.number().optional(),
+        d4Score: z.number().optional(),
+        d5Score: z.number().optional(),
+        d6Score: z.number().optional(),
+        d7Score: z.number().optional(),
+        // Índices legados (modelo de 5 eixos) — mantidos só por compatibilidade.
         itt: z.number().optional(),
         ics: z.number().optional(),
         ivs: z.number().optional(),

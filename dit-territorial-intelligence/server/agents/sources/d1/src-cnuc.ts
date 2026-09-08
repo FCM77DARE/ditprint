@@ -13,10 +13,22 @@ import type { DimensionId, SourceId } from "../../../indicators";
 import { enrichGeoQuery, matchesTerritory } from "../../geo-filter";
 import { serpapiCachedFetch } from "../../serpapi-quota";
 
+/**
+ * NOMENCLATURA (08/09/2026)
+ *
+ * O nome exibido descreve o MÉTODO, não o órgão. Este agente não consulta a
+ * base do órgão citado: ele faz busca aberta (Google, via SerpAPI ou RSS) por
+ * termos relacionados. O sinal que sai daqui é notícia sobre o assunto, não
+ * registro oficial.
+ *
+ * A distinção não é cosmética: o relatório do DIT é lido por decisor que abre
+ * a fonte. Crachá de órgão em cima de resultado de busca é o tipo de coisa que
+ * encerra a conversa.
+ */
 export class SrcCnuc extends BaseSourceAgent {
   readonly id: SourceId = "src-cnuc";
   readonly dimension: DimensionId = "D1";
-  readonly name = "CNUC / MMA - Cadastro Nacional de Unidades de Conservação";
+  readonly name = "Busca aberta — unidades de conservação (CNUC/MMA)";
 
   protected async fetchSignals(
     territory: Territory,

@@ -128,10 +128,61 @@ async function startServer() {
 
   server.listen(port, () => {
     log.info({ port }, `Servidor DIT iniciado em http://localhost:${port}/`);
-    // runImmediately: true em produção → primeira coleta popula o buffer SSE
-    // logo após o deploy, evitando "Aguardando próximo sinal…" na tela.
-    startScheduler({ runImmediately: process.env.NODE_ENV === "production" });
+
+    // ─── Camada estrutural ────────────────────────────────────────────────
+    // Garante que a base oficial dos 5.570 municípios exista antes de a
+    // coleta rodar. São 8 requisições ao IBGE para o Brasil inteiro (~8s), e
+    // o resultado fica no volume, então isto só custa alguma coisa no
+    // primeiro boot depois de um deploy novo ou quando a carga envelhece.
+    //
+    // Sem ela o STT volta a depender só de sinal, que é o comportamento que
+    // fazia 28 de 31 territórios saírem em "escalada".
+    void ensureStructuralLayer().finally(() => {
+      // runImmediately: true em produção → primeira coleta popula o buffer SSE
+      // logo após o deploy, evitando "Aguardando próximo sinal…" na tela.
+      startScheduler({ runImmediately: process.env.NODE_ENV === "production" });
+    });
   });
+}
+
+/**
+ * Carrega a camada estrutural se ela não existir ou estiver velha.
+ *
+ * Recarga mensal: os indicadores são anuais ou de divulgação esparsa, então
+ * dado de 30 dias ainda é o mesmo dado. Falha aqui não derruba o servidor —
+ * o DIT segue com o que tiver e o `/api/dit/ops` mostra a idade da carga.
+ */
+async function ensureStructuralLayer(): Promise<void> {
+  const MAX_AGE_DAYS = Number(process.env.STRUCTURAL_MAX_AGE_DAYS ?? "30");
+  try {
+    const { getStructuralStatus, loadNationalStructuralData, resetStructuralCache } =
+      await import("../structural/store");
+    const status = await getStructuralStatus();
+
+    if (status.available && (status.ageDays ?? 0) < MAX_AGE_DAYS) {
+      logger.info(
+        { municipios: status.municipalityCount, idadeDias: status.ageDays },
+        "Camada estrutural em dia"
+      );
+      return;
+    }
+
+    logger.info(
+      { disponivel: status.available, idadeDias: status.ageDays, maxAgeDays: MAX_AGE_DAYS },
+      "Carregando camada estrutural nacional"
+    );
+    const store = await loadNationalStructuralData();
+    resetStructuralCache();
+    logger.info(
+      { municipios: store.municipalityCount, indicadores: store.indicatorCount },
+      "Camada estrutural pronta"
+    );
+  } catch (err) {
+    logger.error(
+      { err: (err as Error).message },
+      "Falha ao preparar camada estrutural — DIT segue com o que houver em disco"
+    );
+  }
 }
 
 startServer().catch((err) => {

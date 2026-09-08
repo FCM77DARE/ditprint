@@ -33,11 +33,15 @@ export interface HistoricalCollectionResult {
   territory: string;
   signalsCollected: number;
   stt: number;
-  itt: number;
-  ics: number;
-  ivs: number;
-  ive: number;
-  ici: number;
+  // Dimensões PRINT. Substituíram o modelo de 5 índices (ITT/ICS/IVS/IVE/ICI)
+  // e a assinatura tinha ficado para trás na migração.
+  d1Score: number;
+  d2Score: number;
+  d3Score: number;
+  d4Score: number;
+  d5Score: number;
+  d6Score: number;
+  d7Score: number;
   scenario: string;
   skipped: boolean;        // true se já havia dados para este período
   error?: string;
@@ -260,7 +264,12 @@ async function calculateHistoricalStt(
   previousScores: { stt: number; itt: number; ics: number; ivs: number; ive: number; ici: number },
   signalsForPeriod: { title: string; summary: string | null; relatedIndex: string | null }[]
 ): Promise<{
-  stt: number; itt: number; ics: number; ivs: number; ive: number; ici: number;
+  // Modelo de 5 índices (ITT/ICS/IVS/IVE/ICI) foi substituído pelas 6+1
+  // dimensões PRINT. O corpo desta função já devolvia d1Score..d7Score; só a
+  // assinatura tinha ficado para trás na migração, e o TypeScript apontava.
+  stt: number;
+  d1Score: number; d2Score: number; d3Score: number; d4Score: number;
+  d5Score: number; d6Score: number; d7Score: number;
   activatedIndex: string; scenario: "estabilidade" | "pressao" | "escalada";
   executiveNote: string;
 }> {
@@ -442,11 +451,16 @@ export async function runHistoricalCollection(
         territory: territory.name,
         signalsCollected: 0,
         stt: previousScores.stt,
-        itt: previousScores.itt,
-        ics: previousScores.ics,
-        ivs: previousScores.ivs,
-        ive: previousScores.ive,
-        ici: previousScores.ici,
+        // Período pulado: repete o STT anterior e deixa as dimensões zeradas,
+        // porque nada foi medido aqui. Nunca herdar score de dimensão de outro
+        // período — vira série histórica que ninguém calculou.
+        d1Score: 0,
+        d2Score: 0,
+        d3Score: 0,
+        d4Score: 0,
+        d5Score: 0,
+        d6Score: 0,
+        d7Score: 0,
         scenario: "estabilidade",
         skipped: true,
       });
@@ -494,17 +508,21 @@ export async function runHistoricalCollection(
         territoryId: territory.id,
         period,
         stt: sttResult.stt,
-        itt: sttResult.itt,
-        ics: sttResult.ics,
-        ivs: sttResult.ivs,
-        ive: sttResult.ive,
-        ici: sttResult.ici,
+        // Índices legados do modelo de 5 eixos — ver nota em collector.ts.
+        // As colunas seguem na tabela, mas nada mais as calcula. Zero é a
+        // leitura honesta; inventar valor a partir das dimensões seria
+        // fabricar série histórica.
+        itt: 0,
+        ics: 0,
+        ivs: 0,
+        ive: 0,
+        ici: 0,
         sttDelta: parseFloat((sttResult.stt - previousScores.stt).toFixed(1)),
-        ittDelta: parseFloat((sttResult.itt - previousScores.itt).toFixed(1)),
-        icsDelta: parseFloat((sttResult.ics - previousScores.ics).toFixed(1)),
-        ivsDelta: parseFloat((sttResult.ivs - previousScores.ivs).toFixed(1)),
-        iveDelta: parseFloat((sttResult.ive - previousScores.ive).toFixed(1)),
-        iciDelta: parseFloat((sttResult.ici - previousScores.ici).toFixed(1)),
+        ittDelta: 0,
+        icsDelta: 0,
+        ivsDelta: 0,
+        iveDelta: 0,
+        iciDelta: 0,
         activatedIndex: sttResult.activatedIndex,
         scenario: sttResult.scenario,
         signalCount: signalsCollected,
@@ -527,11 +545,11 @@ export async function runHistoricalCollection(
       // Atualizar scores para o próximo período
       previousScores = {
         stt: sttResult.stt,
-        itt: sttResult.itt,
-        ics: sttResult.ics,
-        ivs: sttResult.ivs,
-        ive: sttResult.ive,
-        ici: sttResult.ici,
+        itt: 0,
+        ics: 0,
+        ivs: 0,
+        ive: 0,
+        ici: 0,
       };
 
       results.push({
@@ -556,11 +574,16 @@ export async function runHistoricalCollection(
         territory: territory.name,
         signalsCollected: 0,
         stt: previousScores.stt,
-        itt: previousScores.itt,
-        ics: previousScores.ics,
-        ivs: previousScores.ivs,
-        ive: previousScores.ive,
-        ici: previousScores.ici,
+        // Período pulado: repete o STT anterior e deixa as dimensões zeradas,
+        // porque nada foi medido aqui. Nunca herdar score de dimensão de outro
+        // período — vira série histórica que ninguém calculou.
+        d1Score: 0,
+        d2Score: 0,
+        d3Score: 0,
+        d4Score: 0,
+        d5Score: 0,
+        d6Score: 0,
+        d7Score: 0,
         scenario: "estabilidade",
         skipped: false,
         error: errorMsg,
