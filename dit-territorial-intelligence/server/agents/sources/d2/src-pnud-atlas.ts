@@ -45,19 +45,11 @@ export class SrcPnudAtlas extends BaseSourceAgent {
       this.log.warn({ err }, "Google News RSS falhou (tolerado)");
     }
 
-    // Estratégia 2 (fallback informativo): link para perfil do Atlas Brasil por município.
-    if (signals.length === 0 && ibgeMuns.length > 0) {
-      for (const ibgeId of ibgeMuns) {
-        signals.push({
-          title: `IDH do município ${ibgeId}: consultar Atlas Brasil`,
-          summary: `Atlas Brasil mantém o IDHM (renda, longevidade, educação) por município. Sem API REST aberta — link direto disponível.`,
-          url: `https://www.atlasbrasil.org.br/perfil/municipio/${ibgeId}`,
-          sourceAgentId: this.id,
-          publishedAt: new Date(),
-          metadata: { ibgeId, fallback: "atlas-brasil-link" },
-        });
-      }
-    }
+    // Sem Estratégia 2. O bloco anterior emitia "consultar Atlas Brasil" como
+    // sinal — lembrete, não medição. Contava como fonte resolutiva, inflava a
+    // cobertura e derrubava o STT sem nenhuma evidência por trás. Território
+    // sem cobertura tem que aparecer como sem cobertura.
+    // O IDHM entra pela carga estrutural em lote (scripts/load-*), não aqui.
 
     return signals;
   }

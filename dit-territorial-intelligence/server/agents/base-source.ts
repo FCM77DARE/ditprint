@@ -1,5 +1,5 @@
 /**
- * BaseSourceAgent — Abstract base class for all 32 DIT source agents.
+ * BaseSourceAgent — Abstract base class for all DIT source agents.
  *
  * Each concrete source agent implements `collect()` to fetch data from one
  * external source (API, RSS feed, scraper) and return an array of RawSignals.
@@ -62,14 +62,16 @@ export abstract class BaseSourceAgent {
       };
 
       try {
-        const signals = await this.fetchSignals(territory, mergedOptions);
+        const raw = await this.fetchSignals(territory, mergedOptions);
         clearTimeout(timeoutId);
+
+        const signals = this._enforceProvenance(raw, territory);
 
         const latency = Date.now() - start;
         this._recordSuccess(latency);
 
         this.log.debug(
-          { territory: territory.slug, signals: signals.length, latencyMs: latency },
+          { territory: territory.slug, signals: signals.length, dropped: raw.length - signals.length, latencyMs: latency },
           "Source agent collected signals"
         );
 
@@ -119,6 +121,58 @@ export abstract class BaseSourceAgent {
       avgLatencyMs: Math.round(avgLatencyMs),
       successRate: total > 0 ? this._successCount / total : 1,
     };
+  }
+
+  // ─── Procedência ────────────────────────────────────────────────────────────
+
+  /**
+   * Descarta sinal que não é evidência.
+   *
+   * O DIT afirma coisas sobre território de cliente. Toda afirmação precisa
+   * poder ser aberta e conferida. Um sinal só passa se trouxer pelo menos um
+   * de: `url` (link para o documento), `rawValue` (número medido) ou
+   * `provenance` (endpoint/dataset consultado).
+   *
+   * E marcador explícito de placeholder (`metadata.fallback`,
+   * `metadata.placeholder`) reprova sempre, mesmo com link — é o caso do
+   * "consultar Atlas Brasil", que é lembrete e não medição, e que estava
+   * inflando cobertura e derrubando STT.
+   */
+  private _enforceProvenance(signals: RawSignal[], territory: Territory): RawSignal[] {
+    const kept: RawSignal[] = [];
+    let droppedPlaceholder = 0;
+    let droppedNoEvidence = 0;
+
+    for (const s of signals) {
+      const meta = s.metadata ?? {};
+      if (meta.fallback !== undefined || meta.placeholder !== undefined) {
+        droppedPlaceholder++;
+        continue;
+      }
+      const hasLink = typeof s.url === "string" && /^https?:\/\//i.test(s.url);
+      const hasValue = typeof s.rawValue === "number" && Number.isFinite(s.rawValue);
+      const hasProvenance = typeof s.provenance === "string" && s.provenance.trim().length > 0;
+      if (!hasLink && !hasValue && !hasProvenance) {
+        droppedNoEvidence++;
+        continue;
+      }
+      kept.push(s);
+    }
+
+    if (droppedPlaceholder > 0 || droppedNoEvidence > 0) {
+      this.log.info(
+        {
+          agent: this.id,
+          territory: territory.slug,
+          droppedPlaceholder,
+          droppedNoEvidence,
+          kept: kept.length,
+        },
+        "Sinais sem procedência descartados"
+      );
+    }
+
+    return kept;
   }
 
   // ─── Private helpers ────────────────────────────────────────────────────────

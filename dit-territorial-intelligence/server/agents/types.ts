@@ -25,6 +25,16 @@ export interface RawSignal {
   rawValue?: number;
   /** Unit for rawValue: "%", "km²", "eventos", "R$", etc. */
   unit?: string;
+  /**
+   * Endpoint, dataset ou documento de onde o valor saiu, quando o sinal é
+   * estrutural e não tem URL própria de notícia.
+   * Ex: "IBGE/agregados/6579 · N6[3301009] · 2022".
+   *
+   * REGRA DE PROCEDÊNCIA: todo sinal precisa de `url`, `rawValue` ou
+   * `provenance`. Sinal sem nenhum dos três é lembrete, não evidência, e é
+   * descartado em `BaseSourceAgent.collect()` — não aparece e não pontua.
+   */
+  provenance?: string;
   /** Free-form extra data — kept for drill-down / audit */
   metadata?: Record<string, unknown>;
 }

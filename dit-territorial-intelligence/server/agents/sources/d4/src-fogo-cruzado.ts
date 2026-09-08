@@ -4,7 +4,7 @@
  * Armed violence incidents: shootings, deaths, injuries in metropolitan areas.
  * Dimension: D4 (Dinâmica Territorial) — Indicador 4.2.1.3 (Poder Paralelo)
  *
- * API: https://api.fogocruzado.org.br/api/v2/
+ * API: https://api-service.fogocruzado.org.br/api/v2/
  * Coverage: Rio de Janeiro, Recife metropolitan areas
  */
 
@@ -51,7 +51,7 @@ export class SrcFogoCruzado extends BaseSourceAgent {
     const dateTo = now.toISOString().slice(0, 10);
 
     const url =
-      `https://api.fogocruzado.org.br/api/v2/occurrences` +
+      `https://api-service.fogocruzado.org.br/api/v2/occurrences` +
       `?stateId=${stateId}&initialdate=${dateFrom}&finaldate=${dateTo}&take=50`;
 
     const res = await fetch(url, {
@@ -124,7 +124,7 @@ export class SrcFogoCruzado extends BaseSourceAgent {
     }
 
     try {
-      const res = await fetch("https://api.fogocruzado.org.br/api/v2/auth/login", {
+      const res = await fetch("https://api-service.fogocruzado.org.br/api/v2/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

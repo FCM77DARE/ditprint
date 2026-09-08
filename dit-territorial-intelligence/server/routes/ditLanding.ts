@@ -31,6 +31,33 @@ import type { TerritoryStrategicContext } from "../strategic/types";
 
 const log = logger.child({ module: "dit-landing" });
 
+/**
+ * Piso de cobertura para o DIT sair como diagnóstico.
+ *
+ * `coverageScore` = fontes que responderam / fontes consultadas. Abaixo deste
+ * piso o motor não sabe o suficiente para afirmar nada sobre o território, e o
+ * relatório que sairia seria conhecimento geral do modelo com estética de
+ * inteligência coletada. Nesse caso devolvemos cobertura insuficiente, não um
+ * diagnóstico bonito e vazio.
+ *
+ * Ajustável por env enquanto a carga estrutural nacional não sobe a linha de
+ * base — quando ela subir, este piso pode subir junto.
+ */
+const MIN_COVERAGE = Number(process.env.DIT_MIN_COVERAGE ?? "0.35");
+
+/**
+ * Slug canônico do território = código IBGE do município (+ distrito/localidade).
+ *
+ * Antes o slug saía do texto digitado, e por isso produção acumulou
+ * `galinhos-rn` e `galinhos-rio-grande-do-norte` como territórios diferentes,
+ * cada um com sua própria série histórica pela metade — além de `gatinhos`,
+ * que é erro de digitação e mesmo assim ganhou STT e snapshot.
+ */
+function canonicalSlug(loc: ResolvedLocation): string {
+  const base = `${makeSlug(loc.municipality)}-${loc.ibgeId}`;
+  return loc.kind === "municipality" ? base : `${base}-${makeSlug(loc.name)}`;
+}
+
 export const ditLandingRouter = Router();
 
 // ── CORS (landing page pode ser file:// ou domínio externo) ──────────────────
@@ -753,7 +780,7 @@ function buildReportPrompt(
       const signalsText =
         topSignals.length > 0
           ? topSignals.join("\n  ")
-          : "(sem sinais — usar conhecimento geral sobre o território)";
+          : "(SEM COBERTURA — declarar explicitamente, é proibido inferir)";
       const indicatorKeys = Object.keys(dim.indicatorScores ?? {}).slice(0, 4);
       const indicatorText =
         indicatorKeys.length > 0
@@ -788,9 +815,21 @@ ${dimBlocks}
 ═══ REGRAS DO RELATÓRIO ═══
 1. Os scores numéricos de dimensão (ex: D1=75) são CONFIDENCIAIS — NÃO os mencione como números. Use apenas rótulos qualitativos: "Alta Complexidade", "Vácuo Institucional", etc.
 2. O STT global (${stt}) PODE e DEVE ser mencionado — é o produto que o usuário pagou para ver.
-3. Use os sinais REAIS coletados acima como base da análise. Para dimensões sem dados coletados, fundamente com conhecimento territorial brasileiro.
+3. PROCEDÊNCIA — regra inegociável. Toda afirmação factual sobre o território
+   (número, evento, autuação, obra, conflito, indicador) tem que sair dos sinais
+   REAIS listados acima. É PROIBIDO completar com conhecimento geral, com
+   estimativa ou com o que "costuma acontecer" em municípios parecidos.
+   Para dimensão marcada SEM COBERTURA, escreva exatamente isso — que o motor
+   não teve retorno de fonte nesta dimensão neste território — e siga. Vazio
+   declarado vale mais que texto inventado: quem lê é decisor que confere.
 
-═══ ESPECIFICIDADE OBRIGATÓRIA ═══
+═══ ESPECIFICIDADE OBRIGATÓRIA (contexto, nunca dado) ═══
+O que vem abaixo serve para ancorar o texto no lugar concreto — marco cultural,
+vocação produtiva, geografia. Isso é CONTEXTO e pode vir do seu conhecimento.
+O que NÃO pode vir do seu conhecimento é qualquer dado, número, data, valor ou
+ocorrência apresentado como levantado pelo DIT. Contexto se escreve como
+contexto; dado só existe se estiver nos sinais coletados.
+
 Você está analisando "${territoryName}" — um lugar concreto, com história, cultura,
 economia e geografia próprios. Recomendações genéricas tipo "promover eventos
 culturais" ou "investir em saneamento" são PROIBIDAS porque se aplicam a qualquer
@@ -910,65 +949,13 @@ Responda APENAS com JSON válido, sem texto fora do JSON:
 
 // ── FALLBACK PROMPT (orquestrador falhou/timeout) ─────────────────────────────
 
-function buildFallbackPrompt(territoryName: string, region: string): string {
-  const { scenario, scenarioLabel, gaugeColor } = scenarioFromStt(50);
-  return `Você é o sistema de IA do DIT PRINT Territorial Intelligence™.
-Gere um Diagnóstico de Inteligência Territorial (DIT) para: "${territoryName}" (${region}).
+// buildFallbackPrompt REMOVIDO em 08/09/2026.
+// Ele instruía o modelo: "a coleta de dados em tempo real falhou, use seu
+// conhecimento para gerar um diagnóstico plausível" — e mandava citar "dados
+// reais do IBGE, IBAMA". O relatório saía sem nenhuma marca de que era
+// fabricado. Coleta que falha agora devolve 503; cobertura abaixo do piso
+// devolve status "cobertura_insuficiente". O DIT não preenche vazio.
 
-ATENÇÃO: A coleta de dados em tempo real falhou. Use seu conhecimento sobre o território e a realidade brasileira para gerar um diagnóstico plausível e coerente.
-
-Metodologia PRINT — 6 Dimensões:
-D1 Socioambiental (peso 0.22): APA/APP, IBAMA, CEMADEN, DETER, passivos ambientais
-D2 Socioeconômica (peso 0.15): IDH, Gini, desemprego, renda per capita, pobreza
-D3 Infraestrutura (peso 0.15): saneamento, saúde, educação, habitação, logística
-D4 Dinâmica Territorial (peso 0.22): conflitos fundiários, poder paralelo, populações tradicionais
-D5 Governança (peso 0.15): institucionalidade, participação social, TACs, orçamento
-D6 Reputação (peso 0.11): mídia, Google Trends, engajamento, interesse científico
-STT = (D1×0.22) + (D2×0.15) + (D3×0.15) + (D4×0.22) + (D5×0.15) + (D6×0.11)
-
-REGRAS:
-1. Scores de dimensão são INTERNOS — não mencione números, apenas rótulos de complexidade.
-2. O STT global PODE e DEVE ser mencionado.
-3. Seja específico ao território — use dados reais do IBGE, IBAMA, etc.
-
-Responda APENAS com JSON válido:
-{
-  "territory": "${territoryName}",
-  "region": "${region}",
-  "stt": <número 0-100 calculado>,
-  "scenario": "${scenario}",
-  "scenarioLabel": "${scenarioLabel}",
-  "gaugeColor": "${gaugeColor}",
-  "executiveSummary": ["<p1 com STT>", "<p2 dimensões críticas>", "<p3 implicação decisor>"],
-  "dimensions": [
-    {"code": "D1", "name": "Socioambiental", "complexity": "...", "complexityNote": "...", "insight": "...", "signals": ["...", "...", "..."]},
-    {"code": "D2", "name": "Socioeconômica", "complexity": "...", "complexityNote": "...", "insight": "...", "signals": ["...", "...", "..."]},
-    {"code": "D3", "name": "Infraestrutura e Serviços", "complexity": "...", "complexityNote": "...", "insight": "...", "signals": ["...", "...", "..."]},
-    {"code": "D4", "name": "Dinâmica Territorial", "complexity": "...", "complexityNote": "...", "insight": "...", "signals": ["...", "...", "..."]},
-    {"code": "D5", "name": "Governança", "complexity": "...", "complexityNote": "...", "insight": "...", "signals": ["...", "...", "..."]},
-    {"code": "D6", "name": "Reputação e Visibilidade", "complexity": "...", "complexityNote": "...", "insight": "...", "signals": ["...", "...", "..."]}
-  ],
-  "keySignals": [
-    {"source": "...", "dimension": "...", "dimTag": "...", "text": "...", "impact": 0.0, "impactCls": "...", "status": "...", "statusCls": "..."},
-    {"source": "...", "dimension": "...", "dimTag": "...", "text": "...", "impact": 0.0, "impactCls": "...", "status": "...", "statusCls": "..."},
-    {"source": "...", "dimension": "...", "dimTag": "...", "text": "...", "impact": 0.0, "impactCls": "...", "status": "...", "statusCls": "..."},
-    {"source": "...", "dimension": "...", "dimTag": "...", "text": "...", "impact": 0.0, "impactCls": "...", "status": "...", "statusCls": "..."},
-    {"source": "...", "dimension": "...", "dimTag": "...", "text": "...", "impact": 0.0, "impactCls": "...", "status": "...", "statusCls": "..."}
-  ],
-  "forecast": {
-    "horizon": "Próximo Trimestre — Maio a Agosto/2026",
-    "text": "...",
-    "risks": ["...", "...", "...", "..."],
-    "opportunities": "..."
-  },
-  "recommendations": [
-    {"title": "...", "text": "...", "urgency": "...", "urgCls": "..."},
-    {"title": "...", "text": "...", "urgency": "...", "urgCls": "..."},
-    {"title": "...", "text": "...", "urgency": "...", "urgCls": "..."},
-    {"title": "...", "text": "...", "urgency": "...", "urgCls": "..."}
-  ]
-}`;
-}
 
 // ── LLM CALL ─────────────────────────────────────────────────────────────────
 // Prioridade: OpenRouter → Anthropic → OpenAI
@@ -1192,7 +1179,22 @@ ditLandingRouter.post("/isca", async (req: Request, res: Response) => {
   }
 
   const territoryClean = territory.trim().slice(0, 120);
-  const fullCacheKey = todayKey(makeSlug(territoryClean));
+
+  // A isca precisa da MESMA chave que o /analyze grava, senão nunca acha o
+  // cache e re-roda a coleta inteira a cada visita. Chave = slug canônico IBGE.
+  const loc = await resolveLocation(territoryClean);
+  if (!loc) {
+    res.status(404).json({
+      error: "Território não encontrado",
+      detail:
+        `Não encontramos "${territoryClean}" na malha municipal do IBGE. ` +
+        "Confira a grafia ou informe o estado — ex: \"Galinhos, RN\".",
+      territory: territoryClean,
+    });
+    return;
+  }
+
+  const fullCacheKey = todayKey(canonicalSlug(loc));
   const iscaCacheKey = `isca:${fullCacheKey}`;
 
   // Serve isca do cache se disponível
@@ -1215,7 +1217,14 @@ ditLandingRouter.post("/isca", async (req: Request, res: Response) => {
       body: JSON.stringify({ territory: territoryClean }),
       signal: AbortSignal.timeout(150000),
     });
-    if (!r.ok) throw new Error(`Analyze failed: ${r.status}`);
+    // 404 (não existe), 503 (coleta falhou) e 200 com status
+    // "cobertura_insuficiente" são respostas legítimas — repassa como vieram,
+    // em vez de virar erro genérico de isca.
+    if (!r.ok) {
+      const body = await r.json().catch(() => ({ error: `Analyze failed: ${r.status}` }));
+      res.status(r.status).json(body);
+      return;
+    }
     // Após o analyze, a isca estará no cache — serve do cache
     const iscaCached = analysisCache.get(iscaCacheKey);
     if (iscaCached) {
@@ -1249,7 +1258,6 @@ ditLandingRouter.post("/analyze", async (req: Request, res: Response) => {
   }
 
   const territoryClean = territory.trim().slice(0, 120);
-  const cacheKey = todayKey(makeSlug(territoryClean));
 
   // `?force=true` pula o cache diário — útil pra QA depois de deploys que
   // adicionam fontes ou corrigem bugs de coleta. Sem isso, o cache em disco
@@ -1258,43 +1266,65 @@ ditLandingRouter.post("/analyze", async (req: Request, res: Response) => {
     String(req.query.force ?? "").toLowerCase() === "true" ||
     String((req.body as { force?: string }).force ?? "").toLowerCase() === "true";
 
-  // Cache hit (lock diário — mesmo território no mesmo dia UTC = mesmo STT)
-  if (!forceRefresh) {
-    const cached = analysisCache.get(cacheKey);
-    if (cached && Date.now() - cached.ts < CACHE_TTL_MS) {
-      log.info({ territory: territoryClean }, "Cache hit — retornando DIT em cache (lock diário)");
-      res.json(cached.result);
+  try {
+    // 1. Resolve hierárquico: município → distrito → localidade (OSM).
+    // Roda ANTES do cache porque é a resolução que define o slug canônico —
+    // sem ela, "Galinhos", "Galinhos RN" e "galinhos-rio-grande-do-norte"
+    // viravam três territórios com três históricos.
+    const loc = await resolveLocation(territoryClean);
+
+    // 1a. PORTA DE ENTRADA — território tem que existir na malha do IBGE.
+    // Sem isso, um erro de digitação ("gatinhos") era resolvido, analisado,
+    // pontuado com STT 97 e salvo em produção como território monitorado.
+    if (!loc) {
+      log.info({ territory: territoryClean, ip }, "Território não encontrado na malha IBGE");
+      res.status(404).json({
+        error: "Território não encontrado",
+        detail:
+          `Não encontramos "${territoryClean}" na malha municipal do IBGE. ` +
+          "Confira a grafia ou informe o estado — ex: \"Galinhos, RN\".",
+        territory: territoryClean,
+      });
       return;
     }
-  } else {
-    log.info({ territory: territoryClean }, "Cache bypass (force=true) — recoleta DIT");
-    analysisCache.delete(cacheKey);
-  }
 
-  log.info({ territory: territoryClean, ip }, "Iniciando análise DIT com orquestrador real");
-
-  try {
-    // 1. Resolve hierárquico: município → distrito → localidade (OSM)
-    const loc = await resolveLocation(territoryClean);
     log.info(
       {
         territory: territoryClean,
-        kind: loc?.kind ?? "não encontrado",
-        resolved: loc?.name,
-        municipality: loc?.municipality,
+        kind: loc.kind,
+        resolved: loc.name,
+        municipality: loc.municipality,
+        ibgeId: loc.ibgeId,
       },
       "Lookup hierárquico concluído"
     );
 
-    const resolvedName = loc?.name ?? territoryClean;
+    const slug = canonicalSlug(loc);
+    const cacheKey = todayKey(slug);
+
+    // Cache hit (lock diário — mesmo território no mesmo dia UTC = mesmo STT)
+    if (!forceRefresh) {
+      const cached = analysisCache.get(cacheKey);
+      if (cached && Date.now() - cached.ts < CACHE_TTL_MS) {
+        log.info({ territory: slug }, "Cache hit — retornando DIT em cache (lock diário)");
+        res.json(cached.result);
+        return;
+      }
+    } else {
+      log.info({ territory: slug }, "Cache bypass (force=true) — recoleta DIT");
+      analysisCache.delete(cacheKey);
+    }
+
+    log.info({ territory: slug, ip }, "Iniciando análise DIT com orquestrador real");
+
+    const resolvedName = loc.name;
     // Rótulo de região exibido no relatório
     // município: "Recife, PE — Nordeste"
     // distrito/localidade: "Cabiúnas (Macaé), RJ — Sudeste"
-    const region = loc
-      ? (loc.kind === "municipality"
-          ? `${loc.name}, ${loc.state} — ${loc.region}`
-          : `${loc.name} (${loc.municipality}), ${loc.state} — ${loc.region}`)
-      : territoryClean;
+    const region =
+      loc.kind === "municipality"
+        ? `${loc.name}, ${loc.state} — ${loc.region}`
+        : `${loc.name} (${loc.municipality}), ${loc.state} — ${loc.region}`;
 
     // 2. Find/create territory record no DB
     const territoryRecord = await findOrCreateTerritory(territoryClean, loc);
@@ -1320,10 +1350,78 @@ ditLandingRouter.post("/analyze", async (req: Request, res: Response) => {
         "Orquestrador concluído com sucesso"
       );
     } catch (orchErr) {
-      log.warn(
+      // Antes daqui saía um relatório inteiro escrito de memória do modelo
+      // ("a coleta falhou, gere um diagnóstico plausível"), entregue sem
+      // nenhuma marca de que não tinha dado por trás. Falha de coleta é falha
+      // de coleta — o cliente precisa saber que não rodou.
+      log.error(
         { territory: resolvedName, err: (orchErr as Error).message },
-        "Orquestrador timeout/erro — usando fallback LLM puro"
+        "Orquestrador falhou — sem diagnóstico (não fabricamos relatório)"
       );
+    }
+
+    if (!orchestratorResult) {
+      res.status(503).json({
+        error: "Coleta indisponível",
+        detail:
+          "A malha de fontes não respondeu a tempo para este território. " +
+          "O DIT não emite diagnóstico sem dado coletado. Tente novamente em alguns minutos.",
+        territory: resolvedName,
+        status: "coleta_falhou",
+      });
+      return;
+    }
+
+    // 3a. PISO DE COBERTURA — o motor precisa saber o suficiente para afirmar.
+    // Com cobertura baixa, todas as dimensões chegam vazias no prompt e o
+    // relatório vira conhecimento geral do modelo com cara de inteligência
+    // coletada. Território assim entra na fila de coleta, não vira diagnóstico.
+    const coverage = orchestratorResult.coverageScore ?? 0;
+    if (coverage < MIN_COVERAGE) {
+      const detail = orchestratorResult.coverageDetail;
+      log.warn(
+        { territory: slug, coverage, minCoverage: MIN_COVERAGE, detail },
+        "Cobertura abaixo do piso — DIT não emitido"
+      );
+
+      // Entra na fila de coleta: o scheduler volta nele nos próximos ciclos e,
+      // quando a cobertura subir, o DIT sai de verdade.
+      try {
+        const { trackTerritory } = await import("../stt/tracked-territories");
+        await trackTerritory({
+          slug,
+          name: resolvedName,
+          state: loc.state,
+          region: loc.region,
+          ibgeId: loc.ibgeId,
+        });
+      } catch (trackErr) {
+        log.warn({ err: (trackErr as Error).message }, "Falha ao enfileirar território");
+      }
+
+      res.status(200).json({
+        status: "cobertura_insuficiente",
+        territory: resolvedName,
+        region,
+        slug,
+        resolution: {
+          kind: loc.kind,
+          name: loc.name,
+          municipality: loc.municipality,
+          state: loc.state,
+          region: loc.region,
+          ibgeId: loc.ibgeId,
+        },
+        coverageScore: Math.round(coverage * 1000) / 1000,
+        minCoverage: MIN_COVERAGE,
+        coverageDetail: detail ?? null,
+        message:
+          `A malha do DIT ainda não tem cobertura suficiente sobre ${resolvedName} ` +
+          `para emitir diagnóstico (${Math.round(coverage * 100)}% das fontes responderam, ` +
+          `mínimo de ${Math.round(MIN_COVERAGE * 100)}%). ` +
+          "O território entrou na fila de coleta.",
+      });
+      return;
     }
 
     // 4. Strategic Layer (recursos, setores, hotspots, casos) em paralelo com LLM
@@ -1354,8 +1452,7 @@ ditLandingRouter.post("/analyze", async (req: Request, res: Response) => {
       : {};
 
     // 5. Build prompt + call LLM para relatório executivo (em paralelo com strategic layer)
-    const llmPromise: Promise<unknown> = orchestratorResult
-      ? callLLM(
+    const llmPromise: Promise<unknown> = callLLM(
           buildReportPrompt(
             resolvedName,
             region,
@@ -1370,8 +1467,7 @@ ditLandingRouter.post("/analyze", async (req: Request, res: Response) => {
               microregion: loc?.microregion,
             }
           )
-        )
-      : callLLM(buildFallbackPrompt(resolvedName, region));
+        );
 
     const strategicPromise = runStrategicLayer(strategicCtx, dimScoresForSectors).catch(err => {
       log.warn({ err: (err as Error).message }, "Strategic layer falhou — seguindo sem ela");
@@ -1401,6 +1497,25 @@ ditLandingRouter.post("/analyze", async (req: Request, res: Response) => {
       territoryGeo: geo ? { centroid: geo.centroid, bbox: geo.bbox } : null,
       coverageScore: orchestratorResult?.coverageScore ?? null,
       coverageDetail: orchestratorResult?.coverageDetail ?? null,
+      /**
+       * Procedência do relatório, exposta junto com ele.
+       *
+       * O DIT é lido por decisor que confere. Ele precisa poder ver, sem
+       * pedir, quanto da malha respondeu, quantos sinais sustentam o texto e
+       * qual o piso que o diagnóstico teve que passar para ser emitido.
+       */
+      dataIntegrity: {
+        basis: "coletado" as const,
+        slug,
+        ibgeId: loc.ibgeId,
+        coverageScore: orchestratorResult.coverageScore ?? null,
+        minCoverage: MIN_COVERAGE,
+        sourcesConsulted: orchestratorResult.coverageDetail?.totalSources ?? null,
+        sourcesWithSignals: orchestratorResult.coverageDetail?.sourcesWithSignals ?? null,
+        signalsInWindow: orchestratorResult.historicalConsolidation?.signalsInWindow ?? null,
+        windowMonths: orchestratorResult.historicalConsolidation?.windowMonths ?? null,
+        collectedAt: orchestratorResult.completedAt,
+      },
     };
 
     // Override canônico do orchestrator sobre o output do LLM
@@ -1453,7 +1568,7 @@ ditLandingRouter.post("/analyze", async (req: Request, res: Response) => {
       const signalCount = orchestratorResult?.totalSignals ?? 0;
       const coverage = orchestratorResult?.coverageScore;
       await saveDitSnapshot(
-        makeSlug(territoryClean),
+        slug,
         resolvedName,
         result,
         sttVal,
@@ -1516,7 +1631,7 @@ ditLandingRouter.post("/analyze", async (req: Request, res: Response) => {
           ? ((result as { stt: number }).stt)
           : undefined;
       await trackTerritory({
-        slug: makeSlug(territoryClean),
+        slug,
         name: resolvedName,
         state: loc?.state,
         region: loc?.region,

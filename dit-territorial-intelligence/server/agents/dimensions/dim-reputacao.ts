@@ -22,8 +22,14 @@ export class DimReputacao extends BaseDimensionAgent {
     new SrcRedesSociais(),
     new SrcUniversidades(),
     new SrcYoutubeTerritorio(),
-    new SrcBlueskyTerritorio(),
-    new SrcRedditBr(),
+    // DESLIGADOS em 08/09/2026 — os dois endpoints públicos fecharam e passaram
+    // a devolver 403 em produção. Enquanto ligados, contavam como "fonte ok"
+    // com zero sinais, puxando a cobertura da D6 para baixo sem motivo real.
+    //   Bluesky: app.bsky.feed.searchPosts agora exige sessão autenticada.
+    //   Reddit:  /search.json bloqueia IP de datacenter, exige OAuth de app.
+    // Religar exige credencial de serviço — decisão pós-lançamento.
+    // new SrcBlueskyTerritorio(),
+    // new SrcRedditBr(),
   ];
 
   readonly classificationRules: IndicatorKeywordRule[] = [
