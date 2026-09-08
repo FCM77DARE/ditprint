@@ -41,6 +41,12 @@ import { logger } from "../_core/logger";
 import { DIMENSIONS_LIST } from "../indicators";
 import type { DimensionId } from "../indicators";
 import { readSignalsInWindow, type StoredSignal } from "./signal-store";
+import {
+  getStructuralScores,
+  blendDimensionScore,
+  STRUCTURAL_WEIGHT,
+  type StructuralScores,
+} from "../structural/scoring";
 
 const log = logger.child({ module: "stt-consolidator" });
 
@@ -131,6 +137,14 @@ export interface ConsolidatedStt {
   effectiveWeightSum: number;
   /** Por dimensão: nº sinais e nº estruturais */
   dimensionDetail: Record<DimensionId, { signals: number; structural: number }>;
+  /**
+   * O que a camada estrutural disse sobre cada dimensão e por quê.
+   * Vai para o relatório: é a parte do score que o cliente consegue conferir
+   * indicador por indicador, contra a distribuição nacional.
+   */
+  structuralBasis?: StructuralScores;
+  /** Peso que a camada estrutural teve na composição final */
+  structuralWeight?: number;
 }
 
 /**
@@ -182,9 +196,16 @@ function isStructural(sig: { source: string; metadata: unknown }): boolean {
  */
 export async function consolidateSttFromHistory(
   territoryId: number,
-  territorySlug?: string
+  territorySlug?: string,
+  ibgeId?: number | string | null
 ): Promise<ConsolidatedStt | null> {
   const db = await getDb();
+
+  // Camada estrutural — o que se sabe do município independente de coleta.
+  // Carregada antes dos sinais porque, quando ela existe, é ela que dá a base
+  // do score e os sinais passam a modular em cima.
+  const structural = await getStructuralScores(ibgeId);
+  const hasStructural = Object.keys(structural).length > 0;
   const cutoff = new Date(Date.now() - WINDOW_MS);
   const todayStart = new Date();
   todayStart.setUTCHours(0, 0, 0, 0);
@@ -245,12 +266,58 @@ export async function consolidateSttFromHistory(
     }
   }
 
-  if (rows.length === 0) {
+  if (rows.length === 0 && !hasStructural) {
     log.info(
       { territoryId, territorySlug },
-      "Sem sinais no histórico (DB + disco vazios) — consolidação retorna null"
+      "Sem sinais no histórico e sem camada estrutural — consolidação retorna null"
     );
     return null;
+  }
+
+  if (rows.length === 0 && hasStructural) {
+    // Território válido sem nenhum sinal coletado. A estrutura ainda diz algo
+    // real (renda, densidade, escala), e as dimensões sem cobertura ficam em
+    // 100 — desconhecido é complexo, que é a premissa do modelo.
+    //
+    // Antes daqui saía `null`, o orquestrador caía no STT do snapshot e um
+    // território sem nenhum dado ("Caarapó", zero sinais) terminava com STT 26
+    // e rótulo "estabilidade" — exatamente o contrário do que o modelo diz.
+    const dims: Record<DimensionId, number> = {
+      D1: 100, D2: 100, D3: 100, D4: 100, D5: 100, D6: 100, D7: 100,
+    };
+    for (const id of Object.keys(structural) as DimensionId[]) {
+      const st = structural[id];
+      if (st) dims[id] = blendDimensionScore(100, st);
+    }
+    let sttOnlyStructural = 0;
+    for (const id of Object.keys(DIM_WEIGHTS) as DimensionId[]) {
+      sttOnlyStructural += (dims[id] ?? 0) * (DIM_WEIGHTS[id] ?? 0);
+    }
+    sttOnlyStructural = Math.max(0, Math.min(100, Math.round(sttOnlyStructural * 10) / 10));
+
+    log.info(
+      { territoryId, territorySlug, stt: sttOnlyStructural },
+      "Consolidação apenas estrutural — nenhum sinal na janela"
+    );
+
+    const emptyDetail = { signals: 0, structural: 0 };
+    return {
+      stt: sttOnlyStructural,
+      dimensions: dims,
+      totalSignalsInWindow: 0,
+      totalSignalsToday: 0,
+      totalStructuralSignals: 0,
+      oldestSignalAt: null,
+      newestSignalAt: null,
+      effectiveWeightSum: 0,
+      dimensionDetail: {
+        D1: { ...emptyDetail }, D2: { ...emptyDetail }, D3: { ...emptyDetail },
+        D4: { ...emptyDetail }, D5: { ...emptyDetail }, D6: { ...emptyDetail },
+        D7: { ...emptyDetail },
+      },
+      structuralBasis: structural,
+      structuralWeight: STRUCTURAL_WEIGHT,
+    };
   }
 
   try {
@@ -342,7 +409,14 @@ export async function consolidateSttFromHistory(
     const dimensions: Record<DimensionId, number> = { D1: 100, D2: 100, D3: 100, D4: 100, D5: 100, D6: 100, D7: 100 };
     for (const id of Object.keys(dimAccum) as DimensionId[]) {
       const s = dimAccum[id].score;
-      dimensions[id] = Math.max(0, Math.min(100, Math.round(s * 10) / 10));
+      const signalScore = Math.max(0, Math.min(100, Math.round(s * 10) / 10));
+      // Onde existe indicador oficial medido para o país inteiro, ele pesa
+      // mais que a contagem de notícia que o Google devolveu naquele dia.
+      // Sem estrutura para a dimensão, o score de sinal passa intacto.
+      dimensions[id] = Math.max(
+        0,
+        Math.min(100, blendDimensionScore(signalScore, structural[id]))
+      );
     }
 
     // STT global = Σ (D_i × W_i) com pesos PRINT (D1=22%, D2=15%, etc).
@@ -388,6 +462,8 @@ export async function consolidateSttFromHistory(
       newestSignalAt: newest,
       effectiveWeightSum: Math.round(effectiveWeightSum * 100) / 100,
       dimensionDetail,
+      structuralBasis: hasStructural ? structural : undefined,
+      structuralWeight: hasStructural ? STRUCTURAL_WEIGHT : undefined,
     };
   } catch (err) {
     log.error({ err, territoryId }, "Falha ao consolidar STT do histórico");

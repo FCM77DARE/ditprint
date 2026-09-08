@@ -42,6 +42,15 @@ export interface StructuralValue {
   dimension: string;
   indicatorCode?: string;
   polarity: string;
+  /**
+   * Posição do município na distribuição nacional deste indicador, 0–1.
+   *
+   * É o que permite comparar territórios sem inventar faixa arbitrária:
+   * "PIB per capita no percentil 12 do país" é uma afirmação verificável e
+   * calibrada contra os 5.570 municípios, não contra um número que alguém
+   * escolheu. É daqui que sai o score estrutural das dimensões.
+   */
+  pct?: number;
   /** Procedência exata, para o sinal poder ser conferido pelo cliente */
   provenance: string;
 }
@@ -64,9 +73,12 @@ interface IbgeSerie {
 async function fetchIndicatorNationwide(
   ind: StructuralIndicator
 ): Promise<Map<string, { value: number; period: string }>> {
+  const classif = ind.classificacao
+    ? `&classificacao=${encodeURIComponent(ind.classificacao)}`
+    : "";
   const url =
     `${IBGE_BASE}/${ind.agregado}/periodos/${ind.periodo}` +
-    `/variaveis/${ind.variavel}?localidades=N6%5Ball%5D`;
+    `/variaveis/${ind.variavel}?localidades=N6%5Ball%5D${classif}`;
 
   const res = await fetch(url, {
     headers: { "User-Agent": "DIT-PRINT/1.0 (territorial-intelligence)" },
@@ -165,6 +177,11 @@ export async function loadNationalStructuralData(): Promise<StructuralStore> {
     log.info({ indicator: der.key, municipios: computed }, "Indicador derivado calculado");
   }
 
+  // Percentis nacionais — calculados depois que tudo carregou, sobre a
+  // distribuição real do país. Um município só é "pobre", "denso" ou
+  // "isolado" em relação aos outros 5.569.
+  computeNationalPercentiles(data);
+
   const store: StructuralStore = {
     generatedAt: new Date().toISOString(),
     indicatorCount: ok + DERIVED_CATALOG.length,
@@ -184,6 +201,51 @@ export async function loadNationalStructuralData(): Promise<StructuralStore> {
   );
 
   return store;
+}
+
+/**
+ * Preenche `pct` de cada indicador com a posição do município na distribuição
+ * nacional (0 = menor do país, 1 = maior).
+ *
+ * Empates recebem o mesmo percentil (rank médio), então 300 municípios com
+ * densidade idêntica não viram 300 posições diferentes.
+ */
+function computeNationalPercentiles(
+  data: Record<string, Record<string, StructuralValue>>
+): void {
+  const byIndicator = new Map<string, Array<{ ibgeId: string; value: number }>>();
+
+  for (const [ibgeId, byKey] of Object.entries(data)) {
+    for (const [key, v] of Object.entries(byKey)) {
+      let arr = byIndicator.get(key);
+      if (!arr) {
+        arr = [];
+        byIndicator.set(key, arr);
+      }
+      arr.push({ ibgeId, value: v.value });
+    }
+  }
+
+  for (const [key, arr] of Array.from(byIndicator.entries())) {
+    arr.sort((a, b) => a.value - b.value);
+    const n = arr.length;
+    if (n < 2) continue;
+
+    let i = 0;
+    while (i < n) {
+      // Bloco de empate
+      let j = i;
+      while (j + 1 < n && arr[j + 1].value === arr[i].value) j++;
+      const meanRank = (i + j) / 2;
+      const pct = Math.round((meanRank / (n - 1)) * 1000) / 1000;
+      for (let k = i; k <= j; k++) {
+        data[arr[k].ibgeId][key].pct = pct;
+      }
+      i = j + 1;
+    }
+
+    log.debug({ indicator: key, municipios: n }, "Percentis nacionais calculados");
+  }
 }
 
 // ─── Leitura ─────────────────────────────────────────────────────────────────

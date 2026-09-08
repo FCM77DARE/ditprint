@@ -260,7 +260,18 @@ export class Orchestrator {
     let consolidatedStt = stt;
     let historical: Awaited<ReturnType<typeof consolidateSttFromHistory>> = null;
     try {
-      historical = await consolidateSttFromHistory(territory.id, territory.slug);
+      const ctxForIbge = territory.contextData as Record<string, unknown> | null;
+      const ibgeIdForStructural =
+        (typeof ctxForIbge?.ibgeId === "string" || typeof ctxForIbge?.ibgeId === "number"
+          ? ctxForIbge.ibgeId
+          : Array.isArray(ctxForIbge?.ibgeMunicipios)
+            ? (ctxForIbge.ibgeMunicipios as unknown[])[0]
+            : null) as number | string | null;
+      historical = await consolidateSttFromHistory(
+        territory.id,
+        territory.slug,
+        ibgeIdForStructural
+      );
       if (historical && historical.totalSignalsInWindow > 0) {
         // Substitui o snapshot pelo cumulativo de 24mo:
         // - Score por dimensão = média ponderada dos sinais do histórico

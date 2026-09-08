@@ -41,6 +41,13 @@ export interface StructuralIndicator {
   variavel: number;
   /** Período (ano). "-1" pede o último disponível à API. */
   periodo: string;
+  /**
+   * Filtro de classificação do SIDRA, quando o agregado é cruzado por sexo,
+   * idade ou situação. Usar sempre as categorias "Total" — o DIT quer o
+   * agregado do município, não o recorte.
+   * Ex: "287[100362]|2[6794]|2661[32776]" (idade/sexo/localização = Total)
+   */
+  classificacao?: string;
   /** Unidade, como o IBGE declara */
   unit: string;
   /**
@@ -111,6 +118,43 @@ export const STRUCTURAL_CATALOG: StructuralIndicator[] = [
     source: "IBGE · Censo Demográfico 2022",
   },
   {
+    key: "salario_medio_mensal",
+    label: "Salário médio mensal do trabalho formal",
+    dimension: "D2",
+    indicatorCode: "2.1.2.1",
+    agregado: 1685,
+    variavel: 10143,
+    periodo: "-1",
+    unit: "R$",
+    polarity: "capacity",
+    source: "IBGE · CEMPRE (Cadastro Central de Empresas)",
+  },
+  {
+    key: "pessoal_assalariado",
+    label: "Pessoal ocupado assalariado",
+    dimension: "D2",
+    indicatorCode: "2.1.3.1",
+    agregado: 1685,
+    variavel: 708,
+    periodo: "-1",
+    unit: "pessoas",
+    polarity: "capacity",
+    source: "IBGE · CEMPRE (Cadastro Central de Empresas)",
+  },
+  {
+    key: "populacao_indigena",
+    label: "População indígena residente",
+    dimension: "D4",
+    indicatorCode: "4.3.1.1",
+    agregado: 8175,
+    variavel: 350,
+    periodo: "2022",
+    classificacao: "287[100362]|2[6794]|2661[32776]",
+    unit: "pessoas",
+    polarity: "vulnerability",
+    source: "IBGE · Censo Demográfico 2022",
+  },
+  {
     key: "pib_corrente",
     label: "Produto Interno Bruto a preços correntes",
     dimension: "D2",
@@ -136,6 +180,34 @@ export interface DerivedIndicator {
 }
 
 export const DERIVED_CATALOG: DerivedIndicator[] = [
+  {
+    key: "taxa_assalariamento",
+    label: "Vínculos formais por 100 habitantes",
+    dimension: "D2",
+    unit: "por 100 hab",
+    polarity: "capacity",
+    source: "IBGE · CEMPRE ÷ Censo 2022",
+    compute: (m) => {
+      const vinculos = m.pessoal_assalariado;
+      const pop = m.populacao_residente ?? m.populacao_estimada;
+      if (!vinculos || !pop) return null;
+      return Math.round((vinculos / pop) * 100 * 10) / 10;
+    },
+  },
+  {
+    key: "presenca_indigena_por_mil",
+    label: "População indígena por mil habitantes",
+    dimension: "D4",
+    unit: "por mil hab",
+    polarity: "vulnerability",
+    source: "IBGE · Censo 2022 (indígena ÷ população residente)",
+    compute: (m) => {
+      const ind = m.populacao_indigena;
+      const pop = m.populacao_residente ?? m.populacao_estimada;
+      if (ind === undefined || !pop) return null;
+      return Math.round((ind / pop) * 1000 * 10) / 10;
+    },
+  },
   {
     key: "pib_per_capita",
     label: "PIB per capita",
