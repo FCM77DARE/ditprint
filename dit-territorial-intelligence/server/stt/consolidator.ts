@@ -70,6 +70,8 @@ const FATOR_TENSAO = 4;
 
 // Fontes RESOLUTIVAS: dados estruturados que "explicam" aspectos do território.
 const RESOLUTIVE_SOURCES = new Set<string>([
+  "src-estrutural-d2",
+  "src-estrutural-d3",
   "src-ibge-censo",
   "src-ibge-renda",
   "src-ibge-habitacao",
@@ -149,6 +151,8 @@ function temporalWeight(publishedAt: Date | null, isStructural: boolean): number
  * vale enquanto o empreendimento estiver ativo, etc).
  */
 const STRUCTURAL_SOURCES = new Set<string>([
+  "src-estrutural-d2",
+  "src-estrutural-d3",
   "src-ibge-censo",
   "src-ibge-renda",
   "src-ibge-habitacao",

@@ -13,6 +13,7 @@
     "test": "vitest run",
     "db:push": "drizzle-kit generate && drizzle-kit migrate",
     "bootstrap:history": "tsx scripts/bootstrap-history.ts",
+    "structural:load": "tsx scripts/load-structural.ts",
     "admin:create": "node scripts/create-admin.mjs"
   },
   "dependencies": {

@@ -6,6 +6,7 @@
 
 import { BaseDimensionAgent, type IndicatorKeywordRule } from "../base-dimension";
 import type { DimensionId } from "../../indicators";
+import { SrcEstruturalD2 } from "../sources/estrutural/src-estrutural";
 import { SrcIbgeCenso } from "../sources/d2/src-ibge-censo";
 import { SrcIbgeRenda } from "../sources/d2/src-ibge-renda";
 import { SrcPnudAtlas } from "../sources/d2/src-pnud-atlas";
@@ -14,6 +15,9 @@ import { SrcIpeadata } from "../sources/d2/src-ipeadata";
 export class DimSocioeconomico extends BaseDimensionAgent {
   readonly id: DimensionId = "D2";
   readonly sources = [
+    // Camada estrutural primeiro: é a única fonte que responde para qualquer
+    // município do país, e é a que dá base ao score.
+    new SrcEstruturalD2(),
     new SrcIbgeCenso(),
     new SrcIbgeRenda(),
     new SrcPnudAtlas(),

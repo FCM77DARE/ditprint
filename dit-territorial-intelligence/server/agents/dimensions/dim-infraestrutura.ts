@@ -7,6 +7,7 @@
 
 import { BaseDimensionAgent, type IndicatorKeywordRule } from "../base-dimension";
 import type { DimensionId } from "../../indicators";
+import { SrcEstruturalD3 } from "../sources/estrutural/src-estrutural";
 import { SrcSnisSinasa } from "../sources/d3/src-snis-sinasa";
 import { SrcDatasus } from "../sources/d3/src-datasus";
 import { SrcInep } from "../sources/d3/src-inep";
@@ -23,6 +24,7 @@ import { SrcGoogleNews } from "../sources/d6/src-google-news";
 export class DimInfraestrutura extends BaseDimensionAgent {
   readonly id: DimensionId = "D3";
   readonly sources = [
+    new SrcEstruturalD3(),
     new SrcSnisSinasa(),
     new SrcDatasus(),
     new SrcInep(),
