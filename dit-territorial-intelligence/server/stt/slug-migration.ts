@@ -29,6 +29,7 @@
 
 import { promises as fs, existsSync } from "node:fs";
 import { join } from "node:path";
+import { buscarLocalidadeCurada } from "../routes/localidades-curadas";
 
 const BASE_DIR = join(process.env.DATA_DIR || join(process.cwd(), "data"), "dit-snapshots");
 
@@ -153,6 +154,18 @@ export async function migrateCanonicalSlugs(
     }
 
     const nomeTexto = nome.replace(/-/g, " ");
+    // Localidade curada primeiro: `surui` e `surui-mage` são o mesmo distrito
+    // de Magé com dois históricos, e nenhuma busca por nome de município
+    // resolveria isso. A tabela é a mesma que a resolução da API consulta,
+    // então o slug que sai aqui é idêntico ao que a API produz.
+    const curada =
+      buscarLocalidadeCurada(normalizeCollapsed(nomeTexto)) ??
+      buscarLocalidadeCurada(normalizeCollapsed(slug.replace(/-/g, " ")));
+    if (curada && (!uf || uf === curada.uf)) {
+      mapa.set(slug, `${makeSlug(curada.municipio)}-${curada.ibgeId}-${makeSlug(curada.nome)}`);
+      continue;
+    }
+
     const candidatos =
       porNome.get(normalize(nomeTexto)) ??
       porNome.get(normalizeCollapsed(nomeTexto)) ??
