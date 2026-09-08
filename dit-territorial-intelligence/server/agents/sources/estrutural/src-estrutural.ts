@@ -28,8 +28,11 @@ abstract class StructuralSourceAgent extends BaseSourceAgent {
     territory: Territory,
     _options: CollectOptions
   ): Promise<RawSignal[]> {
-    const ibgeId = resolveIbgeId(territory);
-    if (!ibgeId) {
+    // Recorte composto (Baía de Guanabara) traz vários municípios. Emitimos
+    // um sinal por município e por indicador, com o código no título — somar
+    // ou mostrar só o primeiro descreveria um território que não existe.
+    const ibgeIds = resolveIbgeIds(territory);
+    if (ibgeIds.length === 0) {
       this.log.debug(
         { territory: territory.slug },
         "Sem código IBGE no território — camada estrutural não aplicável"
@@ -37,35 +40,46 @@ abstract class StructuralSourceAgent extends BaseSourceAgent {
       return [];
     }
 
-    const indicators = await getStructuralForMunicipality(ibgeId);
+    const composto = ibgeIds.length > 1;
     const signals: RawSignal[] = [];
 
-    for (const [key, v] of Object.entries(indicators)) {
-      if (v.dimension !== this.dimension) continue;
-      signals.push({
-        title: `${v.label}: ${formatValue(v.value, v.unit)}`,
-        summary:
-          `${v.label} do município (código IBGE ${ibgeId}) segundo ${v.source}, ` +
-          `período ${v.period}. Indicador estrutural — vale até a próxima ` +
-          `divulgação da fonte, não decai com o tempo.`,
-        sourceAgentId: this.id,
-        publishedAt: periodToDate(v.period),
-        rawValue: v.value,
-        unit: v.unit,
-        provenance: v.provenance,
-        metadata: {
-          structural: true,
-          indicatorKey: key,
-          indicatorCode: v.indicatorCode,
-          polarity: v.polarity,
-          period: v.period,
-        },
-      });
+    for (const ibgeId of ibgeIds) {
+      const indicators = await getStructuralForMunicipality(ibgeId);
+      for (const [key, v] of Object.entries(indicators)) {
+        if (v.dimension !== this.dimension) continue;
+        signals.push({
+          title: composto
+            ? `${v.label} (IBGE ${ibgeId}): ${formatValue(v.value, v.unit)}`
+            : `${v.label}: ${formatValue(v.value, v.unit)}`,
+          summary:
+            `${v.label} do município (código IBGE ${ibgeId}) segundo ${v.source}, ` +
+            `período ${v.period}. Indicador estrutural — vale até a próxima ` +
+            `divulgação da fonte, não decai com o tempo.` +
+            (composto
+              ? ` Integra um recorte de ${ibgeIds.length} municípios; no score, ` +
+                "os membros entram ponderados por população."
+              : ""),
+          sourceAgentId: this.id,
+          publishedAt: periodToDate(v.period),
+          rawValue: v.value,
+          unit: v.unit,
+          provenance: v.provenance,
+          metadata: {
+            structural: true,
+            indicatorKey: key,
+            indicatorCode: v.indicatorCode,
+            polarity: v.polarity,
+            period: v.period,
+            ibgeId,
+            composite: composto,
+          },
+        });
+      }
     }
 
     if (signals.length === 0) {
       this.log.debug(
-        { territory: territory.slug, ibgeId, dimension: this.dimension },
+        { territory: territory.slug, ibgeIds, dimension: this.dimension },
         "Camada estrutural sem indicadores para esta dimensão"
       );
     }
@@ -92,18 +106,22 @@ export class SrcEstruturalD3 extends StructuralSourceAgent {
  * O código IBGE chega por caminhos diferentes conforme a origem do território
  * (registro do banco, lista em disco do scheduler, resolução da landing).
  */
-function resolveIbgeId(territory: Territory): string | null {
+function resolveIbgeIds(territory: Territory): string[] {
   const ctx = territory.contextData as Record<string, unknown> | null;
-  if (!ctx) return null;
+  if (!ctx) return [];
+
+  // A lista manda: é ela que carrega o recorte inteiro. `ibgeId` é o
+  // escalar de compatibilidade, usado só quando a lista não veio.
+  const list = ctx.ibgeMunicipios;
+  if (Array.isArray(list) && list.length > 0) {
+    return list.map((v) => String(v)).filter((v) => v.length > 0);
+  }
 
   const direct = ctx.ibgeId;
-  if (typeof direct === "string" && direct.length > 0) return direct;
-  if (typeof direct === "number") return String(direct);
+  if (typeof direct === "string" && direct.length > 0) return [direct];
+  if (typeof direct === "number") return [String(direct)];
 
-  const list = ctx.ibgeMunicipios;
-  if (Array.isArray(list) && list.length > 0) return String(list[0]);
-
-  return null;
+  return [];
 }
 
 function formatValue(value: number, unit: string): string {

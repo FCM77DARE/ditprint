@@ -28,7 +28,11 @@
  */
 
 import type { DimensionId } from "../indicators";
-import { getStructuralForMunicipality, type StructuralValue } from "./store";
+import {
+  getStructuralForMunicipality,
+  getMunicipalityName,
+  type StructuralValue,
+} from "./store";
 import { logger } from "../_core/logger";
 
 const log = logger.child({ module: "structural-scoring" });
@@ -259,6 +263,84 @@ export async function getStructuralScores(
   log.debug(
     { ibgeId, dimensoes: Object.keys(out) },
     "Score estrutural calculado"
+  );
+
+  return out;
+}
+
+/**
+ * Score estrutural de um território COMPOSTO — média dos membros ponderada
+ * por população.
+ *
+ * Sem o peso, Guapimirim (~60 mil habitantes) valeria o mesmo que o Rio de
+ * Janeiro (~6,2 milhões) na leitura da Baía de Guanabara, e o resultado
+ * descreveria uma baía que não existe.
+ *
+ * A `rationale` de cada dimensão passa a nomear os membros que mais pesaram,
+ * porque num composto "percentil 12 do país" sem dizer de quem não é
+ * afirmação conferível.
+ */
+export async function getStructuralScoresComposite(
+  ibgeIds: Array<number | string>
+): Promise<StructuralScores> {
+  if (ibgeIds.length === 0) return {};
+  if (ibgeIds.length === 1) return getStructuralScores(ibgeIds[0]);
+
+  const membros: Array<{
+    ibgeId: string;
+    peso: number;
+    scores: StructuralScores;
+    nomePeso: string;
+  }> = [];
+
+  for (const id of ibgeIds) {
+    const ind = await getStructuralForMunicipality(id);
+    const scores = await getStructuralScores(id);
+    if (Object.keys(scores).length === 0) continue;
+    const pop =
+      ind.populacao_residente?.value ?? ind.populacao_estimada?.value ?? 0;
+    if (pop <= 0) continue;
+    membros.push({
+      ibgeId: await getMunicipalityName(id),
+      peso: pop,
+      scores,
+      nomePeso: `${Math.round(pop).toLocaleString("pt-BR")} hab`,
+    });
+  }
+
+  if (membros.length === 0) return {};
+
+  const pesoTotal = membros.reduce((a, m) => a + m.peso, 0);
+  const out: StructuralScores = {};
+
+  for (const dim of ["D2", "D3", "D4"] as DimensionId[]) {
+    const comDim = membros.filter((m) => m.scores[dim]);
+    if (comDim.length === 0) continue;
+
+    const pesoDim = comDim.reduce((a, m) => a + m.peso, 0);
+    const score = Math.round(
+      comDim.reduce((a, m) => a + m.scores[dim]!.score * m.peso, 0) / pesoDim
+    );
+
+    // Os dois membros de maior peso, para a frase dizer de quem se fala.
+    const dominantes = [...comDim].sort((a, b) => b.peso - a.peso).slice(0, 2);
+
+    out[dim] = {
+      score,
+      // Confiança cai quando parte dos membros não tem dado da dimensão.
+      confidence: pesoDim / pesoTotal,
+      rationale:
+        `Média de ${comDim.length} municípios ponderada por população. ` +
+        `Peso principal: ${dominantes
+          .map((m) => `${m.ibgeId}, ${m.nomePeso}`)
+          .join("; ")}.`,
+      basis: comDim.flatMap((m) => m.scores[dim]!.basis),
+    };
+  }
+
+  log.debug(
+    { membros: membros.length, dimensoes: Object.keys(out) },
+    "Score estrutural composto calculado"
   );
 
   return out;

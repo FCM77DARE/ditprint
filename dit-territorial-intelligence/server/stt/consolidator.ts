@@ -43,6 +43,7 @@ import type { DimensionId } from "../indicators";
 import { readSignalsInWindow, type StoredSignal } from "./signal-store";
 import {
   getStructuralScores,
+  getStructuralScoresComposite,
   blendDimensionScore,
   STRUCTURAL_WEIGHT,
   type StructuralScores,
@@ -197,14 +198,22 @@ function isStructural(sig: { source: string; metadata: unknown }): boolean {
 export async function consolidateSttFromHistory(
   territoryId: number,
   territorySlug?: string,
-  ibgeId?: number | string | null
+  ibgeId?: number | string | null,
+  /** Todos os municípios do recorte — composto traz mais de um */
+  ibgeIds?: Array<number | string>
 ): Promise<ConsolidatedStt | null> {
   const db = await getDb();
 
-  // Camada estrutural — o que se sabe do município independente de coleta.
+  // Camada estrutural — o que se sabe do território independente de coleta.
   // Carregada antes dos sinais porque, quando ela existe, é ela que dá a base
   // do score e os sinais passam a modular em cima.
-  const structural = await getStructuralScores(ibgeId);
+  //
+  // Recorte com vários municípios (Baía de Guanabara) agrega os membros
+  // ponderando por população: sem isso, Guapimirim pesaria o mesmo que o Rio.
+  const structural =
+    ibgeIds && ibgeIds.length > 1
+      ? await getStructuralScoresComposite(ibgeIds)
+      : await getStructuralScores(ibgeId);
   const hasStructural = Object.keys(structural).length > 0;
   const cutoff = new Date(Date.now() - WINDOW_MS);
   const todayStart = new Date();

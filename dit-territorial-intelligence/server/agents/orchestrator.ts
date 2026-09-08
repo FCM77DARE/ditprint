@@ -267,10 +267,14 @@ export class Orchestrator {
           : Array.isArray(ctxForIbge?.ibgeMunicipios)
             ? (ctxForIbge.ibgeMunicipios as unknown[])[0]
             : null) as number | string | null;
+      const listaIbge = Array.isArray(ctxForIbge?.ibgeMunicipios)
+        ? (ctxForIbge.ibgeMunicipios as unknown[]).map((v) => String(v))
+        : undefined;
       historical = await consolidateSttFromHistory(
         territory.id,
         territory.slug,
-        ibgeIdForStructural
+        ibgeIdForStructural,
+        listaIbge
       );
       if (historical && historical.totalSignalsInWindow > 0) {
         // Substitui o snapshot pelo cumulativo de 24mo:

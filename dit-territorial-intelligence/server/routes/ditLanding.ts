@@ -28,6 +28,10 @@ import type { DimensionResult } from "../agents/types";
 import type { DimensionId } from "../indicators";
 import { runStrategicLayer } from "../strategic/runner";
 import { buscarLocalidadeCurada } from "./localidades-curadas";
+import {
+  buscarCompostoPorNome,
+  type TerritorioComposto,
+} from "./territorios-compostos";
 import { canSpend, consume, getBudgetStatus } from "../_core/budget";
 import { getStructuralStatus } from "../structural/store";
 import type { TerritoryStrategicContext } from "../strategic/types";
@@ -75,6 +79,9 @@ const PUBLIC_ANALYZE = String(process.env.DIT_PUBLIC_ANALYZE ?? "false").toLower
  * que é erro de digitação e mesmo assim ganhou STT e snapshot.
  */
 function canonicalSlug(loc: ResolvedLocation): string {
+  // Composto tem slug próprio e estável: não há um código IBGE que o
+  // represente, e derivar do primeiro membro esconderia o recorte.
+  if (loc.fixedSlug) return loc.fixedSlug;
   const base = `${makeSlug(loc.municipality)}-${loc.ibgeId}`;
   return loc.kind === "municipality" ? base : `${base}-${makeSlug(loc.name)}`;
 }
@@ -263,12 +270,25 @@ interface IbgeMunicipio {
 // no IBGE (bairros, terminais, vilas), caímos no Nominatim (OSM) e usamos a
 // `address.municipality` retornada para re-ancorar no IBGE.
 
-export type ResolvedLocationKind = "municipality" | "district" | "locality";
+export type ResolvedLocationKind =
+  | "municipality"
+  | "district"
+  | "locality"
+  /** Recorte que atravessa municípios — ver territorios-compostos.ts */
+  | "composite";
 
 export interface ResolvedLocation {
   kind: ResolvedLocationKind;
   name: string;          // nome local (ex: "Cabiúnas")
   ibgeId: number;        // sempre o id do município pai (para stats downstream)
+  /**
+   * Todos os municípios do recorte. Um item para município, distrito e
+   * localidade; a lista inteira para composto. Os agentes de fonte já liam
+   * `contextData.ibgeMunicipios` como lista — o composto só a preenche toda.
+   */
+  ibgeIds?: number[];
+  /** Slug fixo, quando o recorte tem um (composto não tem código IBGE) */
+  fixedSlug?: string;
   municipality: string;  // município pai (== name quando kind === 'municipality')
   state: string;         // sigla UF
   stateName?: string;    // nome completo UF ("Bahia") — usado em queries
@@ -544,6 +564,36 @@ async function lookupNominatim(
   }
 }
 
+/**
+ * Resolve os membros de um composto contra a malha, por nome e UF.
+ *
+ * Nunca por código digitado: foi assim que 2910776 (Feira da Mata) entrou uma
+ * vez no lugar de Dias d'Ávila (2910057) num script de análise, e a linha saiu
+ * plausível. Membro que não resolve é registrado como erro, não ignorado em
+ * silêncio — recorte incompleto muda o score sem avisar.
+ */
+function resolverMembros(
+  composto: TerritorioComposto,
+  munList: IbgeMunicipio[]
+): { membros: IbgeMunicipio[]; faltando: string[] } {
+  const membros: IbgeMunicipio[] = [];
+  const faltando: string[] = [];
+
+  for (const m of composto.membros) {
+    const hits = munList.filter(
+      (x) =>
+        normalizeCollapsed(x.nome) === normalizeCollapsed(m.nome) &&
+        x.microrregiao?.mesorregiao?.UF?.sigla === m.uf
+    );
+    if (hits.length === 1) membros.push(hits[0]);
+    else faltando.push(`${m.nome}/${m.uf} (${hits.length} correspondências)`);
+  }
+
+  // Maior primeiro — o principal representa o composto nos campos escalares.
+  membros.sort((a, b) => a.id - b.id);
+  return { membros, faltando };
+}
+
 function buildLocation(
   kind: ResolvedLocationKind,
   localName: string,
@@ -595,6 +645,44 @@ async function resolveLocation(rawName: string): Promise<ResolvedLocation | null
   const { name, state: hintState } = parseTerritoryInput(rawName);
   const target = normalize(name);
   if (!target) return null;
+
+  // ── 0) Território composto ─────────────────────────────────────────────────
+  // Antes de tudo: "Baía de Guanabara" não é município nem distrito, e sem
+  // esta porta caía no Nominatim, que devolvia qualquer coisa parecida.
+  const composto = buscarCompostoPorNome(name);
+  const munListParaComposto = composto ? await loadAllMunicipios() : null;
+  if (composto && munListParaComposto) {
+    const resolvido = resolverMembros(composto, munListParaComposto);
+    if (resolvido.faltando.length > 0) {
+      log.error(
+        { composto: composto.slug, faltando: resolvido.faltando },
+        "Território composto tem membro que não existe na malha do IBGE — conferir a declaração"
+      );
+    }
+    if (resolvido.membros.length > 0) {
+      const principal = resolvido.membros[0];
+      log.info(
+        { composto: composto.slug, membros: resolvido.membros.length, criterio: composto.criterio },
+        "Território composto resolvido"
+      );
+      const geo = await lookupGeoBox(composto.nome, composto.uf);
+      return {
+        kind: "composite",
+        name: composto.nome,
+        ibgeId: principal.id,
+        ibgeIds: resolvido.membros.map((m) => m.id),
+        fixedSlug: composto.slug,
+        municipality: composto.nome,
+        state: composto.uf,
+        stateName: principal.microrregiao?.mesorregiao?.UF?.nome ?? "",
+        region: composto.regiao,
+        mesoregion: principal.microrregiao?.mesorregiao?.nome ?? "",
+        microregion: principal.microrregiao?.nome ?? "",
+        centroid: geo?.centroid,
+        bbox: geo?.bbox,
+      };
+    }
+  }
 
   // ── 1) Município ───────────────────────────────────────────────────────────
   const munList = await loadAllMunicipios();
@@ -806,10 +894,17 @@ const FOGO_CRUZADO_STATE_IDS: Record<string, string> = {
  */
 function buildContextData(loc: ResolvedLocation | null): Record<string, unknown> | null {
   if (!loc || !loc.ibgeId) return null;
+  // Composto preenche a lista inteira; os demais, um item. Os agentes de
+  // fonte sempre leram `ibgeMunicipios` como lista, então nada mais muda.
+  const municipios = (loc.ibgeIds?.length ? loc.ibgeIds : [loc.ibgeId]).map(String);
   const ctx: Record<string, unknown> = {
-    ibgeMunicipios: [String(loc.ibgeId)],
+    ibgeMunicipios: municipios,
     ibgeId: String(loc.ibgeId),
   };
+  if (loc.kind === "composite") {
+    ctx.composite = true;
+    ctx.compositeSlug = loc.fixedSlug;
+  }
   if (loc.state) {
     ctx.uf = loc.state;
     const fc = FOGO_CRUZADO_STATE_IDS[loc.state];

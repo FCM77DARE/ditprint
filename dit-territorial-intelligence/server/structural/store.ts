@@ -59,6 +59,12 @@ export interface StructuralStore {
   generatedAt: string;
   indicatorCount: number;
   municipalityCount: number;
+  /**
+   * ibgeId → nome do município, como o IBGE escreve ("Rio de Janeiro - RJ").
+   * Guardado aqui porque quem lê o relatório precisa de nome, não de código:
+   * "média ponderada, peso principal 3304557" não é frase para cliente.
+   */
+  names: Record<string, string>;
   /** ibgeId → { chave do indicador → valor } */
   data: Record<string, Record<string, StructuralValue>>;
 }
@@ -72,7 +78,7 @@ interface IbgeSerie {
 
 async function fetchIndicatorNationwide(
   ind: StructuralIndicator
-): Promise<Map<string, { value: number; period: string }>> {
+): Promise<Map<string, { value: number; period: string; nome: string }>> {
   const classif = ind.classificacao
     ? `&classificacao=${encodeURIComponent(ind.classificacao)}`
     : "";
@@ -90,7 +96,7 @@ async function fetchIndicatorNationwide(
     resultados?: Array<{ series?: IbgeSerie[] }>;
   }>;
 
-  const out = new Map<string, { value: number; period: string }>();
+  const out = new Map<string, { value: number; period: string; nome: string }>();
   const series = payload?.[0]?.resultados?.[0]?.series ?? [];
 
   for (const s of series) {
@@ -104,7 +110,7 @@ async function fetchIndicatorNationwide(
     // IBGE usa "-" e "..." para dado indisponível — não vira zero, vira ausência.
     const value = Number(raw);
     if (!Number.isFinite(value)) continue;
-    out.set(ibgeId, { value, period });
+    out.set(ibgeId, { value, period, nome: s.localidade?.nome ?? "" });
   }
 
   return out;
@@ -118,6 +124,7 @@ export async function loadNationalStructuralData(): Promise<StructuralStore> {
   if (!existsSync(STRUCT_DIR)) mkdirSync(STRUCT_DIR, { recursive: true });
 
   const data: Record<string, Record<string, StructuralValue>> = {};
+  const names: Record<string, string> = {};
   let ok = 0;
   let failed = 0;
 
@@ -125,7 +132,8 @@ export async function loadNationalStructuralData(): Promise<StructuralStore> {
     const started = Date.now();
     try {
       const values = await fetchIndicatorNationwide(ind);
-      for (const [ibgeId, { value, period }] of Array.from(values.entries())) {
+      for (const [ibgeId, { value, period, nome }] of Array.from(values.entries())) {
+        if (nome && !names[ibgeId]) names[ibgeId] = nome;
         (data[ibgeId] ??= {})[ind.key] = {
           value,
           unit: ind.unit,
@@ -186,6 +194,7 @@ export async function loadNationalStructuralData(): Promise<StructuralStore> {
     generatedAt: new Date().toISOString(),
     indicatorCount: ok + DERIVED_CATALOG.length,
     municipalityCount: Object.keys(data).length,
+    names,
     data,
   };
 
@@ -281,6 +290,12 @@ async function loadStore(): Promise<StructuralStore | null> {
 /** Invalida o cache em memória (usar depois de uma recarga). */
 export function resetStructuralCache(): void {
   memo = null;
+}
+
+/** Nome do município como o IBGE escreve. Vazio se a carga não rodou. */
+export async function getMunicipalityName(ibgeId: number | string): Promise<string> {
+  const store = await loadStore();
+  return store?.names?.[String(ibgeId)] ?? String(ibgeId);
 }
 
 /** Indicadores estruturais de um município. Vazio se a carga não rodou. */
