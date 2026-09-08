@@ -27,6 +27,7 @@ import { orchestrator } from "../agents/orchestrator";
 import type { DimensionResult } from "../agents/types";
 import type { DimensionId } from "../indicators";
 import { runStrategicLayer } from "../strategic/runner";
+import { buscarLocalidadeCurada } from "./localidades-curadas";
 import { canSpend, consume, getBudgetStatus } from "../_core/budget";
 import { getStructuralStatus } from "../structural/store";
 import type { TerritoryStrategicContext } from "../strategic/types";
@@ -422,8 +423,83 @@ interface NominatimResult {
   lon: string;
   display_name: string;
   name?: string;
+  /** Categoria OSM: place, boundary, highway, railway, aeroway, shop… */
+  class?: string;
+  /** Subtipo: village, town, administrative, residential, station… */
+  type?: string;
+  addresstype?: string;
   boundingbox?: [string, string, string, string];
   address?: NominatimAddress;
+}
+
+/**
+ * Classes do OSM que representam LUGAR onde gente mora ou que tem recorte
+ * territorial. Só estas podem virar território do DIT.
+ *
+ * Sem esta trava, o Nominatim devolve o que tiver: "Rua das Flores" resolvia
+ * para "Rua XV de Novembro, Curitiba/PR" e "Porto de Maricá" para "Rua Edson
+ * de Almeida Porto Antiga" — cada um virando território monitorado, com
+ * município pai plausível e tudo. Uma rua não é território, e antes de a
+ * resolução virar porta de entrada isso passava despercebido.
+ */
+const OSM_PLACE_CLASSES = new Set(["place", "boundary", "landuse"]);
+
+/** Tipos que reprovam mesmo dentro de uma classe aceita. */
+const OSM_REJECTED_TYPES = new Set([
+  "road", "residential_road", "station", "stop", "halt", "helipad",
+  "aerodrome", "bus_stop", "platform",
+]);
+
+/**
+ * Ordem de preferência: recorte administrativo primeiro (é o que mais se
+ * aproxima de um distrito), depois lugar habitado, depois o resto.
+ */
+function osmRank(d: NominatimResult): number {
+  if (d.class === "boundary" && d.type === "administrative") return 0;
+  if (d.class === "place") return 1;
+  if (d.class === "landuse") return 2;
+  return 99;
+}
+
+function isAcceptableOsmPlace(d: NominatimResult): boolean {
+  if (!d.class || !OSM_PLACE_CLASSES.has(d.class)) return false;
+  if (d.type && OSM_REJECTED_TYPES.has(d.type)) return false;
+  if (d.addresstype && OSM_REJECTED_TYPES.has(d.addresstype)) return false;
+  return true;
+}
+
+/**
+ * O nome devolvido tem que ser o nome pedido.
+ *
+ * Segunda trava, independente da classe: o Nominatim é generoso com
+ * correspondência parcial, e "Porto de Maricá" casava com qualquer logradouro
+ * que tivesse "Porto" no nome. Território errado num relatório de cliente é
+ * pior que território não encontrado.
+ */
+const OSM_STOPWORDS = new Set(["de", "da", "do", "das", "dos", "e", "d"]);
+
+function palavrasSignificativas(v: string): string[] {
+  return normalizeCollapsed(v)
+    .split(/\s+/)
+    .filter((w) => w.length > 0 && !OSM_STOPWORDS.has(w));
+}
+
+function osmNameMatches(query: string, d: NominatimResult): boolean {
+  const alvo = palavrasSignificativas(query);
+  const achado = palavrasSignificativas(d.name ?? "");
+  if (alvo.length === 0 || achado.length === 0) return false;
+
+  // Um dos nomes tem que conter TODAS as palavras do outro.
+  //
+  //   "Cabiúnas"        x "Fazenda Cabiúnas"                → passa
+  //   "Itaipuaçu"       x "Itaipuaçu"                       → passa
+  //   "Porto de Maricá" x "Rua Edson de Almeida Porto Anti" → reprova
+  //                       ("maricá" não aparece)
+  //
+  // A primeira versão comparava tamanho de string, e reprovava Cabiúnas —
+  // que é território real do polo de Macaé, com relatório já gerado.
+  const contem = (a: string[], b: string[]) => a.every((w) => b.includes(w));
+  return contem(alvo, achado) || contem(achado, alvo);
 }
 
 async function lookupNominatim(
@@ -442,10 +518,27 @@ async function lookupNominatim(
     if (!res.ok) return null;
     const data = (await res.json()) as NominatimResult[];
     if (!data?.length) return null;
-    // Prefere hit que tenha município preenchido no endereço
-    const withMun =
-      data.find((d) => d.address?.city || d.address?.municipality || d.address?.town) ?? data[0];
-    return withMun;
+
+    const candidatos = data
+      .filter((d) => isAcceptableOsmPlace(d) && osmNameMatches(rawName, d))
+      .sort((a, b) => osmRank(a) - osmRank(b));
+
+    if (candidatos.length === 0) {
+      log.info(
+        {
+          consulta: rawName,
+          descartados: data.map((d) => `${d.class}/${d.type}:${d.name ?? ""}`),
+        },
+        "Nominatim devolveu resultados, mas nenhum é lugar — território não resolvido"
+      );
+      return null;
+    }
+
+    // Entre os aceitos, prefere o que traz município no endereço.
+    return (
+      candidatos.find((d) => d.address?.city || d.address?.municipality || d.address?.town) ??
+      candidatos[0]
+    );
   } catch {
     return null;
   }
@@ -476,7 +569,29 @@ function buildLocation(
  * Resolve qualquer entrada (município, distrito ou localidade OSM) para uma
  * estrutura completa com município pai, UF, região e geometria (centroid+bbox).
  */
+export interface AmbiguousOption {
+  name: string;
+  state: string;
+  ibgeId: number;
+}
+
+/**
+ * Homônimos encontrados na última resolução que terminou ambígua.
+ *
+ * Carona feia, mas resolveLocation é chamada em dois lugares e mudar a
+ * assinatura para um resultado discriminado espalharia por todo o arquivo.
+ * É lida imediatamente depois da chamada, no mesmo tick.
+ */
+let lastAmbiguity: AmbiguousOption[] | null = null;
+
+function takeAmbiguity(): AmbiguousOption[] | null {
+  const a = lastAmbiguity;
+  lastAmbiguity = null;
+  return a;
+}
+
 async function resolveLocation(rawName: string): Promise<ResolvedLocation | null> {
+  lastAmbiguity = null;
   const { name, state: hintState } = parseTerritoryInput(rawName);
   const target = normalize(name);
   if (!target) return null;
@@ -492,7 +607,24 @@ async function resolveLocation(rawName: string): Promise<ResolvedLocation | null
       );
     }
     if (hits.length > 0) {
-      const m = hits.find((x) => CAPITAL_IBGE_IDS.has(x.id)) ?? hits[0];
+      // Capital ganha do homônimo: quem digita "Salvador" quer a capital da
+      // Bahia, não Salvador das Missões/RS.
+      const capital = hits.find((x) => CAPITAL_IBGE_IDS.has(x.id));
+
+      // Sem capital e sem UF, nome repetido no país é ambiguidade de verdade.
+      // Antes o código pegava hits[0] e seguia: "Lajeado" virava Lajeado/TO
+      // em silêncio, enquanto a série em produção era de Lajeado/RS. Escolher
+      // sozinho aqui é atribuir o território errado ao cliente.
+      if (!capital && hits.length > 1) {
+        lastAmbiguity = hits.slice(0, 8).map((m) => ({
+          name: m.nome,
+          state: m.microrregiao?.mesorregiao?.UF?.sigla ?? "",
+          ibgeId: m.id,
+        }));
+        return null;
+      }
+
+      const m = capital ?? hits[0];
       const geo = await lookupGeoBox(m.nome, m.microrregiao?.mesorregiao?.UF?.sigla ?? "");
       return buildLocation("municipality", m.nome, m, geo ?? undefined);
     }
@@ -521,7 +653,30 @@ async function resolveLocation(rawName: string): Promise<ResolvedLocation | null
     }
   }
 
-  // ── 3) Localidade (Nominatim/OSM) ──────────────────────────────────────────
+  // ── 3) Localidade curada ───────────────────────────────────────────────────
+  // Antes do Nominatim, porque para lugar pequeno ele acerta o nome e erra o
+  // município: "Cabiúnas" caía em Cambuci/RJ (existe uma Fazenda Cabiúnas lá)
+  // quando a que interessa é o terminal da Petrobras, em Macaé. Nenhuma
+  // heurística de texto resolve — só saber de qual Cabiúnas se fala.
+  const curada = buscarLocalidadeCurada(normalizeCollapsed(name));
+  if (curada && (!hintState || hintState === curada.uf)) {
+    const munList2 = munList ?? (await loadAllMunicipios());
+    const pai = munList2?.find((m) => m.id === curada.ibgeId);
+    if (pai) {
+      log.info(
+        { consulta: name, localidade: curada.nome, municipio: curada.municipio, nota: curada.nota },
+        "Localidade resolvida pela tabela curada"
+      );
+      const geo = await lookupGeoBox(`${curada.nome}, ${curada.municipio}`, curada.uf);
+      return buildLocation("locality", curada.nome, pai, geo ?? undefined);
+    }
+    log.warn(
+      { localidade: curada.nome, ibgeId: curada.ibgeId },
+      "Localidade curada aponta para código IBGE que não existe na malha — conferir a tabela"
+    );
+  }
+
+  // ── 4) Localidade (Nominatim/OSM) ──────────────────────────────────────────
   const osm = await lookupNominatim(name, hintState);
   if (osm) {
     const muniName =
@@ -1222,6 +1377,19 @@ ditLandingRouter.post("/isca", async (req: Request, res: Response) => {
   // A isca precisa da MESMA chave que o /analyze grava, senão nunca acha o
   // cache e re-roda a coleta inteira a cada visita. Chave = slug canônico IBGE.
   const loc = await resolveLocation(territoryClean);
+  const iscaAmbiguidade = takeAmbiguity();
+  if (!loc && iscaAmbiguidade) {
+    res.status(409).json({
+      error: "Território ambíguo",
+      detail:
+        `Existe mais de um município chamado "${territoryClean}" no Brasil. ` +
+        "Informe o estado para o DIT saber de qual você fala.",
+      status: "ambiguo",
+      territory: territoryClean,
+      options: iscaAmbiguidade,
+    });
+    return;
+  }
   if (!loc) {
     res.status(404).json({
       error: "Território não encontrado",
@@ -1330,6 +1498,24 @@ ditLandingRouter.post("/analyze", async (req: Request, res: Response) => {
     // 1a. PORTA DE ENTRADA — território tem que existir na malha do IBGE.
     // Sem isso, um erro de digitação ("gatinhos") era resolvido, analisado,
     // pontuado com STT 97 e salvo em produção como território monitorado.
+    const ambiguidade = takeAmbiguity();
+    if (!loc && ambiguidade) {
+      log.info(
+        { territory: territoryClean, opcoes: ambiguidade.length },
+        "Nome de município repetido no país — pedindo a UF"
+      );
+      res.status(409).json({
+        error: "Território ambíguo",
+        detail:
+          `Existe mais de um município chamado "${territoryClean}" no Brasil. ` +
+          "Informe o estado para o DIT saber de qual você fala.",
+        status: "ambiguo",
+        territory: territoryClean,
+        options: ambiguidade,
+      });
+      return;
+    }
+
     if (!loc) {
       log.info({ territory: territoryClean, ip }, "Território não encontrado na malha IBGE");
       res.status(404).json({

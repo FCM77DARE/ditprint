@@ -1,0 +1,18 @@
+# Não sobe no deploy — produção reconstrói ou não precisa.
+
+# Camada estrutural: 18 MB que o boot regenera direto do IBGE, no volume /data.
+# Subir isso a cada deploy é pagar upload por um arquivo que será sobrescrito.
+data/
+
+# Build local — o Railway roda `pnpm build` no servidor.
+dist/
+
+# Logs de desenvolvimento e de backfill
+*.log
+scratch/
+.manus-logs/
+
+# Relatórios gerados localmente
+reports/
+DIT_*.md
+DIT_*.html
