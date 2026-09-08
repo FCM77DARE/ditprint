@@ -66,15 +66,31 @@ export abstract class BaseDimensionAgent {
     let sourcesOk = 0;
     let sourcesError = 0;
     const rawSignals: RawSignal[] = [];
+    // Quem respondeu o quê. Sem isto, "cobertura 29%" é um número sem
+    // endereço: não dá para saber se faltou fonte boa ou se sobrou fonte
+    // morta na conta.
+    const sourceBreakdown: Array<{ id: string; name: string; signals: number; error?: string }> = [];
 
-    for (const result of sourceResults) {
+    sourceResults.forEach((result, i) => {
+      const agent = this.sources[i];
       if (result.status === "fulfilled") {
         rawSignals.push(...result.value);
-        if (result.value.length >= 0) sourcesOk++;
+        sourcesOk++;
+        sourceBreakdown.push({
+          id: agent.id,
+          name: agent.name,
+          signals: result.value.length,
+        });
       } else {
         sourcesError++;
+        sourceBreakdown.push({
+          id: agent.id,
+          name: agent.name,
+          signals: 0,
+          error: String(result.reason).slice(0, 120),
+        });
       }
-    }
+    });
 
     this.log.debug(
       {
@@ -127,6 +143,7 @@ export abstract class BaseDimensionAgent {
       score,
       sourcesOk,
       sourcesError,
+      sourceBreakdown,
       signals: classified,
       indicatorScores,
       collectedAt,

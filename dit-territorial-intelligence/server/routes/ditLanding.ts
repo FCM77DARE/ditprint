@@ -32,6 +32,7 @@ import {
   buscarCompostoPorNome,
   type TerritorioComposto,
 } from "./territorios-compostos";
+import { estaNoRadar, RADAR_LANCAMENTO } from "./radar-lancamento";
 import { canSpend, consume, getBudgetStatus } from "../_core/budget";
 import { getStructuralStatus } from "../structural/store";
 import type { TerritoryStrategicContext } from "../strategic/types";
@@ -115,6 +116,11 @@ ditLandingRouter.get("/ops", async (_req: Request, res: Response) => {
   res.json({
     publicAnalyze: PUBLIC_ANALYZE,
     minCoverage: MIN_COVERAGE,
+    radar: {
+      total: RADAR_LANCAMENTO.length,
+      tese: RADAR_LANCAMENTO.filter((t) => t.eixo === "tese").length,
+      contraste: RADAR_LANCAMENTO.filter((t) => t.eixo === "contraste").length,
+    },
     budget,
     structural,
     ts: new Date().toISOString(),
@@ -1642,7 +1648,10 @@ ditLandingRouter.post("/analyze", async (req: Request, res: Response) => {
     // Diagnóstico por ticket). Cache do dia continua sendo servido: quem já
     // tem DIT publicado hoje recebe normalmente.
     if (!PUBLIC_ANALYZE) {
-      const jaTemDit = analysisCache.has(cacheKey) || (await isMonitored(slug));
+      // O Radar declarado conta como monitorado desde já — senão a primeira
+      // coleta de cada um dos 20 seria recusada e a lista nunca sairia do papel.
+      const noRadar = estaNoRadar(loc.municipality, loc.state, loc.fixedSlug ?? slug);
+      const jaTemDit = noRadar || analysisCache.has(cacheKey) || (await isMonitored(slug));
       if (!jaTemDit) {
         log.info({ territory: slug, ip }, "Território fora do escopo monitorado — vira lead");
         res.status(200).json({
@@ -1755,6 +1764,12 @@ ditLandingRouter.post("/analyze", async (req: Request, res: Response) => {
       return;
     }
 
+    // A análise já rodou a malha inteira — é aqui que ela custa, não na hora
+    // de escrever o relatório. Contabilizar só quando o DIT sai deixaria uma
+    // porta aberta: uma enxurrada de consultas que terminam em cobertura
+    // insuficiente rodaria a coleta toda sem mexer no contador.
+    await consume("analyze");
+
     // 3a. PISO DE COBERTURA — o motor precisa saber o suficiente para afirmar.
     // Com cobertura baixa, todas as dimensões chegam vazias no prompt e o
     // relatório vira conhecimento geral do modelo com cara de inteligência
@@ -1798,6 +1813,7 @@ ditLandingRouter.post("/analyze", async (req: Request, res: Response) => {
         coverageScore: Math.round(coverage * 1000) / 1000,
         minCoverage: MIN_COVERAGE,
         coverageDetail: detail ?? null,
+        sourceBreakdown: orchestratorResult.sourceBreakdown ?? null,
         message:
           `A malha do DIT ainda não tem cobertura suficiente sobre ${resolvedName} ` +
           `para emitir diagnóstico (${Math.round(coverage * 100)}% das fontes responderam, ` +
@@ -1848,7 +1864,6 @@ ditLandingRouter.post("/analyze", async (req: Request, res: Response) => {
       });
       return;
     }
-    await consume("analyze");
     await consume("llm_report");
 
     const llmPromise: Promise<unknown> = callLLM(
@@ -1911,6 +1926,7 @@ ditLandingRouter.post("/analyze", async (req: Request, res: Response) => {
         minCoverage: MIN_COVERAGE,
         sourcesConsulted: orchestratorResult.coverageDetail?.totalSources ?? null,
         sourcesWithSignals: orchestratorResult.coverageDetail?.sourcesWithSignals ?? null,
+        sourceBreakdown: orchestratorResult.sourceBreakdown ?? null,
         signalsInWindow: orchestratorResult.historicalConsolidation?.signalsInWindow ?? null,
         windowMonths: orchestratorResult.historicalConsolidation?.windowMonths ?? null,
         collectedAt: orchestratorResult.completedAt,

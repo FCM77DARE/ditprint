@@ -100,6 +100,18 @@ export class SrcEstruturalD3 extends StructuralSourceAgent {
   readonly name = "Camada estrutural — IBGE (área, densidade, infraestrutura)";
 }
 
+/**
+ * D4 tinha indicador estrutural desde o começo (população indígena, Censo
+ * 2022) mas nenhum agente o emitia: o número entrava no score e o sinal
+ * nunca aparecia no relatório. Quem lia via a dimensão pontuada sem enxergar
+ * a evidência.
+ */
+export class SrcEstruturalD4 extends StructuralSourceAgent {
+  readonly id: SourceId = "src-estrutural-d4";
+  readonly dimension: DimensionId = "D4";
+  readonly name = "Camada estrutural — IBGE (populações tradicionais)";
+}
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 /**

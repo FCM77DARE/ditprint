@@ -332,6 +332,22 @@ export class Orchestrator {
     const coverageScore =
       effectiveSources > 0 ? sourcesWithSignals / effectiveSources : 0;
 
+    // Consolida o diagnóstico por fonte: quantas dimensões cada agente serve e
+    // quantos sinais trouxe no total. É o instrumento que responde "a malha
+    // tem 45 agentes, mas quantos são fonte de verdade hoje?".
+    const porFonte = new Map<string, { name: string; signals: number; dimensoes: number }>();
+    for (const dim of Object.values(dimensions)) {
+      for (const b of dim?.sourceBreakdown ?? []) {
+        const atual = porFonte.get(b.id) ?? { name: b.name, signals: 0, dimensoes: 0 };
+        atual.signals += b.signals;
+        atual.dimensoes += 1;
+        porFonte.set(b.id, atual);
+      }
+    }
+    const sourceBreakdown = Array.from(porFonte.entries())
+      .map(([id, v]) => ({ id, name: v.name, signals: v.signals, dimensoes: v.dimensoes }))
+      .sort((a, b) => b.signals - a.signals);
+
     const result: OrchestratorResult = {
       territoryId: territory.id,
       territorySlug: territory.slug,
@@ -343,6 +359,7 @@ export class Orchestrator {
       totalSignals: totalSignalsCount,
       coverageScore: Math.round(coverageScore * 1000) / 1000,
       coverageDetail: { totalSources, sourcesWithSignals, sourcesEmpty, sourcesError },
+      sourceBreakdown,
       historicalConsolidation: historical
         ? {
             stt: historical.stt,

@@ -79,6 +79,7 @@ const FATOR_TENSAO = 4;
 const RESOLUTIVE_SOURCES = new Set<string>([
   "src-estrutural-d2",
   "src-estrutural-d3",
+  "src-estrutural-d4",
   "src-ibge-censo",
   "src-ibge-renda",
   "src-ibge-habitacao",
@@ -168,6 +169,7 @@ function temporalWeight(publishedAt: Date | null, isStructural: boolean): number
 const STRUCTURAL_SOURCES = new Set<string>([
   "src-estrutural-d2",
   "src-estrutural-d3",
+  "src-estrutural-d4",
   "src-ibge-censo",
   "src-ibge-renda",
   "src-ibge-habitacao",

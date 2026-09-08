@@ -39,6 +39,7 @@ export const SOURCE_IDS = {
   // Não é fonte de notícia: é a base que o IBGE mede para os 5.570 municípios.
   ESTRUTURAL_D2: "src-estrutural-d2",
   ESTRUTURAL_D3: "src-estrutural-d3",
+  ESTRUTURAL_D4: "src-estrutural-d4",
 
   // D2 — Socioeconômica
   IBGE_CENSO: "src-ibge-censo",

@@ -7,6 +7,7 @@
 
 import { BaseDimensionAgent, type IndicatorKeywordRule } from "../base-dimension";
 import type { DimensionId } from "../../indicators";
+import { SrcEstruturalD4 } from "../sources/estrutural/src-estrutural";
 import { SrcPlanoDiretor } from "../sources/d4/src-plano-diretor";
 import { SrcJudiciario } from "../sources/d4/src-judiciario";
 import { SrcFogoCruzado } from "../sources/d4/src-fogo-cruzado";
@@ -20,6 +21,7 @@ import { SrcGoogleNews } from "../sources/d6/src-google-news";
 export class DimDinamica extends BaseDimensionAgent {
   readonly id: DimensionId = "D4";
   readonly sources = [
+    new SrcEstruturalD4(),
     new SrcPlanoDiretor(),
     new SrcJudiciario(),
     new SrcFogoCruzado(),

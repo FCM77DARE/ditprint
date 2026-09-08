@@ -66,6 +66,8 @@ export interface DimensionResult {
   sourcesOk: number;
   /** Number of source agents that failed */
   sourcesError: number;
+  /** Quem respondeu o quê nesta dimensão — diagnóstico da malha */
+  sourceBreakdown?: Array<{ id: string; name: string; signals: number; error?: string }>;
   /** Classified signals collected this run */
   signals: ClassifiedSignal[];
   /** Per-indicator breakdown: indicatorCode → score */
@@ -92,6 +94,11 @@ export interface OrchestratorResult {
    * pro território. Essencial pra interpretar STT: município pequeno com baixa
    * cobertura tende a ter STT artificialmente baixo (vácuo ≠ estabilidade). */
   coverageScore?: number;
+  /**
+   * Quem respondeu o quê, agregado por agente. Diagnóstico da malha: mostra
+   * quais fontes estão vivas e quais entram na conta sem nunca responder.
+   */
+  sourceBreakdown?: Array<{ id: string; name: string; signals: number; dimensoes: number }>;
   /** Detalhe da cobertura: total de fontes ativadas, fontes com retorno, com erro */
   coverageDetail?: {
     totalSources: number;

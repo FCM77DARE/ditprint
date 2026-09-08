@@ -16,6 +16,7 @@
     "structural:load": "tsx scripts/load-structural.ts",
     "slugs:migrate": "tsx scripts/migrate-canonical-slugs.ts",
     "territorios:perfil": "tsx scripts/perfil-candidatos.ts",
+    "radar:carregar": "tsx scripts/carregar-radar.ts",
     "admin:create": "node scripts/create-admin.mjs"
   },
   "dependencies": {
