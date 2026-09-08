@@ -14,6 +14,7 @@
     "db:push": "drizzle-kit generate && drizzle-kit migrate",
     "bootstrap:history": "tsx scripts/bootstrap-history.ts",
     "structural:load": "tsx scripts/load-structural.ts",
+    "slugs:migrate": "tsx scripts/migrate-canonical-slugs.ts",
     "admin:create": "node scripts/create-admin.mjs"
   },
   "dependencies": {

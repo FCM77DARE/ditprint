@@ -137,12 +137,47 @@ async function startServer() {
     //
     // Sem ela o STT volta a depender só de sinal, que é o comportamento que
     // fazia 28 de 31 territórios saírem em "escalada".
-    void ensureStructuralLayer().finally(() => {
+    void ensureStructuralLayer()
+      .then(() => ensureCanonicalSlugs())
+      .finally(() => {
       // runImmediately: true em produção → primeira coleta popula o buffer SSE
       // logo após o deploy, evitando "Aguardando próximo sinal…" na tela.
       startScheduler({ runImmediately: process.env.NODE_ENV === "production" });
     });
   });
+}
+
+/**
+ * Reunifica territórios que ficaram com séries partidas.
+ *
+ * O slug saía do texto digitado, então o mesmo lugar acumulou histórico sob
+ * nomes diferentes — galinhos-rn e galinhos-rio-grande-do-norte, lajeado e
+ * lajeado-rs. Como a promessa do momento Operar depende de série diária,
+ * histórico partido ao meio é a promessa não se cumprindo.
+ *
+ * Idempotente: slug já canônico é ignorado, então isto roda em todo boot sem
+ * efeito depois da primeira vez.
+ */
+async function ensureCanonicalSlugs(): Promise<void> {
+  try {
+    const { migrateCanonicalSlugs } = await import("../stt/slug-migration");
+    const report = await migrateCanonicalSlugs({ apply: true });
+    if (report.merged > 0 || report.renamed > 0) {
+      logger.info(
+        {
+          fundidos: report.merged,
+          renomeados: report.renamed,
+          semResolucao: report.unresolved,
+        },
+        "Slugs canônicos aplicados — séries históricas reunificadas"
+      );
+    }
+  } catch (err) {
+    logger.error(
+      { err: (err as Error).message },
+      "Migração de slugs falhou — territórios seguem com as chaves atuais"
+    );
+  }
 }
 
 /**
