@@ -43,6 +43,30 @@ function urlHash(url: string): string {
   return createHash("sha256").update(url).digest("hex").slice(0, 32);
 }
 
+/**
+ * Encaixa a janela de datas no primeiro dia do mês.
+ *
+ * O DEFEITO QUE ISTO CORRIGE
+ *
+ * 18 agentes montam a URL com `tbs=cdr:1,cd_min:...,cd_max:HOJE`. O cache é
+ * chaveado por hash da URL, com TTL de 30 dias — mas a URL mudava TODO DIA,
+ * porque cd_max é a data de hoje. Resultado: o cache nunca acertava entre
+ * dias, e cada rodada diária de cada território pagava busca nova.
+ *
+ * Foi assim que as 250 buscas do plano free evaporaram: o mecanismo desenhado
+ * para tornar o plano viável estava desligado por uma data.
+ *
+ * A janela do DIT é de 24 meses. Terminar no dia 1º ou no dia 8 não muda o
+ * resultado — mas é a diferença entre 1 e 30 buscas por agente por mês.
+ */
+function normalizarJanela(url: string): string {
+  return url.replace(
+    /(cd_(?:min|max):)(\d{2})\/(\d{2})\/(\d{4})/g,
+    (_m, prefixo: string, mm: string, _dd: string, yyyy: string) =>
+      `${prefixo}${mm}/01/${yyyy}`
+  );
+}
+
 function todayStr(): string {
   return new Date().toISOString().slice(0, 10);
 }
@@ -140,9 +164,13 @@ async function writeCache(hash: string, data: unknown): Promise<void> {
  * Retorna `null` em todas as falhas / cotas estouradas.
  */
 export async function serpapiCachedFetch(
-  url: string,
+  urlOriginal: string,
   signal?: AbortSignal
 ): Promise<unknown | null> {
+  // Normaliza ANTES de tudo: a URL normalizada é a que vai ao ar e a que
+  // vira chave. Normalizar só a chave serviria resultado de uma janela para
+  // outra sem dizer.
+  const url = normalizarJanela(urlOriginal);
   const hash = urlHash(url);
 
   // 1. Cache hit?
