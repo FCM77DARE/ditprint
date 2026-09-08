@@ -295,6 +295,8 @@ export interface ResolvedLocation {
   ibgeIds?: number[];
   /** Slug fixo, quando o recorte tem um (composto não tem código IBGE) */
   fixedSlug?: string;
+  /** Nomes dos municípios do recorte — composto traz todos */
+  memberNames?: string[];
   municipality: string;  // município pai (== name quando kind === 'municipality')
   state: string;         // sigla UF
   stateName?: string;    // nome completo UF ("Bahia") — usado em queries
@@ -677,6 +679,7 @@ async function resolveLocation(rawName: string): Promise<ResolvedLocation | null
         name: composto.nome,
         ibgeId: principal.id,
         ibgeIds: resolvido.membros.map((m) => m.id),
+        memberNames: resolvido.membros.map((m) => m.nome),
         fixedSlug: composto.slug,
         municipality: composto.nome,
         state: composto.uf,
@@ -906,6 +909,9 @@ function buildContextData(loc: ResolvedLocation | null): Record<string, unknown>
   const ctx: Record<string, unknown> = {
     ibgeMunicipios: municipios,
     ibgeId: String(loc.ibgeId),
+    // Nomes, além dos códigos: fonte que devolve dado por nome de cidade
+    // (Fogo Cruzado) precisa saber quais nomes contam como este território.
+    municipiosNomes: loc.memberNames?.length ? loc.memberNames : [loc.municipality],
   };
   if (loc.kind === "composite") {
     ctx.composite = true;
