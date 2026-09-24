@@ -21,6 +21,7 @@ import { logger } from "../_core/logger";
 import {
   STRUCTURAL_CATALOG,
   DERIVED_CATALOG,
+  CATALOG_VERSION,
   type StructuralIndicator,
 } from "./catalog";
 
@@ -57,6 +58,8 @@ export interface StructuralValue {
 
 export interface StructuralStore {
   generatedAt: string;
+  /** Versão do catálogo que gerou esta carga */
+  catalogVersion?: number;
   indicatorCount: number;
   municipalityCount: number;
   /**
@@ -174,7 +177,7 @@ export async function loadNationalStructuralData(): Promise<StructuralStore> {
         value,
         unit: der.unit,
         label: der.label,
-        period: byKey.pib_corrente?.period ?? "",
+        period: byKey[der.periodoDe]?.period ?? "",
         source: der.source,
         dimension: der.dimension,
         polarity: der.polarity,
@@ -192,6 +195,7 @@ export async function loadNationalStructuralData(): Promise<StructuralStore> {
 
   const store: StructuralStore = {
     generatedAt: new Date().toISOString(),
+    catalogVersion: CATALOG_VERSION,
     indicatorCount: ok + DERIVED_CATALOG.length,
     municipalityCount: Object.keys(data).length,
     names,
@@ -320,6 +324,7 @@ export async function getStructuralStatus(): Promise<{
   municipalityCount: number;
   indicatorCount: number;
   ageDays: number | null;
+  catalogoDesatualizado: boolean;
 }> {
   const store = await loadStore();
   if (!store) {
@@ -329,6 +334,7 @@ export async function getStructuralStatus(): Promise<{
       municipalityCount: 0,
       indicatorCount: 0,
       ageDays: null,
+      catalogoDesatualizado: true,
     };
   }
   const ageDays =
@@ -339,5 +345,6 @@ export async function getStructuralStatus(): Promise<{
     municipalityCount: store.municipalityCount,
     indicatorCount: store.indicatorCount,
     ageDays: Math.round(ageDays * 10) / 10,
+    catalogoDesatualizado: (store.catalogVersion ?? 1) !== CATALOG_VERSION,
   };
 }

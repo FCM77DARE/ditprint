@@ -1069,6 +1069,27 @@ interface ReportPromptGeo {
   microregion?: string;
 }
 
+/**
+ * Horizonte da previsão, calculado a partir de hoje.
+ *
+ * Estava fixo no template como "Próximo Trimestre — Maio a Agosto/2026" e
+ * saía assim em qualquer relatório, inclusive nos gerados em setembro. O
+ * cliente lia uma previsão para um período que já tinha passado.
+ */
+function horizontePrevisao(ref = new Date()): string {
+  const meses = [
+    "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+    "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
+  ];
+  const ini = new Date(ref.getFullYear(), ref.getMonth() + 1, 1);
+  const fim = new Date(ref.getFullYear(), ref.getMonth() + 3, 1);
+  const anoFim = fim.getFullYear();
+  const anoIni = ini.getFullYear();
+  return anoIni === anoFim
+    ? `Próximos três meses, ${meses[ini.getMonth()]} a ${meses[fim.getMonth()]} de ${anoFim}`
+    : `Próximos três meses, ${meses[ini.getMonth()]} de ${anoIni} a ${meses[fim.getMonth()]} de ${anoFim}`;
+}
+
 export function buildReportPrompt(
   territoryName: string,
   region: string,
@@ -1235,7 +1256,7 @@ Responda APENAS com JSON válido, sem texto fora do JSON:
     { "source": "...", "dimension": "...", "dimTag": "...", "text": "...", "impact": 0.0, "impactCls": "...", "status": "...", "statusCls": "..." }
   ],
   "forecast": {
-    "horizon": "Próximo Trimestre — Maio a Agosto/2026",
+    "horizon": "${horizontePrevisao()}",
     "text": "<tendência e dinâmica esperada para o território, 2-3 frases>",
     "risks": [
       "<risco específico e concreto 1>",

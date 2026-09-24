@@ -195,7 +195,7 @@ async function ensureStructuralLayer(): Promise<void> {
       await import("../structural/store");
     const status = await getStructuralStatus();
 
-    if (status.available && (status.ageDays ?? 0) < MAX_AGE_DAYS) {
+    if (status.available && (status.ageDays ?? 0) < MAX_AGE_DAYS && !status.catalogoDesatualizado) {
       logger.info(
         { municipios: status.municipalityCount, idadeDias: status.ageDays },
         "Camada estrutural em dia"

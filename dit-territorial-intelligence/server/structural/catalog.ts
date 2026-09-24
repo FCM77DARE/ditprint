@@ -169,8 +169,20 @@ export const STRUCTURAL_CATALOG: StructuralIndicator[] = [
 ];
 
 /** Indicadores derivados, calculados a partir dos coletados acima. */
+/**
+ * Versão do catálogo. Mudou indicador, fórmula ou rótulo: sobe o número, e o
+ * boot recarrega a camada em produção sem esperar os 30 dias de validade.
+ */
+export const CATALOG_VERSION = 2;
+
 export interface DerivedIndicator {
   key: string;
+  /**
+   * De qual indicador coletado o período é herdado. Antes todo derivado
+   * herdava o do PIB (2023), e "população indígena por mil habitantes" saía
+   * datada de 2023 sendo dado do Censo 2022.
+   */
+  periodoDe: string;
   label: string;
   dimension: "D1" | "D2" | "D3" | "D4" | "D5" | "D6";
   unit: string;
@@ -182,6 +194,7 @@ export interface DerivedIndicator {
 export const DERIVED_CATALOG: DerivedIndicator[] = [
   {
     key: "taxa_assalariamento",
+    periodoDe: "pessoal_assalariado",
     label: "Vínculos formais por 100 habitantes",
     dimension: "D2",
     unit: "por 100 hab",
@@ -196,6 +209,7 @@ export const DERIVED_CATALOG: DerivedIndicator[] = [
   },
   {
     key: "presenca_indigena_por_mil",
+    periodoDe: "populacao_indigena",
     label: "População indígena por mil habitantes",
     dimension: "D4",
     unit: "por mil hab",
@@ -210,6 +224,7 @@ export const DERIVED_CATALOG: DerivedIndicator[] = [
   },
   {
     key: "pib_per_capita",
+    periodoDe: "pib_corrente",
     label: "PIB per capita",
     dimension: "D2",
     unit: "R$/hab",

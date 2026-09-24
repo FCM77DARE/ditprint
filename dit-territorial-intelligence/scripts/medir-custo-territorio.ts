@@ -90,6 +90,27 @@ async function main() {
       console.log(`    ${b.id.padEnd(26)} aprovados ${String(b.signals).padStart(3)} · rejeitados ${b.rejeitados}`);
     }
     const semLastro = conferirNumerosDoRelatorio(rel, prompt);
+    if (process.env.DIT_DUMP) {
+      const { writeFileSync } = await import("node:fs");
+      writeFileSync(
+        process.env.DIT_DUMP,
+        JSON.stringify(
+          {
+            relatorio: rel,
+            stt: r.stt,
+            dimensoes: Object.fromEntries(Object.entries(r.dimensions).map(([k, d]) => [k, d?.score])),
+            cobertura: r.coverageScore,
+            coverageDetail: r.coverageDetail,
+            sourceBreakdown: r.sourceBreakdown,
+            historico: r.historicalConsolidation,
+            semLastro,
+          },
+          null,
+          2
+        ),
+        "utf8"
+      );
+    }
     console.log(`  números do relatório sem lastro nos dados: ${semLastro.length}${semLastro.length ? " → " + semLastro.join(", ") : ""}`);
   });
 
