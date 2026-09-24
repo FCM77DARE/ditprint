@@ -296,6 +296,12 @@ export function resetStructuralCache(): void {
   memo = null;
 }
 
+/** Pares [código IBGE, "Município - UF"] da malha inteira. */
+export async function listarCodigosENomes(): Promise<Array<[string, string]>> {
+  const store = await loadStore();
+  return Object.entries(store?.names ?? {});
+}
+
 /** Todos os nomes "Município - UF" da malha. Usado para achar homônimos. */
 export async function listarNomesMunicipios(): Promise<string[]> {
   const store = await loadStore();

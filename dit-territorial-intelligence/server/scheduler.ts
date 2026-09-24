@@ -92,16 +92,25 @@ export async function runDailyCollection(): Promise<DailyCollectionResult[]> {
         const allSlugs = new Set([...stale.map((t) => t.slug), ...snapshotSlugs]);
         const trackedMap = new Map(stale.map((t) => [t.slug, t]));
 
-        const mergedTerritories = Array.from(allSlugs).map((slug) => {
-          const tracked = trackedMap.get(slug);
-          return {
-            slug,
-            name: tracked?.name ?? slug.replace(/-/g, " "),
-            region: tracked?.region,
-            state: tracked?.state,
-            ibgeId: tracked?.ibgeId,
-          };
-        });
+        // Território reconstruído pelo slug canônico (código IBGE, nome do
+        // município, recorte composto). Antes o nome saía do próprio slug —
+        // "belford roxo 3300456" — e o verificador rejeitava 100% dos sinais
+        // da coleta diária, porque nenhuma notícia escreve isso.
+        const { territorioDoSlug } = await import("./stt/territorio-do-slug");
+        const mergedTerritories = await Promise.all(
+          Array.from(allSlugs).map(async (slug) => {
+            const tracked = trackedMap.get(slug);
+            const rec = await territorioDoSlug(slug);
+            return {
+              slug,
+              name: rec?.name ?? tracked?.name ?? slug.replace(/-/g, " "),
+              region: tracked?.region,
+              state: rec?.state ?? tracked?.state,
+              ibgeId: tracked?.ibgeId,
+              contextData: rec?.contextData ?? null,
+            };
+          })
+        );
 
         if (mergedTerritories.length > 0) {
           log.info(
@@ -115,9 +124,11 @@ export async function runDailyCollection(): Promise<DailyCollectionResult[]> {
             region: t.region ?? null,
             state: t.state ?? null,
             active: true,
-            contextData: t.ibgeId
-              ? { ibgeMunicipios: [String(t.ibgeId)], ibgeId: String(t.ibgeId), uf: t.state }
-              : null,
+            contextData:
+              t.contextData ??
+              (t.ibgeId
+                ? { ibgeMunicipios: [String(t.ibgeId)], ibgeId: String(t.ibgeId), uf: t.state, municipiosNomes: [t.name] }
+                : null),
             onboardingStatus: "ready" as const,
             createdAt: new Date(),
           })) as unknown as typeof activeTerritories;
