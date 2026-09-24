@@ -108,3 +108,7 @@ temp/
 
 # Dados locais do learning-engine (em producao e o volume Railway em /data)
 .data/
+
+# Dado de execucao: camada estrutural (regenerada do IBGE no boot), livro de
+# custo, sinais, aprendizado. Vive no volume da Railway, nao no repositorio.
+data/

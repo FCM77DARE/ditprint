@@ -308,6 +308,7 @@ ${signalsList}
 Aplique a fórmula: STT = (ITT × 0.25) + (ICS × 0.20) + (IVS × 0.20) + (IVE × 0.20) + (ICI × 0.15)`;
 
   const response = await invokeLLM({
+    role: "stt",
     messages: [
       { role: "system" as const, content: "Você é o sistema de IA da Print Territorial Intelligence™. Calcule scores STT históricos com rigor metodológico. Responda em JSON válido." },
       { role: "user" as const, content: prompt },

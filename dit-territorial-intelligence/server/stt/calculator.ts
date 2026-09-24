@@ -16,7 +16,7 @@
 
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { invokeLLM } from "../_core/llm";
+import { invokeJson } from "../_core/llm";
 import { calculateSTT, DIMENSIONS_LIST } from "../indicators";
 import type { DimensionId } from "../indicators";
 import type { SttCalculatorInput, SttCalculatorOutput } from "./types";
@@ -185,49 +185,47 @@ interface LLMOutput {
 }
 
 async function callLLM(prompt: string, territorySlug: string): Promise<LLMOutput> {
-  const response = await invokeLLM({
+  // invokeJson: conserto determinístico + verificador antes de desistir.
+  // Na primeira medição com o gateway novo, esta chamada voltou vazia por
+  // corte de tokens e o STT de Macaé ficou sem verificação.
+  const saida = await invokeJson<LLMOutput>({
+    role: "stt",
     messages: [
       {
         role: "system" as const,
         content:
           "Você é o sistema de IA da Print Territorial Intelligence™. " +
           "Calcule e valide o STT com rigor metodológico PRINT. " +
-          "Responda sempre em JSON válido, sem texto fora do JSON.",
+          "Responda sempre em JSON válido, sem texto fora do JSON, com exatamente " +
+          "estas chaves: d1Score, d2Score, d3Score, d4Score, d5Score, d6Score " +
+          "(números 0-100), calculatedStt (número 0-100), activatedDimension " +
+          "(D1 a D6 ou GERAL) e executiveNote (texto de no máximo 900 caracteres).",
       },
       { role: "user" as const, content: prompt },
     ],
-    response_format: {
-      type: "json_schema",
-      json_schema: {
-        name: "stt_calculation",
-        strict: true,
-        schema: {
-          type: "object",
-          properties: {
-            d1Score: { type: "number" },
-            d2Score: { type: "number" },
-            d3Score: { type: "number" },
-            d4Score: { type: "number" },
-            d5Score: { type: "number" },
-            d6Score: { type: "number" },
-            calculatedStt: { type: "number" },
-            activatedDimension: { type: "string" },
-            executiveNote: { type: "string" },
-          },
-          required: [
-            "d1Score", "d2Score", "d3Score", "d4Score", "d5Score", "d6Score",
-            "calculatedStt", "activatedDimension", "executiveNote",
-          ],
-          additionalProperties: false,
-        },
-      },
-    },
+    // json_object, não json_schema strict. Medido em 24/09: com schema
+    // estrito e prompt longo, o Sonnet 5 gastou 6.000 tokens e devolveu
+    // conteúdo vazio (falha conhecida de decodificação restrita, que fica
+    // emitindo espaço até o teto). A forma é conferida aqui embaixo, em
+    // código, e o invokeJson já conserta sintaxe com o verificador.
+    response_format: { type: "json_object" },
   });
 
-  const raw = response.choices?.[0]?.message?.content;
-  if (!raw) throw new Error(`LLM returned empty response for ${territorySlug}`);
-  const content = typeof raw === "string" ? raw : JSON.stringify(raw);
-  return JSON.parse(content) as LLMOutput;
+  if (!saida || typeof saida !== "object") {
+    throw new Error(`Verificação do STT sem resposta utilizável para ${territorySlug}`);
+  }
+  // Conferência de forma, em código — o que o schema estrito fazia antes.
+  const numeros = ["d1Score", "d2Score", "d3Score", "d4Score", "d5Score", "d6Score", "calculatedStt"] as const;
+  for (const k of numeros) {
+    const v = (saida as unknown as Record<string, unknown>)[k];
+    if (typeof v !== "number" || !Number.isFinite(v) || v < 0 || v > 100) {
+      throw new Error(`Verificação do STT devolveu ${k} inválido (${String(v)}) para ${territorySlug}`);
+    }
+  }
+  if (typeof saida.executiveNote !== "string" || saida.executiveNote.trim().length === 0) {
+    throw new Error(`Verificação do STT sem nota executiva para ${territorySlug}`);
+  }
+  return saida;
 }
 
 // ─── Prompt construction ──────────────────────────────────────────────────────

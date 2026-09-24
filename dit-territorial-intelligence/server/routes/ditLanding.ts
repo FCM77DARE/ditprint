@@ -27,6 +27,8 @@ import { orchestrator } from "../agents/orchestrator";
 import type { DimensionResult } from "../agents/types";
 import type { DimensionId } from "../indicators";
 import { runStrategicLayer } from "../strategic/runner";
+import { invokeJson } from "../_core/llm";
+import { comCustoDoTerritorio, resumoPorExecucao } from "../_core/cost-ledger";
 import { buscarLocalidadeCurada } from "./localidades-curadas";
 import {
   buscarCompostoPorNome,
@@ -108,6 +110,14 @@ ditLandingRouter.get("/health", (_req, res) => {
  * É o painel que responde "quanto já gastamos hoje" e "o dado de base está
  * velho?" sem precisar abrir a conta do fornecedor.
  */
+/**
+ * Quanto custou cada leitura e cada dia de acompanhamento, medido — não
+ * estimado. Uma linha por execução, com LLM e busca separados.
+ */
+ditLandingRouter.get("/custos", async (_req: Request, res: Response) => {
+  res.json({ execucoes: await resumoPorExecucao(100) });
+});
+
 ditLandingRouter.get("/ops", async (_req: Request, res: Response) => {
   const [budget, structural] = await Promise.all([
     getBudgetStatus(),
@@ -1058,7 +1068,7 @@ interface ReportPromptGeo {
   microregion?: string;
 }
 
-function buildReportPrompt(
+export function buildReportPrompt(
   territoryName: string,
   region: string,
   stt: number,
@@ -1259,138 +1269,30 @@ Responda APENAS com JSON válido, sem texto fora do JSON:
 
 
 // ── LLM CALL ─────────────────────────────────────────────────────────────────
-// Prioridade: OpenRouter → Anthropic → OpenAI
-// OpenRouter unifica acesso a todos os modelos pelo mesmo endpoint OpenAI-compat.
+// Um caminho só, pelo gateway (_core/llm.ts), papel "relatorio".
+//
+// Aqui havia três clientes HTTP próprios — OpenRouter com gpt-4o, Anthropic
+// direto com claude-3-5-haiku-20241022 e OpenAI direto com gpt-4o-mini —,
+// escolhidos pela chave que estivesse presente. Agora o modelo é decidido no
+// catálogo (models.ts), o fallback atravessa fornecedores e o custo de cada
+// relatório fica registrado com o território a que pertence.
 
-const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY ?? "";
-const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY ?? "";
-
-async function callLLMOpenRouter(prompt: string): Promise<unknown> {
-  const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-      "HTTP-Referer": "https://dit-api-production.up.railway.app",
-      "X-Title": "DIT PRINT Territorial Intelligence",
-    },
-    body: JSON.stringify({
-      model: "openai/gpt-4o",          // Melhor custo-benefício no OpenRouter
-      temperature: 0,
-      response_format: { type: "json_object" },
-      messages: [
-        {
-          role: "system",
-          content: "Você é o sistema de relatórios do DIT PRINT Territorial Intelligence™. Responda SEMPRE com JSON válido e completo, sem nenhum texto fora do JSON. Seja específico, concreto e útil para decisores de negócios no Brasil.",
-        },
-        { role: "user", content: prompt },
-      ],
-    }),
-    signal: AbortSignal.timeout(150000),
+export async function callLLM(prompt: string): Promise<unknown> {
+  return invokeJson({
+    role: "relatorio",
+    messages: [
+      {
+        role: "system",
+        content:
+          "Você é o sistema de relatórios do DIT, da PRINT. Responda SEMPRE com JSON " +
+          "válido e completo, sem nenhum texto fora do JSON. Seja específico, concreto " +
+          "e útil para decisores de negócios no Brasil. Nunca afirme dado que não esteja " +
+          "nos sinais fornecidos.",
+      },
+      { role: "user", content: prompt },
+    ],
+    response_format: { type: "json_object" },
   });
-
-  if (!res.ok) {
-    const errText = await res.text();
-    throw new Error(`OpenRouter error ${res.status}: ${errText.slice(0, 200)}`);
-  }
-
-  const data = (await res.json()) as {
-    choices?: Array<{ message?: { content?: string } }>;
-  };
-  const content = data.choices?.[0]?.message?.content;
-  if (!content) throw new Error("OpenRouter retornou resposta vazia");
-  return JSON.parse(content);
-}
-
-async function callLLMAnthropicClaude(prompt: string): Promise<unknown> {
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
-      model: "claude-3-5-haiku-20241022",
-      max_tokens: 4096,
-      temperature: 0,
-      system:
-        "Você é o sistema de IA do DIT PRINT Territorial Intelligence™. " +
-        "Responda SEMPRE com JSON válido e completo, sem nenhum texto fora do JSON. " +
-        "Seja específico, concreto e útil para decisores de negócios no Brasil.",
-      messages: [{ role: "user", content: prompt }],
-    }),
-    signal: AbortSignal.timeout(150000),
-  });
-
-  if (!res.ok) {
-    const errText = await res.text();
-    throw new Error(`Anthropic error ${res.status}: ${errText.slice(0, 200)}`);
-  }
-
-  const data = (await res.json()) as {
-    content?: Array<{ type: string; text?: string }>;
-  };
-  const content = data.content?.find(c => c.type === "text")?.text;
-  if (!content) throw new Error("Anthropic retornou resposta vazia");
-  const clean = content.replace(/^```json\s*/i, "").replace(/```\s*$/, "").trim();
-  return JSON.parse(clean);
-}
-
-async function callLLMOpenAI(prompt: string): Promise<unknown> {
-  const apiBase = (ENV.forgeApiUrl || "https://api.openai.com").replace(/\/$/, "");
-  const apiKey = ENV.forgeApiKey;
-  if (!apiKey) throw new Error("OPENAI_API_KEY não configurado no .env");
-
-  const res = await fetch(`${apiBase}/v1/chat/completions`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content:
-            "Você é o sistema de IA do DIT PRINT Territorial Intelligence™. " +
-            "Responda SEMPRE com JSON válido e completo, sem nenhum texto fora do JSON. " +
-            "Seja específico, concreto e útil para decisores de negócios no Brasil.",
-        },
-        { role: "user", content: prompt },
-      ],
-      response_format: { type: "json_object" },
-      max_tokens: 4096,
-      temperature: 0,
-    }),
-    signal: AbortSignal.timeout(150000),
-  });
-
-  if (!res.ok) {
-    const errText = await res.text();
-    throw new Error(`OpenAI error ${res.status}: ${errText.slice(0, 200)}`);
-  }
-
-  const data = (await res.json()) as {
-    choices?: Array<{ message?: { content?: string } }>;
-  };
-  const content = data.choices?.[0]?.message?.content;
-  if (!content) throw new Error("OpenAI retornou resposta vazia");
-  return JSON.parse(content);
-}
-
-async function callLLM(prompt: string): Promise<unknown> {
-  if (OPENROUTER_API_KEY.length > 20) {
-    log.info("Usando OpenRouter (gpt-4o) para relatório DIT");
-    return callLLMOpenRouter(prompt);
-  }
-  if (ANTHROPIC_API_KEY.length > 20) {
-    log.info("Usando Anthropic Claude para relatório DIT");
-    return callLLMAnthropicClaude(prompt);
-  }
-  log.info("Usando OpenAI direto para relatório DIT");
-  return callLLMOpenAI(prompt);
 }
 
 // ── ROTA ISCA (free preview) ──────────────────────────────────────────────────
@@ -1733,7 +1635,7 @@ ditLandingRouter.post("/analyze", async (req: Request, res: Response) => {
     let orchestratorResult: Awaited<ReturnType<typeof orchestrator.run>> | null = null;
     try {
       orchestratorResult = await Promise.race([
-        orchestrator.run(territoryRecord),
+        comCustoDoTerritorio(slug, "leitura", () => orchestrator.run(territoryRecord)),
         new Promise<never>((_, reject) =>
           setTimeout(() => reject(new Error("Orchestrator timeout (140s)")), 140000)
         ),
@@ -1872,7 +1774,7 @@ ditLandingRouter.post("/analyze", async (req: Request, res: Response) => {
     }
     await consume("llm_report");
 
-    const llmPromise: Promise<unknown> = callLLM(
+    const llmPromise: Promise<unknown> = comCustoDoTerritorio(slug, "leitura", () => callLLM(
           buildReportPrompt(
             resolvedName,
             region,
@@ -1887,7 +1789,7 @@ ditLandingRouter.post("/analyze", async (req: Request, res: Response) => {
               microregion: loc?.microregion,
             }
           )
-        );
+        ));
 
     const strategicPromise = runStrategicLayer(strategicCtx, dimScoresForSectors).catch(err => {
       log.warn({ err: (err as Error).message }, "Strategic layer falhou — seguindo sem ela");

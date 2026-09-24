@@ -170,6 +170,7 @@ SINAIS:
 ${relevantSignals.slice(0, 100).map(s => s.title).join("\n")}`;
 
     const entitiesResponse = await invokeLLM({
+      role: "extracao",
       messages: [{ role: "user", content: entitiesPrompt }],
       response_format: { type: "json_object" }
     });
@@ -242,6 +243,7 @@ ${hotspots.length > 0
 `;
 
     const response = await invokeLLM({
+      role: "relatorio",
       messages: [
         { role: "system", content: "Consultor de inteligência militar/estratégica. Estilo conciso, denso em fatos e orientado a ação." },
         { role: "user", content: prompt },

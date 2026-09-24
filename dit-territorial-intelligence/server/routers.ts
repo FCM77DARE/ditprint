@@ -186,6 +186,7 @@ IMPORTANTE: Retorne APENAS o JSON válido, sem markdown, sem explicações adici
 
         try {
           const llmResponse = await invokeLLM({
+            role: "extracao",
             messages: [
               { role: "system", content: "Você é um especialista em inteligência territorial. Responda APENAS com JSON válido." },
               { role: "user", content: llmPrompt },
@@ -526,6 +527,7 @@ Gere um one-pager executivo completo com as seguintes seções em Markdown:
 Use linguagem executiva, precisa e direta. Evite jargões desnecessários. Foco em implicações estratégicas para infraestrutura, energia e recursos naturais.`;
 
         const response = await invokeLLM({
+          role: "relatorio",
           messages: [
             { role: "system" as const, content: "Você é um analista de inteligência territorial. Gere relatórios executivos precisos e estratégicos." },
             { role: "user" as const, content: prompt },

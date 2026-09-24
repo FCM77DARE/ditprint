@@ -22,6 +22,14 @@ import { join } from "node:path";
 import { createHash } from "node:crypto";
 import { logger } from "../_core/logger";
 import { canSpend, consume } from "../_core/budget";
+import { registrarCusto } from "../_core/cost-ledger";
+
+/**
+ * Custo marginal de uma busca no plano Developer (US$ 75 / 5.000). No plano
+ * free a busca não custa dinheiro, custa cota — mas o número que interessa
+ * para precificar o DIT é o do plano em que ele vai operar.
+ */
+const USD_POR_BUSCA = Number(process.env.SERPAPI_USD_POR_BUSCA ?? "0.015");
 
 const log = logger.child({ module: "serpapi-quota" });
 
@@ -177,6 +185,7 @@ export async function serpapiCachedFetch(
   const cached = await readCache(hash);
   if (cached !== null) {
     log.debug({ hash }, "SerpAPI cache hit");
+    await registrarCusto({ recurso: "serpapi", cache: true, usd: 0 });
     return cached;
   }
 
@@ -188,6 +197,7 @@ export async function serpapiCachedFetch(
       { reason: budget.reason, dailyUsed: budget.dailyUsed, monthlyUsed: budget.monthlyUsed },
       "Orçamento global de busca esgotado — agente retorna []"
     );
+    await registrarCusto({ recurso: "serpapi", bloqueada: true, usd: 0 });
     return null;
   }
 
@@ -198,6 +208,7 @@ export async function serpapiCachedFetch(
       { reason: quota.reason, monthly: quota.usage.monthlyCount, daily: quota.usage.dailyCounts[todayStr()] || 0 },
       "SerpAPI cota esgotada — agente retorna []"
     );
+    await registrarCusto({ recurso: "serpapi", bloqueada: true, usd: 0 });
     return null;
   }
 
@@ -206,11 +217,14 @@ export async function serpapiCachedFetch(
     const res = await fetch(url, { signal });
     if (!res.ok) {
       log.warn({ status: res.status }, "SerpAPI request failed");
+      // 429 aqui é o provedor dizendo que a conta acabou — demanda real barrada.
+      await registrarCusto({ recurso: "serpapi", bloqueada: true, usd: 0 });
       return null;
     }
     const data = await res.json();
     await recordConsumption();
     await consume("serpapi");
+    await registrarCusto({ recurso: "serpapi", cache: false, usd: USD_POR_BUSCA });
     await writeCache(hash, data);
     const newQuota = await readUsage();
     log.info(

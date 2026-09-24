@@ -466,6 +466,7 @@ IMPORTANTE:
 `;
 
   const response = await invokeLLM({
+    role: "stt",
     messages: [
       { role: "system" as const, content: "Você é o sistema de IA da Print Territorial Intelligence™. Calcule scores STT com rigor metodológico. Responda sempre em JSON válido." },
       { role: "user" as const, content: prompt },

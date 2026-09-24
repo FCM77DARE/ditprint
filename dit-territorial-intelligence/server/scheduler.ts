@@ -18,6 +18,7 @@ import { orchestrator } from "./agents/orchestrator";
 import { notifyOwner } from "./_core/notification";
 import { logger } from "./_core/logger";
 import { canSpend } from "./_core/budget";
+import { comCustoDoTerritorio } from "./_core/cost-ledger";
 
 const log = logger.child({ module: "scheduler" });
 
@@ -153,7 +154,12 @@ export async function runDailyCollection(): Promise<DailyCollectionResult[]> {
 
       try {
         // 1. Agent orchestrator pipeline (6 dimensions × N source agents)
-        const orchResult = await orchestrator.run(territory);
+        // Acompanhamento diário: todo custo desta rodada fica na conta do
+        // território, separado da leitura inicial. É daqui que sai o custo
+        // mensal real de manter um território no Radar.
+        const orchResult = await comCustoDoTerritorio(territory.slug, "acompanhamento", () =>
+          orchestrator.run(territory)
+        );
         log.info(
           { territory: territory.name, stt: orchResult.stt, alerts: orchResult.alerts.length },
           "Orchestrator pipeline complete"
