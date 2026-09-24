@@ -292,6 +292,12 @@ export function resetStructuralCache(): void {
   memo = null;
 }
 
+/** Todos os nomes "Município - UF" da malha. Usado para achar homônimos. */
+export async function listarNomesMunicipios(): Promise<string[]> {
+  const store = await loadStore();
+  return Object.values(store?.names ?? {});
+}
+
 /** Nome do município como o IBGE escreve. Vazio se a carga não rodou. */
 export async function getMunicipalityName(ibgeId: number | string): Promise<string> {
   const store = await loadStore();

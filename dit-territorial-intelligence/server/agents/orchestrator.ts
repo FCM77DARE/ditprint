@@ -335,17 +335,18 @@ export class Orchestrator {
     // Consolida o diagnóstico por fonte: quantas dimensões cada agente serve e
     // quantos sinais trouxe no total. É o instrumento que responde "a malha
     // tem 45 agentes, mas quantos são fonte de verdade hoje?".
-    const porFonte = new Map<string, { name: string; signals: number; dimensoes: number }>();
+    const porFonte = new Map<string, { name: string; signals: number; rejeitados: number; dimensoes: number }>();
     for (const dim of Object.values(dimensions)) {
       for (const b of dim?.sourceBreakdown ?? []) {
-        const atual = porFonte.get(b.id) ?? { name: b.name, signals: 0, dimensoes: 0 };
+        const atual = porFonte.get(b.id) ?? { name: b.name, signals: 0, rejeitados: 0, dimensoes: 0 };
         atual.signals += b.signals;
+        atual.rejeitados += b.rejeitados ?? 0;
         atual.dimensoes += 1;
         porFonte.set(b.id, atual);
       }
     }
     const sourceBreakdown = Array.from(porFonte.entries())
-      .map(([id, v]) => ({ id, name: v.name, signals: v.signals, dimensoes: v.dimensoes }))
+      .map(([id, v]) => ({ id, name: v.name, signals: v.signals, rejeitados: v.rejeitados, dimensoes: v.dimensoes }))
       .sort((a, b) => b.signals - a.signals);
 
     const result: OrchestratorResult = {
@@ -567,7 +568,10 @@ export class Orchestrator {
           structural:
             STRUCTURAL.has(sig.sourceAgentId) ||
             (sig.metadata as Record<string, unknown> | undefined)?.structural === true,
-          metadata: sig.metadata,
+          // Todo sinal que chega aqui passou pelo verificador. A marca deixa o
+          // consolidador separar o histórico verificado do que entrou antes
+          // de 24/09/2026 — quando 40% dos sinais nem citavam o território.
+          metadata: { ...(sig.metadata ?? {}), verificado: true },
         }))
       );
     } catch (err) {

@@ -28,6 +28,7 @@ import type { DimensionResult } from "../agents/types";
 import type { DimensionId } from "../indicators";
 import { runStrategicLayer } from "../strategic/runner";
 import { invokeJson } from "../_core/llm";
+import { conferirNumerosDoRelatorio } from "../agents/verificador";
 import { comCustoDoTerritorio, resumoPorExecucao } from "../_core/cost-ledger";
 import { buscarLocalidadeCurada } from "./localidades-curadas";
 import {
@@ -1774,8 +1775,7 @@ ditLandingRouter.post("/analyze", async (req: Request, res: Response) => {
     }
     await consume("llm_report");
 
-    const llmPromise: Promise<unknown> = comCustoDoTerritorio(slug, "leitura", () => callLLM(
-          buildReportPrompt(
+    const promptRelatorio = buildReportPrompt(
             resolvedName,
             region,
             Math.round(orchestratorResult.stt),
@@ -1788,8 +1788,10 @@ ditLandingRouter.post("/analyze", async (req: Request, res: Response) => {
               mesoregion: loc?.mesoregion,
               microregion: loc?.microregion,
             }
-          )
-        ));
+          );
+    const llmPromise: Promise<unknown> = comCustoDoTerritorio(slug, "leitura", () =>
+      callLLM(promptRelatorio)
+    );
 
     const strategicPromise = runStrategicLayer(strategicCtx, dimScoresForSectors).catch(err => {
       log.warn({ err: (err as Error).message }, "Strategic layer falhou — seguindo sem ela");
@@ -1838,6 +1840,9 @@ ditLandingRouter.post("/analyze", async (req: Request, res: Response) => {
         signalsInWindow: orchestratorResult.historicalConsolidation?.signalsInWindow ?? null,
         windowMonths: orchestratorResult.historicalConsolidation?.windowMonths ?? null,
         collectedAt: orchestratorResult.completedAt,
+        // Números escritos no relatório sem lastro nos dados que o sustentam.
+        // Não barra a publicação — aparece para o analista antes do cliente.
+        afirmacoesSemLastro: conferirNumerosDoRelatorio(llmReport, promptRelatorio),
       },
     };
 

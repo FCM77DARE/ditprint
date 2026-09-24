@@ -67,7 +67,7 @@ export interface DimensionResult {
   /** Number of source agents that failed */
   sourcesError: number;
   /** Quem respondeu o quê nesta dimensão — diagnóstico da malha */
-  sourceBreakdown?: Array<{ id: string; name: string; signals: number; error?: string }>;
+  sourceBreakdown?: Array<{ id: string; name: string; signals: number; rejeitados?: number; error?: string }>;
   /** Classified signals collected this run */
   signals: ClassifiedSignal[];
   /** Per-indicator breakdown: indicatorCode → score */
@@ -98,7 +98,7 @@ export interface OrchestratorResult {
    * Quem respondeu o quê, agregado por agente. Diagnóstico da malha: mostra
    * quais fontes estão vivas e quais entram na conta sem nunca responder.
    */
-  sourceBreakdown?: Array<{ id: string; name: string; signals: number; dimensoes: number }>;
+  sourceBreakdown?: Array<{ id: string; name: string; signals: number; rejeitados?: number; dimensoes: number }>;
   /** Detalhe da cobertura: total de fontes ativadas, fontes com retorno, com erro */
   coverageDetail?: {
     totalSources: number;

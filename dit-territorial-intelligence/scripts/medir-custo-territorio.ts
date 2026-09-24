@@ -40,6 +40,7 @@ async function main() {
   const { orchestrator } = await import("../server/agents/orchestrator");
   const { comCustoDoTerritorio, resumoPorExecucao } = await import("../server/_core/cost-ledger");
   const { buildReportPrompt, callLLM } = await import("../server/routes/ditLanding");
+  const { conferirNumerosDoRelatorio } = await import("../server/agents/verificador");
 
   const [nome, uf] = consulta.split(",").map((v) => v.trim());
   const res = await fetch("https://servicodados.ibge.gov.br/api/v1/localidades/municipios");
@@ -80,8 +81,16 @@ async function main() {
       r.totalSignals,
       { state: uf }
     );
-    await callLLM(prompt);
+    const rel = await callLLM(prompt);
     console.log(`  cobertura ${Math.round((r.coverageScore ?? 0) * 100)}% · ${r.totalSignals} sinais · STT ${Math.round(r.stt)}`);
+    const rej = (r.sourceBreakdown ?? []).reduce((a, b) => a + (b.rejeitados ?? 0), 0);
+    const ok = (r.sourceBreakdown ?? []).reduce((a, b) => a + b.signals, 0);
+    console.log(`  verificação: ${ok} sinais aprovados · ${rej} rejeitados`);
+    for (const b of (r.sourceBreakdown ?? []).filter((x) => (x.rejeitados ?? 0) > 0)) {
+      console.log(`    ${b.id.padEnd(26)} aprovados ${String(b.signals).padStart(3)} · rejeitados ${b.rejeitados}`);
+    }
+    const semLastro = conferirNumerosDoRelatorio(rel, prompt);
+    console.log(`  números do relatório sem lastro nos dados: ${semLastro.length}${semLastro.length ? " → " + semLastro.join(", ") : ""}`);
   });
 
   const seg = ((Date.now() - t0) / 1000).toFixed(0);

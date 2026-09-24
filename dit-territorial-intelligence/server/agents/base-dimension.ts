@@ -11,6 +11,7 @@
  * Orchestrator for the daily STT consolidation and rationale generation.
  */
 
+import { verificarSinais, resolverAmbiguos } from "./verificador";
 import type { Territory } from "../../drizzle/schema";
 import type { DimensionId } from "../indicators";
 import { DIMENSIONS_LIST } from "../indicators";
@@ -69,28 +70,65 @@ export abstract class BaseDimensionAgent {
     // Quem respondeu o quê. Sem isto, "cobertura 29%" é um número sem
     // endereço: não dá para saber se faltou fonte boa ou se sobrou fonte
     // morta na conta.
-    const sourceBreakdown: Array<{ id: string; name: string; signals: number; error?: string }> = [];
+    const sourceBreakdown: Array<{ id: string; name: string; signals: number; rejeitados?: number; error?: string }> = [];
+
+    const brutos: RawSignal[] = [];
+    sourceResults.forEach((result) => {
+      if (result.status === "fulfilled") {
+        brutos.push(...result.value);
+        sourcesOk++;
+      } else {
+        sourcesError++;
+      }
+    });
+
+    // VERIFICAÇÃO — entre coletar e pontuar. Ver verificador.ts: medido em
+    // Macaé, 40% dos sinais não citavam o município e entravam por citar a UF.
+    const verif = await verificarSinais(territory, brutos);
+    const ambiguosAprovados = await resolverAmbiguos(territory, verif.ambiguos);
+    rawSignals.push(...verif.aprovados, ...ambiguosAprovados);
+
+    const aprovadosPorFonte = new Map<string, number>();
+    for (const s of rawSignals) {
+      aprovadosPorFonte.set(s.sourceAgentId, (aprovadosPorFonte.get(s.sourceAgentId) ?? 0) + 1);
+    }
+    const rejeitadosPorFonte = new Map<string, number>();
+    for (const r of verif.rejeitados) {
+      rejeitadosPorFonte.set(r.sinal.sourceAgentId, (rejeitadosPorFonte.get(r.sinal.sourceAgentId) ?? 0) + 1);
+    }
+    for (const s of verif.ambiguos) {
+      if (!ambiguosAprovados.includes(s)) {
+        rejeitadosPorFonte.set(s.sourceAgentId, (rejeitadosPorFonte.get(s.sourceAgentId) ?? 0) + 1);
+      }
+    }
 
     sourceResults.forEach((result, i) => {
       const agent = this.sources[i];
-      if (result.status === "fulfilled") {
-        rawSignals.push(...result.value);
-        sourcesOk++;
-        sourceBreakdown.push({
-          id: agent.id,
-          name: agent.name,
-          signals: result.value.length,
-        });
-      } else {
-        sourcesError++;
-        sourceBreakdown.push({
-          id: agent.id,
-          name: agent.name,
-          signals: 0,
-          error: String(result.reason).slice(0, 120),
-        });
-      }
+      sourceBreakdown.push({
+        id: agent.id,
+        name: agent.name,
+        signals: result.status === "fulfilled" ? aprovadosPorFonte.get(agent.id) ?? 0 : 0,
+        rejeitados: rejeitadosPorFonte.get(agent.id) ?? 0,
+        ...(result.status === "rejected" ? { error: String(result.reason).slice(0, 120) } : {}),
+      });
     });
+
+    if (verif.rejeitados.length > 0) {
+      const motivos: Record<string, number> = {};
+      for (const r of verif.rejeitados) motivos[r.motivo] = (motivos[r.motivo] ?? 0) + 1;
+      this.log.info(
+        {
+          dimension: this.id,
+          territory: territory.slug,
+          brutos: brutos.length,
+          aprovados: rawSignals.length,
+          motivos,
+          ambiguos: verif.ambiguos.length,
+          ambiguosAprovados: ambiguosAprovados.length,
+        },
+        "Verificação da dimensão"
+      );
+    }
 
     this.log.debug(
       {

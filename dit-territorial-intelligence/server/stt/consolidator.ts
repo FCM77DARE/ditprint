@@ -259,7 +259,20 @@ export async function consolidateSttFromHistory(
   // FALLBACK DISCO: lê .jsonl quando DB indisponível ou retornou vazio.
   if (rows.length === 0 && territorySlug) {
     try {
-      const disk: StoredSignal[] = await readSignalsInWindow(territorySlug, WINDOW_MONTHS);
+      const todos: StoredSignal[] = await readSignalsInWindow(territorySlug, WINDOW_MONTHS);
+      // Só histórico verificado pontua. Antes de 24/09/2026 o filtro aceitava
+      // sinal que só citava a UF — 40% dos sinais de Macaé nem citavam Macaé.
+      // Deixar esse histórico no cálculo seria manter o defeito por 24 meses,
+      // que é o tamanho da janela. Estrutural passa: é refeito a cada coleta.
+      const disk = todos.filter(
+        (s) => s.structural === true || (s.metadata as Record<string, unknown> | undefined)?.verificado === true
+      );
+      if (disk.length < todos.length) {
+        log.info(
+          { territorySlug, descartados: todos.length - disk.length, mantidos: disk.length },
+          "Histórico anterior à verificação descartado do cálculo"
+        );
+      }
       rows = disk.map((s) => ({
         relatedIndex: s.dimension,
         source: s.source,
