@@ -37,6 +37,7 @@ import { DimGovernanca } from "./dimensions/dim-governanca";
 import { DimReputacao } from "./dimensions/dim-reputacao";
 import { DimRecursos } from "./dimensions/dim-recursos";
 import { logger } from "../_core/logger";
+import { comCentral } from "../_core/central";
 
 const log = logger.child({ module: "orchestrator" });
 
@@ -63,6 +64,15 @@ export class Orchestrator {
    * Historical runs pass `options.period` to scope collection.
    */
   async run(territory: Territory, options: CollectOptions = {}): Promise<OrchestratorResult> {
+    // Central de agentes: comecou/entregou/erro da leitura inteira, sem o território.
+    const r = await comCentral(
+      { fonte: "orchestrator.ts", tarefa: "leitura territorial" },
+      () => this.runNucleo(territory, options)
+    );
+    return r;
+  }
+
+  private async runNucleo(territory: Territory, options: CollectOptions): Promise<OrchestratorResult> {
     const period = options.period ?? currentPeriod();
 
     // Janela temporal padrão: T-24 meses até T (data da pesquisa).

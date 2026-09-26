@@ -24,6 +24,7 @@ import type {
 } from "./types";
 import type { BaseSourceAgent } from "./base-source";
 import { logger } from "../_core/logger";
+import { comCentral } from "../_core/central";
 
 // Impact thresholds — matching the plan governance decisions
 export const ALERT_THRESHOLD = 0.7;
@@ -57,6 +58,14 @@ export abstract class BaseDimensionAgent {
    * Returns a DimensionResult with score, signals, and per-indicator breakdown.
    */
   async run(territory: Territory, options: CollectOptions = {}): Promise<DimensionResult> {
+    // Central de agentes: só o id da dimensão, nunca o território.
+    return comCentral(
+      { agente: "dit_dimensoes", fonte: "base-dimension.ts", tarefa: `análise da dimensão ${this.id}` },
+      () => this.runNucleo(territory, options)
+    );
+  }
+
+  private async runNucleo(territory: Territory, options: CollectOptions): Promise<DimensionResult> {
     const collectedAt = new Date().toISOString();
 
     // 1. Run all source agents in parallel; failed ones return []

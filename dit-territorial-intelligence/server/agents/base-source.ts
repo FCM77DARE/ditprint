@@ -10,6 +10,7 @@ import type { Territory } from "../../drizzle/schema";
 import type { DimensionId, SourceId } from "../indicators";
 import type { AgentHealth, CollectOptions, RawSignal } from "./types";
 import { logger } from "../_core/logger";
+import { emitirCentral, classeDoErro } from "../_core/central";
 
 const DEFAULT_TIMEOUT_MS = 30_000;
 const MAX_RETRIES = 2;
@@ -52,6 +53,9 @@ export abstract class BaseSourceAgent {
    */
   async collect(territory: Territory, options: CollectOptions = {}): Promise<RawSignal[]> {
     const start = Date.now();
+    // Central de agentes: rótulo = id da fonte, nunca o território.
+    const central = { rotulo: this.id, fonte: "base-source.ts", tarefa: "coleta de fonte" };
+    emitirCentral({ ...central, status: "comecou" });
 
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
       const controller = new AbortController();
@@ -75,6 +79,7 @@ export abstract class BaseSourceAgent {
           "Source agent collected signals"
         );
 
+        emitirCentral({ ...central, status: "entregou", para: "dit_dimensoes" });
         return signals;
       } catch (err) {
         clearTimeout(timeoutId);
@@ -89,6 +94,7 @@ export abstract class BaseSourceAgent {
             { err, territory: territory.slug, attempt },
             "Source agent failed after retries"
           );
+          emitirCentral({ ...central, status: "erro", tarefa: classeDoErro(err) });
           return [];
         }
 

@@ -3,6 +3,7 @@ import { signals, indexHistory, territories } from "../../drizzle/schema";
 import { and, eq, gte, lte, desc } from "drizzle-orm";
 import { logger } from "../_core/logger";
 import { invokeLLM } from "../_core/llm";
+import { comCentral } from "../_core/central";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 
@@ -127,6 +128,13 @@ export class ReporterAgent {
    * Gera o relatório DIT PREMIUM completo e profundo.
    */
   async generatePremiumReport(territoryId: number, period: string): Promise<string> {
+    return comCentral(
+      { agente: "dit_reporter", fonte: "reporterAgent.ts", tarefa: "briefing territorial" },
+      () => this.generatePremiumReportNucleo(territoryId, period)
+    );
+  }
+
+  private async generatePremiumReportNucleo(territoryId: number, period: string): Promise<string> {
     const db = await getDb();
     if (!db) return "Erro: Banco de dados indisponível.";
 

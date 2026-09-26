@@ -18,6 +18,7 @@ import { promises as fs, existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
 import { logger } from "./logger";
+import { emitirCentral } from "./central";
 
 const log = logger.child({ module: "cost-ledger" });
 
@@ -95,11 +96,35 @@ export async function registrarCusto(
     ...e,
     usd: Math.round(e.usd * 1e6) / 1e6,
   };
+  avisarCentral(evento);
   try {
     if (!existsSync(DIR)) mkdirSync(DIR, { recursive: true });
     await fs.appendFile(LEDGER, JSON.stringify(evento) + "\n", "utf8");
   } catch (err) {
     log.warn({ err: (err as Error).message }, "Falha ao gravar evento de custo");
+  }
+}
+
+// Central de agentes: um `progresso` por papel a cada 20s no máximo. Só
+// papel, modelo e custo; o território nunca sai daqui.
+const ultimoAviso = new Map<string, number>();
+function avisarCentral(e: EventoCusto): void {
+  try {
+    const chave = e.papel ?? e.recurso;
+    const agora = Date.now();
+    if (agora - (ultimoAviso.get(chave) ?? 0) < 20_000) return;
+    ultimoAviso.set(chave, agora);
+    emitirCentral({
+      status: "progresso",
+      rotulo: chave,
+      fonte: "cost-ledger.ts",
+      tarefa: e.recurso === "llm" ? "chamada de modelo" : "busca paga",
+      modelo: e.modelo,
+      custo_usd: e.usd,
+      run_id: e.execucao !== "-" ? e.execucao : undefined,
+    });
+  } catch {
+    /* painel nunca derruba o livro de custo */
   }
 }
 
