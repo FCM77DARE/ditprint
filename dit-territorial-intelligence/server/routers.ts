@@ -42,6 +42,7 @@ import {
 } from "./dashboardAuth";
 import { parse as parseCookies } from "cookie";
 import { invokeLLM } from "./_core/llm";
+import { registrar } from "./_core/aprendiz";
 import { signals, sttScores, territories, alertPreferences, alertLog, subscribers } from "../drizzle/schema";
 import { eq, and, desc, inArray } from "drizzle-orm";
 import { orchestrator } from "./agents/orchestrator";
@@ -228,6 +229,11 @@ IMPORTANTE: Retorne APENAS o JSON válido, sem markdown, sem explicações adici
           console.error("[Territory Wizard] Erro no LLM:", llmErr);
           onboardingStatus = "error";
         }
+
+        // Rede de aprendizado: só registrar (o onboarding gera o baseline do STT).
+        registrar("dit_onboarding", onboardingStatus === "ready"
+          ? { ok: true, fez: "contexto territorial de território novo" }
+          : { ok: false, erro: "LLM do onboarding falhou" });
 
         await db.update(territories)
           .set({ contextData, onboardingStatus, active: onboardingStatus === "ready" })

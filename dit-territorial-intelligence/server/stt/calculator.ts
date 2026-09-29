@@ -21,6 +21,7 @@ import { calculateSTT, DIMENSIONS_LIST } from "../indicators";
 import type { DimensionId } from "../indicators";
 import type { SttCalculatorInput, SttCalculatorOutput } from "./types";
 import { logger } from "../_core/logger";
+import { registrar } from "../_core/aprendiz";
 
 const log = logger.child({ module: "stt-calculator" });
 
@@ -122,6 +123,15 @@ export async function calculateSttWithLLM(
       activatedDimension = llmOutput.activatedDimension as DimensionId;
     }
   }
+
+  // Rede de aprendizado: só registrar. Sem contexto aqui, porque a saída entra na nota.
+  registrar("dit_nota_stt", llmOutput
+    ? {
+        ok: llmVerificationPassed,
+        fez: `nota executiva e conferência do STT (${period})`,
+        erro: llmVerificationPassed ? undefined : `verificação reprovada, discrepância ${llmDiscrepancy.toFixed(1)}`,
+      }
+    : { ok: false, erro: "chamada do STT falhou, ficou só o determinístico", evidencia: period });
 
   // Final deterministic STT using (possibly LLM-refined) dimension scores
   const finalStt = clampScore(calculateSTT(finalScores));

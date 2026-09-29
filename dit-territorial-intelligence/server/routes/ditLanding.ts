@@ -28,6 +28,7 @@ import type { DimensionResult } from "../agents/types";
 import type { DimensionId } from "../indicators";
 import { runStrategicLayer } from "../strategic/runner";
 import { invokeJson } from "../_core/llm";
+import { comContexto, registrar } from "../_core/aprendiz";
 import { conferirNumerosDoRelatorio } from "../agents/verificador";
 import { comCustoDoTerritorio, resumoPorExecucao } from "../_core/cost-ledger";
 import { buscarLocalidadeCurada } from "./localidades-curadas";
@@ -1305,16 +1306,25 @@ export async function callLLM(prompt: string): Promise<unknown> {
     messages: [
       {
         role: "system",
-        content:
+        content: comContexto("dit_relatorio",
           "Você é o sistema de relatórios do DIT, da PRINT. Responda SEMPRE com JSON " +
           "válido e completo, sem nenhum texto fora do JSON. Seja específico, concreto " +
           "e útil para decisores de negócios no Brasil. Nunca afirme dado que não esteja " +
-          "nos sinais fornecidos.",
+          "nos sinais fornecidos."),
       },
       { role: "user", content: prompt },
     ],
     response_format: { type: "json_object" },
-  });
+  }).then(
+    (r) => {
+      registrar("dit_relatorio", { ok: !!r, fez: "relatório executivo do DIT", erro: r ? undefined : "relatório voltou vazio" });
+      return r;
+    },
+    (err) => {
+      registrar("dit_relatorio", { ok: false, erro: "geração do relatório falhou" });
+      throw err;
+    },
+  );
 }
 
 // ── ROTA ISCA (free preview) ──────────────────────────────────────────────────

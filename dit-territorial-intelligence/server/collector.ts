@@ -12,6 +12,7 @@
 
 import { insertSignal, getAllTerritories, getTerritoryBySlug, getSignalsByTerritory, insertCollectionSnapshot, insertIndexHistory, getLatestIndexHistory } from "./db";
 import { invokeLLM } from "./_core/llm";
+import { registrar } from "./_core/aprendiz";
 import { getDb } from "./db";
 import { signals, sttScores } from "../drizzle/schema";
 import { eq, and, isNull, desc } from "drizzle-orm";
@@ -513,7 +514,10 @@ IMPORTANTE:
   });
 
   const rawContent = response.choices?.[0]?.message?.content;
-  if (!rawContent) throw new Error("LLM returned empty response");
+  if (!rawContent) {
+    registrar("dit_stt_legado", { ok: false, erro: "análise de sinais voltou vazia" });
+    throw new Error("LLM returned empty response");
+  }
   const content = typeof rawContent === "string" ? rawContent : JSON.stringify(rawContent);
 
   const result = JSON.parse(content) as {
@@ -530,6 +534,8 @@ IMPORTANTE:
     scenario: string;
     executiveNote: string;
   };
+
+  registrar("dit_stt_legado", { ok: true, fez: `analisou ${pendingSignals.length} sinais e recalculou o STT` });
 
   // ─── Clamp + sanitise LLM outputs ───────────────────────────────────────────
   // LLMs occasionally hallucinate values outside valid ranges; guard hard here.

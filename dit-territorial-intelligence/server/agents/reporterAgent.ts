@@ -4,6 +4,7 @@ import { and, eq, gte, lte, desc } from "drizzle-orm";
 import { logger } from "../_core/logger";
 import { invokeLLM } from "../_core/llm";
 import { comCentral } from "../_core/central";
+import { comContexto, registrar } from "../_core/aprendiz";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 
@@ -253,12 +254,17 @@ ${hotspots.length > 0
     const response = await invokeLLM({
       role: "relatorio",
       messages: [
-        { role: "system", content: "Consultor de inteligência militar/estratégica. Estilo conciso, denso em fatos e orientado a ação." },
+        { role: "system", content: comContexto("dit_reporter", "Consultor de inteligência militar/estratégica. Estilo conciso, denso em fatos e orientado a ação.") },
         { role: "user", content: prompt },
       ],
     });
 
     const reportContent = response.choices?.[0]?.message?.content || "";
+    registrar("dit_reporter", {
+      ok: !!reportContent,
+      fez: `briefing premium com ${relevantSignals.length} sinais (${period})`,
+      erro: reportContent ? undefined : "briefing voltou vazio",
+    });
     const sourcesSection = await this.generateSourcesSection(territoryId, period);
 
     return reportContent + "\n\n" + sourcesSection + "\n---\n*Confidencial - Gerado pela Inteligência DIT PRINT*\n";

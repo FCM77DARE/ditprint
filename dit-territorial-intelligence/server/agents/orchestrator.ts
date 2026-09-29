@@ -38,6 +38,7 @@ import { DimReputacao } from "./dimensions/dim-reputacao";
 import { DimRecursos } from "./dimensions/dim-recursos";
 import { logger } from "../_core/logger";
 import { comCentral } from "../_core/central";
+import { registrar } from "../_core/aprendiz";
 
 const log = logger.child({ module: "orchestrator" });
 
@@ -130,6 +131,13 @@ export class Orchestrator {
       allCollectedSignals.push(...dim.signals);
       alerts.push(...dim.signals.filter((s) => s.triggersAlert));
     }
+
+    const dimFalhas = dimResults.filter((r) => r.status === "rejected").length;
+    registrar("dit_dimensoes", {
+      ok: dimFalhas === 0,
+      fez: `${dimResults.length - dimFalhas} dimensões, ${totalSignalsCount} sinais classificados (${period})`,
+      erro: dimFalhas ? `${dimFalhas} dimensões falharam` : undefined,
+    });
 
     // 3. Build DimensionScore[] for LLM calculator
     const dimensionScoreList = buildDimensionScoreList(dimensions);

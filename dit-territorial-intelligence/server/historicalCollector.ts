@@ -19,6 +19,7 @@
 import { getAllTerritories, getTerritoryBySlug, insertSignal, insertCollectionSnapshot, insertIndexHistory, getDb } from "./db";
 import type { TerritoryContextData } from "./stt/types";
 import { invokeLLM } from "./_core/llm";
+import { registrar } from "./_core/aprendiz";
 import { buildTerritoryContextPrompt, TERRITORY_CONTEXTS } from "./territoryContext";
 import { indexHistory, signals, sttScores } from "../drizzle/schema";
 import { eq, and, desc, between, gte, lte } from "drizzle-orm";
@@ -591,6 +592,13 @@ export async function runHistoricalCollection(
       });
     }
   }
+
+  const periodosComErro = results.filter(r => r.error).length;
+  registrar("dit_stt_legado", {
+    ok: periodosComErro === 0,
+    fez: `STT histórico: ${results.filter(r => !r.skipped && !r.error).length} períodos novos de ${results.length}`,
+    erro: periodosComErro ? `${periodosComErro} períodos com erro` : undefined,
+  });
 
   log.info(` Coleta histórica concluída para ${territory.name}: ${results.filter(r => !r.skipped && !r.error).length} períodos novos`);
   return results;

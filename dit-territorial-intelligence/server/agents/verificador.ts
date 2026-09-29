@@ -37,6 +37,7 @@ import type { Territory } from "../../drizzle/schema";
 import type { RawSignal } from "./types";
 import { logger } from "../_core/logger";
 import { emitirCentral, classeDoErro } from "../_core/central";
+import { registrar } from "../_core/aprendiz";
 
 const log = logger.child({ module: "verificador" });
 
@@ -277,9 +278,11 @@ export async function resolverAmbiguos(
       "Ambíguos resolvidos em lote"
     );
     emitirCentral({ ...central, status: "entregou", para: "dit_dimensoes" });
+    registrar("dit_verificador", { ok: true, fez: `${aprovados.length} de ${lote.length} ambíguos aprovados` });
     return aprovados;
   } catch (err) {
     emitirCentral({ ...central, status: "erro", tarefa: classeDoErro(err) });
+    registrar("dit_verificador", { ok: false, erro: `lote de ambíguos falhou: ${classeDoErro(err)}` });
     log.warn({ err: (err as Error).message, territorio: territory.slug }, "Lote de ambíguos falhou — nenhum entra");
     return [];
   }
