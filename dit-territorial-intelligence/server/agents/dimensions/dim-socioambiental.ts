@@ -18,6 +18,9 @@ import { SrcMpAmbiental } from "../sources/d1/src-mp-ambiental";
 import { SrcCptecInpe } from "../sources/d1/src-cptec-inpe";
 import { SrcIbgeMapbiomas } from "../sources/d1/src-ibge-mapbiomas";
 import { SrcInea } from "../sources/d1/src-inea";
+import { SrcIbamaEmbargos } from "../sources/d1/src-ibama-embargos";
+import { SrcS2idReconhecimentos } from "../sources/d1/src-s2id-reconhecimentos";
+import { SrcTerrabrasilisProdes } from "../sources/d1/src-terrabrasilis-prodes";
 
 export class DimSocioambiental extends BaseDimensionAgent {
   readonly id: DimensionId = "D1";
@@ -33,6 +36,11 @@ export class DimSocioambiental extends BaseDimensionAgent {
     new SrcCptecInpe(),
     new SrcIbgeMapbiomas(),
     new SrcInea(),
+    // Fontes OFICIAIS e gratuitas (dado aberto, sem chave): respondem mesmo com
+    // a cota de busca aberta zerada, e "zero ocorrências" conta como evidência.
+    new SrcIbamaEmbargos(),
+    new SrcS2idReconhecimentos(),
+    new SrcTerrabrasilisProdes(),
   ];
 
   readonly classificationRules: IndicatorKeywordRule[] = [
@@ -57,7 +65,9 @@ export class DimSocioambiental extends BaseDimensionAgent {
     // 1.2.1.1 — Eventos climáticos extremos
     {
       indicatorCode: "1.2.1.1",
-      keywords: ["emergência climática", "enchente", "inundação", "deslizamento", "seca severa", "estiagem", "queimada", "incêndio florestal", "ciclone", "tempestade severa", "CEMADEN", "alerta vermelho"],
+      keywords: ["emergência climática", "enchente", "inundação", "deslizamento", "seca severa", "estiagem", "queimada", "incêndio florestal", "ciclone", "tempestade severa", "CEMADEN", "alerta vermelho",
+        // S2iD (Defesa Civil): reconhecimento federal de desastre
+        "reconhecimento federal", "situação de emergência", "calamidade pública", "defesa civil", "s2id"],
       baseImpact: 0.72,
     },
     // 1.2.1.2 — Degradação ambiental

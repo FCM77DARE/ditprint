@@ -6,16 +6,21 @@
 
 import { BaseDimensionAgent, type IndicatorKeywordRule } from "../base-dimension";
 import type { DimensionId } from "../../indicators";
+import type { ClassifiedSignal, RawSignal } from "../types";
 import { SrcQueridoDiario } from "../sources/d5/src-querido-diario";
 import { SrcConselhos } from "../sources/d5/src-conselhos";
 import { SrcAudiencias } from "../sources/d5/src-audiencias";
 import { SrcOrcamentoParticipativo } from "../sources/d5/src-orcamento-participativo";
+import { SrcSiconfi, classificarSiconfi } from "../sources/d5/src-siconfi";
+import { SrcPncp, classificarPncp } from "../sources/d5/src-pncp";
 import { SrcGoogleNews } from "../sources/d6/src-google-news";
 import { SrcJudiciario } from "../sources/d4/src-judiciario";
 
 export class DimGovernanca extends BaseDimensionAgent {
   readonly id: DimensionId = "D5";
   readonly sources = [
+    new SrcSiconfi(),
+    new SrcPncp(),
     new SrcQueridoDiario(),
     new SrcConselhos(),
     new SrcAudiencias(),
@@ -23,6 +28,14 @@ export class DimGovernanca extends BaseDimensionAgent {
     new SrcGoogleNews(),
     new SrcJudiciario(),
   ];
+
+  /**
+   * Os sinais do Siconfi e do PNCP chegam com indicador e impacto já decididos por regra
+   * determinística (ver src-siconfi.ts e src-pncp.ts); os demais seguem as palavras-chave.
+   */
+  classify(signal: RawSignal): ClassifiedSignal | null {
+    return classificarSiconfi(signal) ?? classificarPncp(signal) ?? super.classify(signal);
+  }
 
   readonly classificationRules: IndicatorKeywordRule[] = [
     // 5.1.1.1 — Instituições e movimentos atuantes

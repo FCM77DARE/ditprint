@@ -34,6 +34,10 @@ export const SOURCE_IDS = {
   IBAMA: "src-ibama",
   MP_AMBIENTAL: "src-mp-ambiental",
   INEA: "src-inea",
+  // D1 — fontes oficiais e gratuitas (dado aberto, sem chave, sem busca aberta)
+  IBAMA_EMBARGOS: "src-ibama-embargos",
+  S2ID_RECONHECIMENTOS: "src-s2id-reconhecimentos",
+  TERRABRASILIS_PRODES: "src-terrabrasilis-prodes",
 
   // Camada estrutural — indicador oficial em lote nacional, leitura sem rede.
   // Não é fonte de notícia: é a base que o IBGE mede para os 5.570 municípios.
@@ -59,6 +63,7 @@ export const SOURCE_IDS = {
   SNIS: "src-snis",
   DATASUS_REAL: "src-datasus-real",
   INEP_IDEB: "src-inep-ideb",
+  PNCP_OBRAS: "src-pncp-obras",
 
   // D4 — Dinâmica Territorial
   PLANO_DIRETOR: "src-plano-diretor",
@@ -75,6 +80,8 @@ export const SOURCE_IDS = {
   CONSELHOS: "src-conselhos",
   AUDIENCIAS: "src-audiencias",
   ORCAMENTO_PARTICIPATIVO: "src-orcamento-participativo",
+  SICONFI: "src-siconfi",
+  PNCP: "src-pncp",
 
   // D6 — Reputação
   GOOGLE_NEWS: "src-google-news",
@@ -84,6 +91,7 @@ export const SOURCE_IDS = {
   YOUTUBE_TERRITORIO: "src-youtube-territorio",
   BLUESKY_TERRITORIO: "src-bluesky-territorio",
   REDDIT_BR: "src-reddit-br",
+  CAMARA_PROPOSICOES: "src-camara-proposicoes",
 } as const;
 
 export type SourceId = typeof SOURCE_IDS[keyof typeof SOURCE_IDS];
@@ -373,7 +381,7 @@ const D3: Dimension = {
           objectOfStudy: "3.1 Acesso a Políticas Públicas",
           itemOfStudy: "3.1.1 Saneamento",
           name: "Cobertura do saneamento básico (%)",
-          sources: [SOURCE_IDS.SNIS_SINASA],
+          sources: [SOURCE_IDS.SNIS_SINASA, SOURCE_IDS.PNCP_OBRAS],
           weight: 2,
         },
         {
@@ -383,7 +391,7 @@ const D3: Dimension = {
           objectOfStudy: "3.1 Acesso a Políticas Públicas",
           itemOfStudy: "3.1.2 Saúde",
           name: "Acesso a serviços de saúde (cobertura SUS, equipamentos de saúde)",
-          sources: [SOURCE_IDS.DATASUS],
+          sources: [SOURCE_IDS.DATASUS, SOURCE_IDS.PNCP_OBRAS],
           weight: 1,
         },
         {
@@ -393,7 +401,7 @@ const D3: Dimension = {
           objectOfStudy: "3.1 Acesso a Políticas Públicas",
           itemOfStudy: "3.1.3 Educação",
           name: "Taxa de escolaridade média",
-          sources: [SOURCE_IDS.INEP],
+          sources: [SOURCE_IDS.INEP, SOURCE_IDS.PNCP_OBRAS],
           weight: 1,
         },
         {
@@ -403,7 +411,7 @@ const D3: Dimension = {
           objectOfStudy: "3.1 Acesso a Políticas Públicas",
           itemOfStudy: "3.1.4 Habitação",
           name: "Percentual de déficit habitacional",
-          sources: [SOURCE_IDS.IBGE_HABITACAO],
+          sources: [SOURCE_IDS.IBGE_HABITACAO, SOURCE_IDS.PNCP_OBRAS],
           weight: 1,
         },
       ],
@@ -465,7 +473,7 @@ const D3: Dimension = {
           objectOfStudy: "3.3 Logística",
           itemOfStudy: "3.3.2 Acesso a rodovias",
           name: "Distância das principais rodovias",
-          sources: [SOURCE_IDS.ANTT_PORTOS],
+          sources: [SOURCE_IDS.ANTT_PORTOS, SOURCE_IDS.PNCP_OBRAS],
           weight: 1,
         },
         {
@@ -627,7 +635,7 @@ const D5: Dimension = {
           objectOfStudy: "5.1 Capacidade Institucional",
           itemOfStudy: "5.1 Quantitativo, atuação e influência das instituições",
           name: "Quantidade de instituições existentes e atuantes na localidade",
-          sources: [SOURCE_IDS.CONSELHOS, SOURCE_IDS.QUERIDO_DIARIO],
+          sources: [SOURCE_IDS.CONSELHOS, SOURCE_IDS.QUERIDO_DIARIO, SOURCE_IDS.SICONFI, SOURCE_IDS.PNCP],
           weight: 2,
         },
         {
@@ -720,7 +728,7 @@ const D5: Dimension = {
           objectOfStudy: "5.3 Articulação com o Poder Público",
           itemOfStudy: "5.3.2 Influências negativas do poder público no território",
           name: "Influências negativas documentadas do poder público no território",
-          sources: [SOURCE_IDS.QUERIDO_DIARIO, SOURCE_IDS.JUDICIARIO, SOURCE_IDS.GOOGLE_NEWS],
+          sources: [SOURCE_IDS.QUERIDO_DIARIO, SOURCE_IDS.JUDICIARIO, SOURCE_IDS.GOOGLE_NEWS, SOURCE_IDS.SICONFI, SOURCE_IDS.PNCP],
           weight: 3,
         },
       ],
@@ -767,7 +775,7 @@ const D6: Dimension = {
           objectOfStudy: "6.1 Mídia",
           itemOfStudy: "6.1.3 Escala de repercussão",
           name: "Quantitativo de matérias com alcance regional/nacional sobre o território",
-          sources: [SOURCE_IDS.GOOGLE_NEWS],
+          sources: [SOURCE_IDS.GOOGLE_NEWS, SOURCE_IDS.CAMARA_PROPOSICOES],
           weight: 2,
         },
         {

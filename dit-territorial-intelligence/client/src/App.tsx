@@ -6,6 +6,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Sistema from "./pages/Sistema";
 import DashboardLogin from "./pages/DashboardLogin";
+import Marco from "./pages/Marco";
 
 // Área pública
 import PublicoInicio from "./pages/publico/Inicio";
@@ -62,6 +63,8 @@ function Router() {
 
       {/* Interno */}
       <Route path="/sistema" component={Sistema} />
+      {/* Proposta de nome e identidade (em decisão) */}
+      <Route path="/marco" component={Marco} />
 
       {/* Rotas antigas */}
       <Route path="/dashboard/login">{() => <Redirect to="/mesa/login" />}</Route>

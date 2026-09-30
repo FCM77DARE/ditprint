@@ -49,6 +49,7 @@ import {
   STRUCTURAL_WEIGHT,
   type StructuralScores,
 } from "../structural/scoring";
+import { calcularMedicao, type MedicaoDoisNumeros } from "./medicao";
 
 const log = logger.child({ module: "stt-consolidator" });
 
@@ -115,8 +116,18 @@ const TENSIONING_SOURCES = new Set<string>([
   "src-inpe-deter",
 ]);
 
+// Fontes OFICIAIS de contagem (D1): a polaridade depende do que elas mediram.
+// Zero ocorrência ou ocorrência antiga (impacto < 0.3) é evidência resolutiva de
+// baixa tensão; ocorrência recente (impacto >= 0.3) é tensionante.
+const OFICIAIS_POR_IMPACTO = new Set<string>([
+  "src-ibama-embargos",
+  "src-s2id-reconhecimentos",
+  "src-terrabrasilis-prodes",
+]);
+
 /** Decide polaridade do sinal: resolutivo, tensionante ou neutro (Google News etc) */
 function signalPolarity(source: string, impact: number): "resolutive" | "tensioning" | "neutral" {
+  if (OFICIAIS_POR_IMPACTO.has(source)) return impact < 0.3 ? "resolutive" : "tensioning";
   if (RESOLUTIVE_SOURCES.has(source)) return "resolutive";
   if (TENSIONING_SOURCES.has(source)) return "tensioning";
   // Google News, SerpAPI genérico: neutral — mas se impact >= 0.7 (triggersAlert)
@@ -146,6 +157,28 @@ export interface ConsolidatedStt {
   structuralBasis?: StructuralScores;
   /** Peso que a camada estrutural teve na composição final */
   structuralWeight?: number;
+  /**
+   * Medição em dois números (tensão + confiança + faixa). Calculada SEMPRE,
+   * em qualquer modo. `stt` acima continua sendo o número histórico; quem
+   * decide qual vira o principal é DIT_MODELO_MEDICAO (ver stt/medicao.ts).
+   */
+  medicao: MedicaoDoisNumeros;
+}
+
+/**
+ * Evidência por dimensão: tem sinal verificado que passou no cálculo
+ * (dimensionDetail.signals > 0) OU camada estrutural presente para ela.
+ * Estrutural conta como evidência.
+ */
+function evidenciaPorDimensao(
+  detail: Record<DimensionId, { signals: number; structural: number }>,
+  structural: StructuralScores
+): Record<DimensionId, boolean> {
+  const out = {} as Record<DimensionId, boolean>;
+  for (const id of Object.keys(DIM_WEIGHTS) as DimensionId[]) {
+    out[id] = (detail[id]?.signals ?? 0) > 0 || structural[id] != null;
+  }
+  return out;
 }
 
 /**
@@ -324,7 +357,13 @@ export async function consolidateSttFromHistory(
     );
 
     const emptyDetail = { signals: 0, structural: 0 };
+    const detailVazio: Record<DimensionId, { signals: number; structural: number }> = {
+      D1: { ...emptyDetail }, D2: { ...emptyDetail }, D3: { ...emptyDetail },
+      D4: { ...emptyDetail }, D5: { ...emptyDetail }, D6: { ...emptyDetail },
+      D7: { ...emptyDetail },
+    };
     return {
+      medicao: calcularMedicao(dims, DIM_WEIGHTS, evidenciaPorDimensao(detailVazio, structural)),
       stt: sttOnlyStructural,
       dimensions: dims,
       totalSignalsInWindow: 0,
@@ -476,6 +515,7 @@ export async function consolidateSttFromHistory(
     void DIMENSIONS_LIST;
 
     return {
+      medicao: calcularMedicao(dimensions, DIM_WEIGHTS, evidenciaPorDimensao(dimensionDetail, structural)),
       stt,
       dimensions,
       totalSignalsInWindow: rows.length,

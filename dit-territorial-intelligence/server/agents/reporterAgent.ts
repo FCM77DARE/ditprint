@@ -50,6 +50,10 @@ export class ReporterAgent {
     { id: "src-funai-iphan", name: "FUNAI/IPHAN (Territórios Especiais)", dimension: "D4" },
     // D5
     { id: "src-querido-diario", name: "Querido Diário (Diários Oficiais)", dimension: "D5" },
+    { id: "src-siconfi", name: "Siconfi/Tesouro (Capacidade Fiscal)", dimension: "D5" },
+    { id: "src-pncp", name: "PNCP (Contratações Públicas)", dimension: "D5" },
+    { id: "src-pncp-obras", name: "PNCP (Obras e Infraestrutura)", dimension: "D3" },
+    { id: "src-camara-proposicoes", name: "Câmara dos Deputados (Proposições)", dimension: "D6" },
     { id: "src-conselhos", name: "Conselhos Municipais (Participação)", dimension: "D5" },
     { id: "src-audiencias", name: "Audiências Públicas", dimension: "D5" },
     // D6

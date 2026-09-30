@@ -171,6 +171,16 @@
     .exec-summary-label { font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.25em;color:var(--sage);text-transform:uppercase;margin-bottom:12px; }
     .exec-summary-text { font-size:16px;line-height:1.75;color:var(--grafite); }
     .exec-summary-text p + p { margin-top:12px; }
+    .ident { margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid var(--areia); }
+    .ident-linha { font-size:14px;line-height:1.6;margin:0 0 4px; }
+    .ident-linha b { font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--sage);margin-right:8px;font-weight:400; }
+    .ident-problema { margin:14px 0;padding:12px 16px;background:#fff;border-left:3px solid var(--terra);border-radius:8px;font-size:15px;line-height:1.5; }
+    .ident-problema span { display:block;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--terra);margin-bottom:4px; }
+    .ident-cols { display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:14px; }
+    .ident h4 { font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--sage);margin:0 0 6px;font-weight:400; }
+    .ident ul { margin:0;padding-left:18px;font-size:14px;line-height:1.5; }
+    .ident-meta { font-family:'DM Mono',monospace;font-size:12px;opacity:.7; }
+    @media (max-width:640px) { .ident-cols { grid-template-columns:1fr; } }
     .result-section-title { font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--forest);letter-spacing:.04em;margin-bottom:20px;display:flex;align-items:center;gap:14px; }
     .result-section-title::after { content:'';flex:1;height:1px;background:var(--areia); }
     .signals-section,.dims-section,.forecast-section,.rec-section,.strategic-section { margin-bottom:56px; }
@@ -751,6 +761,34 @@ function dimCssClassFromComplexity(complexity) {
   return 'dc-low';
 }
 
+// Escapa HTML de texto vindo do LLM/coleta antes de entrar em innerHTML.
+const ESC_MAP = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+function escHtml(v) {
+  return String(v == null ? '' : v).replace(/[&<>"']/g, c => ESC_MAP[c]);
+}
+
+// Identidade do território. Campo opcional: sem ele (relatório antigo) devolve ''.
+function renderIdentidade(id) {
+  if (!id || typeof id !== 'object') return '';
+  const forcas = (Array.isArray(id.forcas) ? id.forcas : []).filter(Boolean).slice(0, 2);
+  const fragil = (Array.isArray(id.fragilidades) ? id.fragilidades : []).filter(Boolean).slice(0, 2);
+  const semana = (Array.isArray(id.semana) ? id.semana : []).filter(x => x && x.fato);
+  if (!id.localizacao && !id.conhecidoPor && !id.problemaCaracteristico && !forcas.length && !fragil.length) return '';
+  const lis = a => a.map(x => `<li>${escHtml(x)}</li>`).join('');
+  return `<div class="ident">`
+    + (id.localizacao ? `<p class="ident-linha"><b>Onde fica</b>${escHtml(id.localizacao)}</p>` : '')
+    + (id.conhecidoPor ? `<p class="ident-linha"><b>Conhecido por</b>${escHtml(id.conhecidoPor)}</p>` : '')
+    + (id.problemaCaracteristico ? `<div class="ident-problema"><span>Problema característico</span>${escHtml(id.problemaCaracteristico)}</div>` : '')
+    + ((forcas.length || fragil.length)
+        ? `<div class="ident-cols"><div><h4>Forças</h4><ul>${lis(forcas)}</ul></div><div><h4>Fragilidades</h4><ul>${lis(fragil)}</ul></div></div>`
+        : '')
+    + `<h4>Nesta semana</h4>`
+    + (semana.length
+        ? `<ul>${semana.map(x => `<li>${escHtml(x.fato)} <span class="ident-meta">· ${escHtml(x.fonte)}${x.data ? ' · ' + escHtml(x.data) : ''}</span></li>`).join('')}</ul>`
+        : `<p class="ident-linha ident-meta">Sem fato novo captado nos últimos 30 dias.</p>`)
+    + `</div>`;
+}
+
 function renderResult(t) {
   const score    = typeof t.stt === 'number' ? Math.round(t.stt) : 0;
   const scenario = t.scenario || 'estabilidade';
@@ -770,7 +808,7 @@ function renderResult(t) {
   const exec = Array.isArray(t.executiveSummary)
     ? t.executiveSummary.map(p => `<p>${p}</p>`).join('')
     : `<p>${t.executiveSummary || ''}</p>`;
-  document.getElementById('r-exec').innerHTML = exec;
+  document.getElementById('r-exec').innerHTML = renderIdentidade(t.identidade) + exec;
 
   // Signals
   const signals = Array.isArray(t.keySignals) ? t.keySignals : [];

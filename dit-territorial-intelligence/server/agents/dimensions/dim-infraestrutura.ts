@@ -20,6 +20,8 @@ import { SrcSnis } from "../sources/d3/src-snis";
 import { SrcDatasusReal } from "../sources/d3/src-datasus-real";
 import { SrcInepIdeb } from "../sources/d3/src-inep-ideb";
 import { SrcGoogleNews } from "../sources/d6/src-google-news";
+import { SrcPncpObras, classificarPncp } from "../sources/d5/src-pncp";
+import type { ClassifiedSignal, RawSignal } from "../types";
 
 export class DimInfraestrutura extends BaseDimensionAgent {
   readonly id: DimensionId = "D3";
@@ -37,7 +39,13 @@ export class DimInfraestrutura extends BaseDimensionAgent {
     new SrcDatasusReal(),
     new SrcInepIdeb(),
     new SrcGoogleNews(),
+    new SrcPncpObras(),
   ];
+
+  /** Sinais de obra do PNCP chegam com indicador e impacto já decididos por regra (ver src-pncp.ts). */
+  classify(signal: RawSignal): ClassifiedSignal | null {
+    return classificarPncp(signal) ?? super.classify(signal);
+  }
 
   readonly classificationRules: IndicatorKeywordRule[] = [
     // 3.1.1.1 — Saneamento

@@ -8,6 +8,7 @@
 import type { Territory } from "../../drizzle/schema";
 import type { DimensionId, SourceId } from "../indicators";
 import type { Leitura } from "../../shared/leitura";
+import type { MedicaoDoisNumeros } from "../stt/medicao";
 
 // ─── Raw Signal (output of a source agent) ───────────────────────────────────
 
@@ -36,6 +37,15 @@ export interface RawSignal {
    * descartado em `BaseSourceAgent.collect()` — não aparece e não pontua.
    */
   provenance?: string;
+  /**
+   * Impacto (0.0–1.0) já decidido pela própria fonte, por regra determinística
+   * explicada no agente. Usado por fontes OFICIAIS de contagem (embargos,
+   * reconhecimentos, desmatamento), onde "zero ocorrências" é medição de baixa
+   * tensão e "muitas ocorrências recentes" é medição de tensão alta. Quando
+   * presente, o classificador não aplica o impacto-base da regra de palavras
+   * nem o bônus de fonte oficial: usa este valor.
+   */
+  impactHint?: number;
   /** Free-form extra data — kept for drill-down / audit */
   metadata?: Record<string, unknown>;
 }
@@ -127,6 +137,13 @@ export interface OrchestratorResult {
    * como sempre; a leitura separa o que foi medido do que a malha não sabe.
    */
   leitura?: Leitura;
+  /**
+   * Medição em dois números (tensão + confiança + faixa), calculada sempre.
+   * Com DIT_MODELO_MEDICAO=tensao_confianca, `stt` passa a carregar `medicao.tensao`.
+   */
+  medicao?: MedicaoDoisNumeros | null;
+  /** Modelo de medição que definiu o número principal `stt` */
+  modeloMedicao?: "stt" | "tensao_confianca";
   /** ISO timestamp of when this run completed */
   completedAt: string;
 }
