@@ -230,7 +230,13 @@ export abstract class BaseDimensionAgent {
     const impactBoost = isOfficialSource ? 0.15 : 0;
     const confidence = isOfficialSource ? 0.85 : 0.65;
 
-    const impactScore = Math.min(1, bestRule.baseImpact + impactBoost);
+    // Fonte oficial de contagem já traz o impacto decidido por regra própria
+    // (ver impactHint em types.ts): vale esse valor, sem bônus.
+    const hint =
+      typeof signal.impactHint === "number" && Number.isFinite(signal.impactHint)
+        ? Math.max(0, Math.min(1, signal.impactHint))
+        : null;
+    const impactScore = hint ?? Math.min(1, bestRule.baseImpact + impactBoost);
     const impactLevel = scoreToLevel(impactScore);
     const triggersAlert = impactScore >= ALERT_THRESHOLD;
 
@@ -300,6 +306,9 @@ export abstract class BaseDimensionAgent {
 /** Source agent IDs considered "official" (receive a confidence/impact boost) */
 const OFFICIAL_SOURCE_IDS = new Set([
   "src-ibama",
+  "src-ibama-embargos",
+  "src-s2id-reconhecimentos",
+  "src-terrabrasilis-prodes",
   "src-inpe-deter",
   "src-cemaden",
   "src-inmet",
@@ -316,6 +325,10 @@ const OFFICIAL_SOURCE_IDS = new Set([
   "src-antt-portos",
   "src-funai-iphan",
   "src-querido-diario",
+  "src-siconfi",
+  "src-pncp",
+  "src-pncp-obras",
+  "src-camara-proposicoes",
   "src-fogo-cruzado",
 ]);
 

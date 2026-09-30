@@ -52,7 +52,7 @@ const DIMENSION_LABEL: Record<string, string> = {
   "src-mapa-empresas": "D3", "src-antt-portos": "D3", "src-sinir": "D3",
   "src-plano-diretor": "D4", "src-judiciario": "D4", "src-fogo-cruzado": "D4",
   "src-geni-uff": "D4", "src-isp-ssp": "D4", "src-funai-iphan": "D4", "src-unicamp-terr": "D4",
-  "src-querido-diario": "D5", "src-conselhos": "D5", "src-audiencias": "D5",
+  "src-querido-diario": "D5", "src-siconfi": "D5", "src-pncp": "D5", "src-pncp-obras": "D3", "src-camara-proposicoes": "D6", "src-conselhos": "D5", "src-audiencias": "D5",
   "src-orcamento-participativo": "D5",
   "src-google-news": "D6", "src-google-trends": "D6", "src-redes-sociais": "D6", "src-universidades": "D6",
 };

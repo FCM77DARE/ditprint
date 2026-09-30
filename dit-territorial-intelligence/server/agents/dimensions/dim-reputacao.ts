@@ -13,6 +13,8 @@ import { SrcUniversidades } from "../sources/d6/src-universidades";
 import { SrcYoutubeTerritorio } from "../sources/d6/src-youtube-territorio";
 import { SrcBlueskyTerritorio } from "../sources/d6/src-bluesky-territorio";
 import { SrcRedditBr } from "../sources/d6/src-reddit-br";
+import { SrcCamaraProposicoes, classificarCamara } from "../sources/d6/src-camara-proposicoes";
+import type { ClassifiedSignal, RawSignal } from "../types";
 
 export class DimReputacao extends BaseDimensionAgent {
   readonly id: DimensionId = "D6";
@@ -22,6 +24,7 @@ export class DimReputacao extends BaseDimensionAgent {
     new SrcRedesSociais(),
     new SrcUniversidades(),
     new SrcYoutubeTerritorio(),
+    new SrcCamaraProposicoes(),
     // DESLIGADOS em 08/09/2026 — os dois endpoints públicos fecharam e passaram
     // a devolver 403 em produção. Enquanto ligados, contavam como "fonte ok"
     // com zero sinais, puxando a cobertura da D6 para baixo sem motivo real.
@@ -31,6 +34,11 @@ export class DimReputacao extends BaseDimensionAgent {
     // new SrcBlueskyTerritorio(),
     // new SrcRedditBr(),
   ];
+
+  /** Sinais da Câmara chegam com indicador e impacto já decididos por regra (ver src-camara-proposicoes.ts). */
+  classify(signal: RawSignal): ClassifiedSignal | null {
+    return classificarCamara(signal) ?? super.classify(signal);
+  }
 
   readonly classificationRules: IndicatorKeywordRule[] = [
     // 6.1.1.1 — Volume de buscas

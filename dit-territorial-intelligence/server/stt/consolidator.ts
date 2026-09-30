@@ -117,8 +117,18 @@ const TENSIONING_SOURCES = new Set<string>([
   "src-inpe-deter",
 ]);
 
+// Fontes OFICIAIS de contagem (D1): a polaridade depende do que elas mediram.
+// Zero ocorrência ou ocorrência antiga (impacto < 0.3) é evidência resolutiva de
+// baixa tensão; ocorrência recente (impacto >= 0.3) é tensionante.
+const OFICIAIS_POR_IMPACTO = new Set<string>([
+  "src-ibama-embargos",
+  "src-s2id-reconhecimentos",
+  "src-terrabrasilis-prodes",
+]);
+
 /** Decide polaridade do sinal: resolutivo, tensionante ou neutro (Google News etc) */
 function signalPolarity(source: string, impact: number): "resolutive" | "tensioning" | "neutral" {
+  if (OFICIAIS_POR_IMPACTO.has(source)) return impact < 0.3 ? "resolutive" : "tensioning";
   if (RESOLUTIVE_SOURCES.has(source)) return "resolutive";
   if (TENSIONING_SOURCES.has(source)) return "tensioning";
   // Google News, SerpAPI genérico: neutral — mas se impact >= 0.7 (triggersAlert)

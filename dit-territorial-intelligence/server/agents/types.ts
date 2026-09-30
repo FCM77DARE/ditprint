@@ -36,6 +36,15 @@ export interface RawSignal {
    * descartado em `BaseSourceAgent.collect()` — não aparece e não pontua.
    */
   provenance?: string;
+  /**
+   * Impacto (0.0–1.0) já decidido pela própria fonte, por regra determinística
+   * explicada no agente. Usado por fontes OFICIAIS de contagem (embargos,
+   * reconhecimentos, desmatamento), onde "zero ocorrências" é medição de baixa
+   * tensão e "muitas ocorrências recentes" é medição de tensão alta. Quando
+   * presente, o classificador não aplica o impacto-base da regra de palavras
+   * nem o bônus de fonte oficial: usa este valor.
+   */
+  impactHint?: number;
   /** Free-form extra data — kept for drill-down / audit */
   metadata?: Record<string, unknown>;
 }

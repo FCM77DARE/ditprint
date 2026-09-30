@@ -247,7 +247,14 @@ export class Orchestrator {
     await this._persist(territory, period, stt, dimensions, executiveNote, activatedDimension);
 
     // 8. Persist signals (all relevant ones for reports, plus all alerts)
-    const signalsToPersist = allCollectedSignals.filter(s => s.impactScore >= 0.3 || s.triggersAlert);
+    const signalsToPersist = allCollectedSignals.filter(
+      (s) =>
+        s.impactScore >= 0.3 ||
+        s.triggersAlert ||
+        // Fonte oficial que respondeu "zero ocorrências" é evidência resolutiva
+        // de baixa tensão: precisa ficar no histórico, não só na cobertura.
+        (s.metadata as Record<string, unknown> | undefined)?.evidenciaOficial === true
+    );
     await this._persistSignals(territory, signalsToPersist);
 
     // 8a. APRENDIZADO AUTÔNOMO — cada coleta atualiza pesos e perfis
@@ -699,6 +706,9 @@ function dimensionFromSourceId(sourceAgentId: string): "D1" | "D2" | "D3" | "D4"
     "src-fiocruz-clima": "D1",
     "src-inpe-deter": "D1",
     "src-ibama": "D1",
+    "src-ibama-embargos": "D1",
+    "src-s2id-reconhecimentos": "D1",
+    "src-terrabrasilis-prodes": "D1",
     "src-mp-ambiental": "D1",
     "src-ibge-censo": "D2",
     "src-ibge-renda": "D2",
@@ -719,6 +729,10 @@ function dimensionFromSourceId(sourceAgentId: string): "D1" | "D2" | "D3" | "D4"
     "src-funai-iphan": "D4",
     "src-unicamp-terr": "D4",
     "src-querido-diario": "D5",
+    "src-siconfi": "D5",
+    "src-pncp": "D5",
+    "src-pncp-obras": "D3",
+    "src-camara-proposicoes": "D6",
     "src-conselhos": "D5",
     "src-audiencias": "D5",
     "src-orcamento-participativo": "D5",

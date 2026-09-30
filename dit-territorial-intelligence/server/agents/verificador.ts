@@ -79,6 +79,10 @@ const FONTES_ANCORADAS = new Set([
   "src-estrutural-d4",
   "src-querido-diario",
   "src-fogo-cruzado",
+  "src-siconfi",
+  "src-pncp", // consulta por código IBGE da unidade compradora
+  "src-pncp-obras",
+  "src-camara-proposicoes", // nome e UF já conferidos na ementa pelo próprio agente
   "src-aneel-siga",
   "src-datasus",
   "src-datasus-real",
@@ -89,6 +93,10 @@ const FONTES_ANCORADAS = new Set([
   "src-snis",
   "src-inmet",
   "src-ipeadata",
+  // D1 oficial: consulta por código IBGE do município
+  "src-ibama-embargos",
+  "src-s2id-reconhecimentos",
+  "src-terrabrasilis-prodes",
 ]);
 
 // ─── Homônimos ───────────────────────────────────────────────────────────────
