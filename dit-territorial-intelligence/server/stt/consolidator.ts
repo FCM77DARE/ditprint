@@ -48,6 +48,7 @@ import {
   STRUCTURAL_WEIGHT,
   type StructuralScores,
 } from "../structural/scoring";
+import { calcularMedicao, type MedicaoDoisNumeros } from "./medicao";
 
 const log = logger.child({ module: "stt-consolidator" });
 
@@ -147,6 +148,28 @@ export interface ConsolidatedStt {
   structuralBasis?: StructuralScores;
   /** Peso que a camada estrutural teve na composição final */
   structuralWeight?: number;
+  /**
+   * Medição em dois números (tensão + confiança + faixa). Calculada SEMPRE,
+   * em qualquer modo. `stt` acima continua sendo o número histórico; quem
+   * decide qual vira o principal é DIT_MODELO_MEDICAO (ver stt/medicao.ts).
+   */
+  medicao: MedicaoDoisNumeros;
+}
+
+/**
+ * Evidência por dimensão: tem sinal verificado que passou no cálculo
+ * (dimensionDetail.signals > 0) OU camada estrutural presente para ela.
+ * Estrutural conta como evidência.
+ */
+function evidenciaPorDimensao(
+  detail: Record<DimensionId, { signals: number; structural: number }>,
+  structural: StructuralScores
+): Record<DimensionId, boolean> {
+  const out = {} as Record<DimensionId, boolean>;
+  for (const id of Object.keys(DIM_WEIGHTS) as DimensionId[]) {
+    out[id] = (detail[id]?.signals ?? 0) > 0 || structural[id] != null;
+  }
+  return out;
 }
 
 /**
@@ -325,7 +348,13 @@ export async function consolidateSttFromHistory(
     );
 
     const emptyDetail = { signals: 0, structural: 0 };
+    const detailVazio: Record<DimensionId, { signals: number; structural: number }> = {
+      D1: { ...emptyDetail }, D2: { ...emptyDetail }, D3: { ...emptyDetail },
+      D4: { ...emptyDetail }, D5: { ...emptyDetail }, D6: { ...emptyDetail },
+      D7: { ...emptyDetail },
+    };
     return {
+      medicao: calcularMedicao(dims, DIM_WEIGHTS, evidenciaPorDimensao(detailVazio, structural)),
       stt: sttOnlyStructural,
       dimensions: dims,
       totalSignalsInWindow: 0,
@@ -477,6 +506,7 @@ export async function consolidateSttFromHistory(
     void DIMENSIONS_LIST;
 
     return {
+      medicao: calcularMedicao(dimensions, DIM_WEIGHTS, evidenciaPorDimensao(dimensionDetail, structural)),
       stt,
       dimensions,
       totalSignalsInWindow: rows.length,

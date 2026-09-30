@@ -7,6 +7,7 @@
 
 import type { Territory } from "../../drizzle/schema";
 import type { DimensionId, SourceId } from "../indicators";
+import type { MedicaoDoisNumeros } from "../stt/medicao";
 
 // ─── Raw Signal (output of a source agent) ───────────────────────────────────
 
@@ -121,6 +122,13 @@ export interface OrchestratorResult {
     /** STT calculado a partir do snapshot do dia (não publicado, só pra debug) */
     snapshotSttForComparison: number;
   } | null;
+  /**
+   * Medição em dois números (tensão + confiança + faixa), calculada sempre.
+   * Com DIT_MODELO_MEDICAO=tensao_confianca, `stt` passa a carregar `medicao.tensao`.
+   */
+  medicao?: MedicaoDoisNumeros | null;
+  /** Modelo de medição que definiu o número principal `stt` */
+  modeloMedicao?: "stt" | "tensao_confianca";
   /** ISO timestamp of when this run completed */
   completedAt: string;
 }

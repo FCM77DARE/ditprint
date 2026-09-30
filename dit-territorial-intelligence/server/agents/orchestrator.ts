@@ -28,6 +28,7 @@ import { detectAnomalies } from "../stt/anomalyDetector";
 import type { TerritoryContextData } from "../stt/types";
 import { dispatchAlert, dispatchAnomalyAlert, broadcastSignalToFeed } from "../alertEngine";
 import { consolidateSttFromHistory } from "../stt/consolidator";
+import { modeloMedicao } from "../stt/medicao";
 import type { BaseDimensionAgent } from "./base-dimension";
 import { DimSocioambiental } from "./dimensions/dim-socioambiental";
 import { DimSocioeconomico } from "./dimensions/dim-socioeconomico";
@@ -308,6 +309,12 @@ export class Orchestrator {
           }
         }
         consolidatedStt = historical.stt;
+        // Flag DIT_MODELO_MEDICAO: no modo tensao_confianca o número principal
+        // é a tensão medida (só dimensões com evidência). No modo padrão `stt`
+        // nada muda. Sem nenhuma dimensão com evidência (tensao null), mantém o STT.
+        if (modeloMedicao() === "tensao_confianca" && historical.medicao.tensao !== null) {
+          consolidatedStt = historical.medicao.tensao;
+        }
         consolidatedDimensions = dimensions;
         log.info(
           {
@@ -373,6 +380,8 @@ export class Orchestrator {
       period,
       // STT publicado é o CONSOLIDADO de 24 meses (não o snapshot).
       stt: consolidatedStt,
+      medicao: historical?.medicao ?? null,
+      modeloMedicao: modeloMedicao(),
       dimensions: consolidatedDimensions,
       alerts,
       totalSignals: totalSignalsCount,
