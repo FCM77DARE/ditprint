@@ -1566,7 +1566,10 @@ export function derivarIsca(fullResult: Record<string, unknown>): Record<string,
     gaugeColor: fullResult.gaugeColor,
     resolution: fullResult.resolution,
     coverageScore: fullResult.coverageScore,
-    leitura: fullResult.leitura ?? null,
+    // Sem o STT legado (número de transição, mede cobertura): a isca mostra Tensão e Confiança.
+    leitura: fullResult.leitura && typeof fullResult.leitura === "object"
+      ? (({ stt_legado: _legado, ...resto }) => resto)(fullResult.leitura as Record<string, unknown>)
+      : null,
     // Identidade do território (contexto + fatos recentes): vai inteira na isca.
     identidade: fullResult.identidade ?? null,
     // 1 parágrafo de síntese

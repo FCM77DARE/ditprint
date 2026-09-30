@@ -212,7 +212,9 @@ export function montarDados(e: EntradaMontagem): DadosRelatorio {
 
   // ── o que mudou e o que decide ─────────────────────────────────────────────
   const porTitulo = new Map(e.sinais.map((x) => [x.title.trim().slice(0, 60).toLowerCase(), x]));
-  const semana = arr<any>(ident.semana).map((x) => {
+  const semana = arr<any>(ident.semana)
+    .filter((x) => !RUIDO.test(s(x.fato)))
+    .map((x) => {
     const achou = porTitulo.get(s(x.fato).trim().slice(0, 60).toLowerCase());
     return {
       fato: s(x.fato),

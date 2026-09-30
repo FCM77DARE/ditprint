@@ -124,7 +124,7 @@ function PerfilTabela({ perfil }: { perfil: IndicadorPerfil[] }) {
               </td>
               <td className="py-2 text-xs text-tinta-2">
                 {i.fonte}
-                {i.periodo ? `, ${i.periodo}` : ""}
+                {i.periodo && !i.fonte.includes(i.periodo) ? `, ${i.periodo}` : ""}
               </td>
             </tr>
           ))}
@@ -934,7 +934,14 @@ export default function PublicoLeitura() {
         {leitura && !semTerritorio && (
           <section aria-label="Tensão e Confiança" className="space-y-3">
             {leitura.tensao !== null ? (
-              <TensaoBar tensao={leitura.tensao} faixa={leitura.faixa} confianca={leitura.confianca} />
+              // key: o valor muda quando a leitura completa chega; remontar evita que o contador de
+              // entrada (data-mo="count") congele o número da camada anterior.
+              <TensaoBar
+                key={`${completa ? "completa" : "parcial"}-${leitura.tensao}-${leitura.confianca}`}
+                tensao={leitura.tensao}
+                faixa={leitura.faixa}
+                confianca={leitura.confianca}
+              />
             ) : (
               <EmptyState
                 titulo="Sem número, de propósito"

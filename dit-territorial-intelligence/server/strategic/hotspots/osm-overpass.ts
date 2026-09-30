@@ -192,8 +192,13 @@ export async function collectOsmHotspots(
     const query = buildOverpassQuery(bbox);
     const res = await fetch(OVERPASS_ENDPOINT, {
       method: "POST",
-      headers: { "Content-Type": "text/plain" },
-      body: query,
+      // O Overpass devolve 406 para cliente sem User-Agent e Accept identificados.
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        Accept: "application/json",
+        "User-Agent": "Marco-PRINT/1.0 (relatorio-territorial)",
+      },
+      body: `data=${encodeURIComponent(query)}`,
       signal: AbortSignal.timeout(30000),
     });
 

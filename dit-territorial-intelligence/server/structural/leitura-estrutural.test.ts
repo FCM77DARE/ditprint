@@ -134,6 +134,18 @@ describe("resolverMunicipio", () => {
   });
 });
 
+describe("frasePublica", () => {
+  it("tira o travessão e troca o ponto decimal, sem tocar no milhar", () => {
+    expect(mod.frasePublica("densidade de 202,46 hab/km² (percentil 93 — adensamento alto); população de 246.391 (percentil 98)")).toBe(
+      "densidade de 202,46 hab/km² (percentil 93, adensamento alto); população de 246.391 (percentil 98)"
+    );
+    expect(mod.frasePublica("1.4 pessoas indígenas por mil habitantes, percentil 64.")).toBe(
+      "1,4 pessoas indígenas por mil habitantes, percentil 64."
+    );
+    expect(mod.frasePublica("2.104 habitantes")).toBe("2.104 habitantes");
+  });
+});
+
 describe("sugerirMunicipios", () => {
   it("prefixo primeiro, capital antes do homônimo, limite respeitado", async () => {
     const s = await mod.sugerirMunicipios("salvad");

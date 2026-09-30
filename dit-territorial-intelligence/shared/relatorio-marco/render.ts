@@ -622,8 +622,9 @@ export const MOVIMENTO_SRC = `(function(root){
   if(reduz||!('IntersectionObserver' in window)){for(var i=0;i<els.length;i++)els[i].classList.add('on');}
   else{
     root.classList.add('js');
-    var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('on');io.unobserve(e.target);}});},{rootMargin:'0px 0px -8% 0px',threshold:0.08});
-    for(var j=0;j<els.length;j++)io.observe(els[j]);
+    // Barra com scaleX(0) tem área zero e nunca cruza o limiar: observa-se o pai.
+    var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){var a=e.target;a.classList.add('on');(a.__barras||[]).forEach(function(b){b.classList.add('on');});io.unobserve(a);}});},{rootMargin:'0px 0px -8% 0px',threshold:0.08});
+    for(var j=0;j<els.length;j++){var el=els[j];if(el.classList.contains('bar')){var pai=el.parentElement;(pai.__barras=pai.__barras||[]).push(el);io.observe(pai);}else io.observe(el);}
   }
   var abertos=[];
   window.addEventListener('beforeprint',function(){abertos=[];root.querySelectorAll('details').forEach(function(d){if(!d.open){abertos.push(d);d.open=true;}});root.classList.add('imprimindo');for(var k=0;k<els.length;k++)els[k].classList.add('on');});

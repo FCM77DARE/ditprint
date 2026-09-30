@@ -256,6 +256,16 @@ export async function resolverMunicipio(bruto: string): Promise<ResolucaoMunicip
   return { tipo: "nao_encontrado", sugestoes: await sugerirMunicipios(texto, 5) };
 }
 
+/**
+ * Frase do score pronta para a tela: sem travessão e com vírgula decimal.
+ * A frase nasce em scoring.ts (também usada em relatório), onde o D4 escreve
+ * "1.4" e o D3 separa com travessão; aqui só se ajusta a forma, nunca o número.
+ * Milhar já vem com ponto e 3 dígitos ("246.391"), que a regra não toca.
+ */
+export function frasePublica(frase: string): string {
+  return frase.replace(/\s[—–]\s/g, ", ").replace(/(\d)\.(\d{1,2})(?!\d)/g, "$1,$2");
+}
+
 // ─── Perfil ──────────────────────────────────────────────────────────────────
 
 /** Indicadores que aparecem no perfil, na ordem de leitura. */
@@ -335,7 +345,7 @@ function sustentaDe(
           percentil: Math.round(b.pct * 100),
         });
     }
-    out.push({ dimensao: d.id, nome: d.nome, score: s.score, peso: d.peso, frase: s.rationale, base });
+    out.push({ dimensao: d.id, nome: d.nome, score: s.score, peso: d.peso, frase: frasePublica(s.rationale), base });
   }
   return out;
 }
@@ -350,7 +360,9 @@ function leituraDeScores(scores: StructuralScores): Leitura {
     escores[id] = s ? s.score : null;
     evidencia[id] = { estrutural: Boolean(s), sinaisVerificados: 0 };
   }
-  return leituraDeEvidencia(escores, evidencia);
+  // O STT legado é número de transição interno (mede cobertura, não território): não sai na isca pública.
+  const { stt_legado: _legado, ...publica } = leituraDeEvidencia(escores, evidencia);
+  return publica;
 }
 
 export async function leituraEstruturalDoMunicipio(m: MunicipioEstrutural): Promise<LeituraEstrutural> {
