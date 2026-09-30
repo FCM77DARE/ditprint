@@ -50,7 +50,7 @@ export default function RadarTerritorial() {
       icon: BarChart3,
       title: "STT Atualizado",
       description:
-        "Score de Território Total revisado mensalmente com variação em relação ao período anterior. Você sabe exatamente se a complexidade aumentou, estabilizou ou recuou.",
+        "Score de Tensão Territorial revisado mensalmente com variação em relação ao período anterior. Você sabe exatamente se a complexidade aumentou, estabilizou ou recuou.",
     },
     {
       icon: Bell,

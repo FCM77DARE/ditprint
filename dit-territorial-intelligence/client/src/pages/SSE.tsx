@@ -91,17 +91,16 @@ export default function SSE() {
 
             {/* Headline */}
             <h2 className="mb-8 font-display text-5xl font-bold leading-tight tracking-tight text-foreground lg:text-6xl">
-              Nem todo setor ativa o território da mesma forma.
+              Cada setor se relaciona de um jeito diferente com o território.
             </h2>
 
             {/* Description */}
             <div className="mb-12 space-y-6">
               <p className="mx-auto max-w-3xl font-body text-xl leading-relaxed text-muted-foreground">
-                O SSE™ cruza o <span className="font-bold text-accent text-glow-cyan">Score Territorial Total (STT)</span> com dinâmicas setoriais específicas, revelando como diferentes segmentos interagem com a complexidade estrutural do território.
+                O SSE™ mostra como a presença e a atuação de um setor se relacionam com as características, forças e fragilidades de cada território.
               </p>
               <p className="mx-auto max-w-3xl font-body text-lg leading-relaxed text-muted-foreground">
-                Baseado no DIT, o SSE transforma leitura territorial em{" "}
-                <span className="font-bold text-primary text-glow">exposição setorial mensurável</span>.
+                Para isso, o indicador cruza o <span className="font-bold text-accent text-glow-cyan">STT</span> com fatores específicos do setor analisado, e identifica onde a atividade tende a encontrar maior sensibilidade, maior aderência ou maior potencial de impacto.
               </p>
             </div>
 

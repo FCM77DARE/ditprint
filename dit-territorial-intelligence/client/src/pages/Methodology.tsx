@@ -28,7 +28,6 @@ export default function Methodology() {
       code: "D1",
       name: "Socioambiental",
       description: "Mede impactos ambientais, clima e fiscalização do território",
-      weight: "20%",
       variables: ["Bioma e Clima", "Passivos Ambientais", "Unidades de Conservação"],
       icon: Shield,
       color: "text-green-600"
@@ -37,7 +36,6 @@ export default function Methodology() {
       code: "D2",
       name: "Socioeconômica",
       description: "Avalia densidade demográfica, pobreza e desenvolvimento social",
-      weight: "14%",
       variables: ["Demografia", "Emprego e Renda", "Índice de Gini"],
       icon: Layers,
       color: "text-orange-600"
@@ -46,7 +44,6 @@ export default function Methodology() {
       code: "D3",
       name: "Infraestrutura",
       description: "Analisa capacidades urbanas, saneamento e logística",
-      weight: "14%",
       variables: ["Saneamento", "Habitação", "Portos e Transportes"],
       icon: Database,
       color: "text-blue-600"
@@ -55,7 +52,6 @@ export default function Methodology() {
       code: "D4",
       name: "Dinâmica Territorial",
       description: "Mapeia conflitos, uso do solo e segurança pública",
-      weight: "20%",
       variables: ["Plano Diretor", "Segurança", "Comunidades Tradicionais"],
       icon: AlertTriangle,
       color: "text-red-600"
@@ -64,7 +60,6 @@ export default function Methodology() {
       code: "D5",
       name: "Governança",
       description: "Mede o engajamento cívico e a capacidade institucional",
-      weight: "12%",
       variables: ["Transparência", "Conselhos", "Audiências Públicas"],
       icon: FileCheck,
       color: "text-purple-600"
@@ -73,19 +68,9 @@ export default function Methodology() {
       code: "D6",
       name: "Reputação",
       description: "Dimensiona a exposição midiática e o interesse digital",
-      weight: "10%",
       variables: ["Notícias", "Redes Sociais", "Estudos Universitários"],
       icon: TrendingUp,
       color: "text-teal-600"
-    },
-    {
-      code: "D7",
-      name: "Recursos Naturais e Potencial",
-      description: "Potencial para minerais estratégicos e tecnologias emergentes",
-      weight: "10%",
-      variables: ["Terras Raras", "Energia Limpa", "Data Centers"],
-      icon: TrendingUp,
-      color: "text-cyan-600"
     }
   ];
 
@@ -128,41 +113,9 @@ export default function Methodology() {
             </h1>
 
             <p className="mx-auto max-w-2xl font-body text-xl leading-relaxed text-muted-foreground">
-              O Score de Território Total (STT) é um índice proprietário que consolida{" "}
-              <span className="font-bold text-primary">sete dimensões estruturais</span> em uma métrica única de complexidade territorial.
+              O Score de Tensão Territorial (STT) é um índice proprietário que consolida{" "}
+              <span className="font-bold text-primary">seis dimensões estruturais</span> em uma métrica única de complexidade territorial.
             </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Fórmula do STT */}
-      <section className="relative border-t border-border/40 bg-card/20 py-24">
-        <div className="container max-w-5xl">
-          <div className="mb-16 text-center">
-            <h2 className="mb-6 font-display text-5xl font-bold tracking-tight text-foreground">
-              Fórmula do STT
-            </h2>
-            <p className="mx-auto max-w-2xl font-body text-lg text-muted-foreground">
-              Índice composto por sete dimensões dinamicamente ponderadas
-            </p>
-          </div>
-
-          <div className="glass rounded-2xl p-12">
-            <div className="mb-8 flex justify-center">
-              <div className="rounded-xl bg-primary/10 px-8 py-6 font-mono text-2xl font-bold text-primary">
-                STT = (D1×20%) + (D2×14%) + (D3×14%) + (D4×20%) + (D5×12%) + (D6×10%) + (D7×10%)
-              </div>
-            </div>
-
-            <div className="space-y-4 text-center">
-              <p className="font-body text-lg text-muted-foreground">
-                Cada índice varia de <span className="font-bold text-foreground">0 a 100</span>, 
-                resultando em um STT final também na escala <span className="font-bold text-foreground">0-100</span>.
-              </p>
-              <p className="font-body text-base text-muted-foreground">
-                A distribuição de pesos reflete a relevância crítica das dinâmicas socioambientais (D1) e tensões territoriais (D4), complementadas por capacidades locais e potenciais inerentes (D7).
-              </p>
-            </div>
           </div>
         </div>
       </section>
@@ -178,7 +131,7 @@ export default function Methodology() {
               </span>
             </div>
             <h2 className="mb-6 font-display text-5xl font-bold tracking-tight text-foreground">
-              As sete dimensões do STT
+              As seis dimensões do STT
             </h2>
             <p className="mx-auto max-w-2xl font-body text-lg text-muted-foreground">
               Cada índice captura uma dimensão específica da complexidade territorial
@@ -198,9 +151,6 @@ export default function Methodology() {
                         <CardTitle className="font-display text-2xl font-bold tracking-tight text-foreground">
                           {index.code}
                         </CardTitle>
-                        <span className="rounded-full bg-primary/10 px-3 py-1 font-mono text-xs font-bold text-primary">
-                          {index.weight}
-                        </span>
                       </div>
                       <p className="font-body text-lg font-medium text-foreground">
                         {index.name}

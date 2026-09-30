@@ -139,7 +139,7 @@ export default function SignalFeed({
                   : "Conectando à malha de sinais..."}
               </p>
               <p className="font-mono text-[10px] text-muted-foreground/60">
-                Ciclo de coleta: a cada 4h · 47 territórios · 35 fontes ativas
+                Ciclo de coleta: a cada 4h
               </p>
             </div>
           ) : (

@@ -21,7 +21,7 @@ const LOADING_STEPS = [
   { icon: "🌐", title: "Identificando no IBGE",        detail: "Localizando município, estado e região geográfica..." },
   { icon: "🤖", title: "Ativando 32 agentes PRINT",     detail: "D1 Socioambiental · D2 Socioeconômica · D3 Infraestrutura..." },
   { icon: "📊", title: "Processando fontes oficiais",   detail: "IBAMA · CEMADEN · IBGE · DataSUS · INEP · Querido Diário..." },
-  { icon: "🧮", title: "Calculando STT com orquestrador", detail: "6 dimensões consolidadas · Σ(Di × Wi)..." },
+  { icon: "🧮", title: "Calculando STT com orquestrador", detail: "6 dimensões consolidadas em uma escala de 0 a 100..." },
   { icon: "✍️", title: "Gerando análise executiva",     detail: "IA PRINT sintetizando diagnóstico e recomendações..." },
 ];
 // Marcos de tempo em ms (cumulativos) — quando cada step entra em "running"
@@ -104,24 +104,6 @@ export default function LandingSimple() {
     }
   }, [result]);
 
-  const socialProof = [
-    {
-      territory: "Macaé - RJ",
-      summary: "Pressão estrutural elevada em Cabiúnas devido ao avanço de novos terminais logísticos e conflitos de uso do solo com comunidades tradicionais de pescadores. O score ITT (Infraestrutura) atingiu 82 pontos.",
-      stt: 78
-    },
-    {
-      territory: "Alagoinhas - BA",
-      summary: "Complexidade hídrica crítica. O cruzamento de dados industriais com o IVE (Vulnerabilidade Econômica) revela uma saturação iminente dos aquíferos locais, exigindo novas estratégias de governança regional.",
-      stt: 64
-    },
-    {
-      territory: "Bacia do Teles Pires - MT/PA",
-      summary: "Cenário de escalada sistêmica. A expansão da fronteira agrícola sobre terras indígenas e áreas de preservação ambiental ativou 4 das 6 dimensões de risco em 24 meses.",
-      stt: 89
-    }
-  ];
-
   const products = [
     {
       id: "radar",
@@ -201,9 +183,6 @@ export default function LandingSimple() {
                 </Button>
               </div>
             </div>
-            <p className="mt-4 font-mono text-xs text-muted-foreground">
-              <span className="text-primary font-bold animate-pulse">●</span> DIT Engine ativado e monitorando 47 territórios estratégicos
-            </p>
           </form>
 
           {/* Loading panel — visível durante a análise */}
@@ -270,6 +249,19 @@ export default function LandingSimple() {
               </div>
             </div>
           )}
+
+          {/* O que é o DIT */}
+          <div className="mx-auto max-w-2xl space-y-3 rounded-2xl border border-border/40 bg-card/40 p-6 text-left glass">
+            <h2 className="font-display text-2xl font-bold tracking-tight text-foreground">
+              Diagnóstico de Inteligência Territorial (DIT)
+            </h2>
+            <p className="font-body text-base leading-relaxed text-muted-foreground">
+              Reunimos e cruzamos dados de diferentes fontes sobre o território, transformando-os em inteligência para compreender o contexto e orientar decisões.
+            </p>
+            <p className="font-body text-base leading-relaxed text-muted-foreground">
+              Para isso, o DIT conta com o STT, Score de Tensão Territorial, que integra seis dimensões e traduz, numa escala de 0 a 100, o grau de tensão do território.
+            </p>
+          </div>
         </div>
       </section>
 
@@ -280,12 +272,12 @@ export default function LandingSimple() {
         </section>
       )}
 
-      {/* Social Proof & Intelligence Sections */}
+      {/* Inteligência em tempo real */}
       <section className="border-t border-border/40 bg-card/10 py-24 relative overflow-hidden">
         <div className="absolute inset-0 bg-neural-pattern opacity-5" />
         <div className="container relative z-10">
-          <div className="grid gap-16 lg:grid-cols-2">
-            {/* Left: Signal Feed (The 'Intelligence' part) */}
+          <div className="mx-auto max-w-3xl">
+            
             <div className="space-y-8">
               <div className="space-y-4">
                 <div className="inline-flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/10 px-4 py-2 glass">
@@ -296,7 +288,7 @@ export default function LandingSimple() {
                   Inteligência em Tempo Real
                 </h2>
                 <p className="font-body text-lg text-muted-foreground">
-                  Nossa IA processa milhares de sinais diários para detectar variações na complexidade territorial. O feed abaixo mostra o processamento ao vivo.
+                  Nossa IA processa sinais diários para detectar variações no território. O feed abaixo mostra o processamento ao vivo das últimas localidades pesquisadas.
                 </p>
               </div>
               <SignalFeed maxItems={6} />
@@ -308,45 +300,6 @@ export default function LandingSimple() {
                   <p className="font-display font-bold">Score STT Dinâmico</p>
                   <p className="font-body text-sm text-muted-foreground">Variações capturadas mensalmente para assinantes Radar™.</p>
                 </div>
-              </div>
-            </div>
-
-            {/* Right: Social Proof */}
-            <div className="space-y-8">
-              <div className="space-y-4">
-                <div className="inline-flex items-center gap-2 rounded-lg border border-accent/30 bg-accent/10 px-4 py-2 glass">
-                  <ShieldCheck className="h-4 w-4 text-accent" />
-                  <span className="font-mono text-xs font-bold uppercase tracking-wider text-accent">Prova Social</span>
-                </div>
-                <h2 className="font-display text-4xl font-bold tracking-tight text-glow">
-                  Casos de Sucesso DIT
-                </h2>
-                <p className="font-body text-lg text-muted-foreground">
-                  O que a inteligência territorial já entregou para operações reais de alto impacto.
-                </p>
-              </div>
-
-              <div className="grid gap-6">
-                {socialProof.map((item, idx) => (
-                  <Card key={idx} className="glass border-border/50 transition-all hover:border-primary/30 hover:scale-[1.02]">
-                    <CardHeader className="pb-2">
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="font-display text-xl font-bold text-primary">
-                          {item.territory}
-                        </CardTitle>
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono text-xs font-bold text-muted-foreground">STT</span>
-                          <span className="font-mono text-xl font-bold text-glow">{item.stt}</span>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="font-body text-sm leading-relaxed text-muted-foreground italic">
-                        "{item.summary}"
-                      </p>
-                    </CardContent>
-                  </Card>
-                ))}
               </div>
             </div>
           </div>

@@ -531,9 +531,9 @@ export default function DiagnosisReport({ result: t }: Props) {
         <div className="stt-primer">
           <div className="stt-primer-label">Como ler este resultado</div>
           <p className="stt-primer-text">
-            O <strong>Score de Território Total (STT)</strong> é um índice proprietário
+            O <strong>Score de Tensão Territorial (STT)</strong> é um índice proprietário
             que avalia o grau de complexidade de um território a partir da análise
-            integrada de sete dimensões estruturais. <strong>Quanto maior o score,
+            integrada de seis dimensões estruturais. <strong>Quanto maior o score,
             maior a complexidade local.</strong>
           </p>
           <a href="/metodologia" className="stt-primer-link">
@@ -833,7 +833,7 @@ export default function DiagnosisReport({ result: t }: Props) {
             <div className="method-label">Metodologia · PRINT Intelligence</div>
             <div className="method-title">6 DIMENSÕES,<br />32 FONTES VERIFICADAS</div>
             <p className="method-text">
-              STT = Σ(Di × Wi) com pesos calibrados por impacto territorial. Coleta em tempo real de APIs governamentais, mídia e inteligência de campo.
+              STT com pesos calibrados por impacto territorial. Coleta em tempo real de APIs governamentais, mídia e inteligência de campo.
             </p>
           </div>
           <div className="method-right">

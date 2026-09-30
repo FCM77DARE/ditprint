@@ -44,11 +44,11 @@ export default function Header() {
             <Link href="/" className="font-body text-sm font-medium text-muted-foreground transition-all hover:text-foreground hover:text-glow">
               Territórios
             </Link>
-            <Link href="/sse" className="font-body text-sm font-medium text-muted-foreground transition-all hover:text-foreground hover:text-glow">
-              SSE™
-            </Link>
             <Link href="/metodologia" className="font-body text-sm font-medium text-muted-foreground transition-all hover:text-foreground hover:text-glow">
               Metodologia
+            </Link>
+            <Link href="/sse" className="font-body text-sm font-medium text-muted-foreground transition-all hover:text-foreground hover:text-glow">
+              SSE™
             </Link>
             <Link href="/radar" className="font-body text-sm font-medium text-muted-foreground transition-all hover:text-foreground hover:text-glow">
               Radar™
