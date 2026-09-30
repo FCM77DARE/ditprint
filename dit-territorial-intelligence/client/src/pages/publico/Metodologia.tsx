@@ -17,48 +17,66 @@ export default function PublicoMetodologia() {
     <PageShell>
       <article className="container max-w-4xl space-y-12 py-12 md:py-16">
         <header className="space-y-3">
-          <h1 className="text-3xl md:text-4xl">A tensão soma seis dimensões, e um analista publica cada número.</h1>
+          <h1 className="text-3xl md:text-4xl">STT: como medimos a tensão do território em seis dimensões, com um analista por trás de cada número.</h1>
           <p className="max-w-prose text-tinta-2">
-            Você não deveria confiar em um número que não consegue conferir. Aqui está a conta inteira, com os pesos que o
-            motor usa hoje.
+            Você não deveria confiar em um número que não consegue conferir. Aqui está como a conta funciona, e os pesos
+            estão abertos logo abaixo.
           </p>
         </header>
 
-        <Secao titulo="Cada dimensão pesa o que a metodologia define, e só entra quem foi medida." nota="Pesos lidos da mesma constante que o motor usa (shared/metodologia.ts, conferida por teste).">
-          <p className="num rounded-[6px] border bg-superficie p-4 text-sm md:text-base">
-            Tensão = Σ (Di × Wi) ÷ Σ Wi, somando só as dimensões medidas
-          </p>
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[34rem] border-collapse text-sm">
-              <caption className="sr-only">Dimensões, pesos e o que cada uma observa</caption>
-              <thead>
-                <tr className="text-left text-xs text-tinta-2">
-                  <th scope="col" className="pb-2 pr-4 font-medium">Dimensão</th>
-                  <th scope="col" className="pb-2 pr-4 text-right font-medium">Peso</th>
-                  <th scope="col" className="pb-2 font-medium">O que observa</th>
-                </tr>
-              </thead>
-              <tbody>
-                {DIMENSOES_METODOLOGIA.map(d => (
-                  <tr key={d.id} className="border-t align-top">
-                    <th scope="row" className="py-2 pr-4 text-left font-medium text-tinta">
-                      <span className="num text-tinta-2">{d.id}</span> {d.nome}
-                      {d.emCalibracao && (
-                        <span className="ml-2 align-middle">
-                          <Chip tom="contorno">em calibração</Chip>
-                        </span>
-                      )}
-                    </th>
-                    <td className="num py-2 pr-4 text-right text-tinta">{pct(d.peso)}</td>
-                    <td className="py-2 text-tinta-2">
-                      {d.olha}
-                      {d.emCalibracao && " Fora do cálculo até a calibração terminar."}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        <Secao titulo="O território é lido em seis dimensões, e só entra na conta quem foi medida.">
+          <ul className="grid gap-x-8 gap-y-3 text-sm md:grid-cols-2">
+            {DIMENSOES_METODOLOGIA.filter(d => !d.emCalibracao).map(d => (
+              <li key={d.id} className="border-t pt-2">
+                <p className="font-medium text-tinta">
+                  <span className="num text-tinta-2">{d.id}</span> {d.nome}
+                </p>
+                <p className="text-tinta-2">{d.olha}</p>
+              </li>
+            ))}
+          </ul>
+          <details className="rounded-[6px] border bg-superficie p-4">
+            <summary className="cursor-pointer text-sm font-medium text-tinta focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2">
+              Ver os pesos de cada dimensão
+            </summary>
+            <div className="mt-4 space-y-4">
+              <p className="nota">Pesos lidos da mesma constante que o motor usa (shared/metodologia.ts, conferida por teste).</p>
+              <p className="num rounded-[6px] border bg-superficie p-4 text-sm md:text-base">
+                Tensão = Σ (Di × Wi) ÷ Σ Wi, somando só as dimensões medidas
+              </p>
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[34rem] border-collapse text-sm">
+                  <caption className="sr-only">Dimensões, pesos e o que cada uma observa</caption>
+                  <thead>
+                    <tr className="text-left text-xs text-tinta-2">
+                      <th scope="col" className="pb-2 pr-4 font-medium">Dimensão</th>
+                      <th scope="col" className="pb-2 pr-4 text-right font-medium">Peso</th>
+                      <th scope="col" className="pb-2 font-medium">O que observa</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {DIMENSOES_METODOLOGIA.map(d => (
+                      <tr key={d.id} className="border-t align-top">
+                        <th scope="row" className="py-2 pr-4 text-left font-medium text-tinta">
+                          <span className="num text-tinta-2">{d.id}</span> {d.nome}
+                          {d.emCalibracao && (
+                            <span className="ml-2 align-middle">
+                              <Chip tom="contorno">em calibração</Chip>
+                            </span>
+                          )}
+                        </th>
+                        <td className="num py-2 pr-4 text-right text-tinta">{pct(d.peso)}</td>
+                        <td className="py-2 text-tinta-2">
+                          {d.olha}
+                          {d.emCalibracao && " Fora do cálculo até a calibração terminar."}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </details>
         </Secao>
 
         <Secao titulo="Duas camadas alimentam cada dimensão: a estrutural e a dos sinais.">

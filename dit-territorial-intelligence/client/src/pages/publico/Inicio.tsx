@@ -78,7 +78,7 @@ export default function PublicoInicio() {
           <h1 className="text-4xl md:text-6xl">Toda operação tem um CEP.</h1>
           <p className="max-w-2xl text-lg text-tinta">
             Você decide entrar, operar ou responder em um território sem saber o que ele aguenta. O território decide.
-            O DIT mede a tensão do seu CEP e diz o que mudou.
+            Medimos a tensão do seu CEP e dizemos o que mudou.
           </p>
           <div className="flex flex-wrap items-center gap-3">
             <Link href="/diagnostico" className={cn(botaoVariants({ variant: "primario", size: "lg" }))}>
@@ -98,6 +98,25 @@ export default function PublicoInicio() {
       </section>
 
       <div className="space-y-14 border-t bg-background pb-16 pt-14 md:space-y-20 md:pb-24 md:pt-20">
+        {/* 1b. O que é o DIT */}
+        <section className="container" aria-labelledby="o-que-e">
+          <div className="max-w-3xl space-y-3">
+            <p className="nota uppercase tracking-wide">O que é o DIT</p>
+            <h2 id="o-que-e" className="text-2xl">
+              Diagnóstico de Inteligência Territorial
+            </h2>
+            <p className="text-tinta-2">
+              Reunimos e cruzamos dados de diferentes fontes sobre o território, transformando-os em inteligência para
+              compreender o contexto e orientar decisões.
+            </p>
+            <p className="text-tinta-2">
+              Para isso, o DIT publica o STT, Score de Tensão Territorial: uma escala de 0 a 100 que integra seis
+              dimensões do território, sempre acompanhada da Confiança, que diz quanto do território foi de fato
+              medido.
+            </p>
+          </div>
+        </section>
+
         {/* 2. Os três momentos */}
         <section className="container" aria-labelledby="momentos">
           <h2 id="momentos" className="text-2xl">

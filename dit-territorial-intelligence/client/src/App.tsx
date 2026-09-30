@@ -13,6 +13,7 @@ import PublicoDiagnostico from "./pages/publico/Diagnostico";
 import PublicoRadar from "./pages/publico/Radar";
 import PublicoMetodologia from "./pages/publico/Metodologia";
 import PublicoTerritorio from "./pages/publico/Territorio";
+import PublicoSse from "./pages/publico/Sse";
 import PublicoEntrar from "./pages/publico/Entrar";
 
 // Portal do assinante
@@ -67,7 +68,7 @@ function Router() {
       </Route>
       <Route path="/dashboard">{() => <Redirect to="/mesa" />}</Route>
       <Route path="/portal/configuracoes">{() => <Redirect to="/portal/conta" />}</Route>
-      <Route path="/sse">{() => <Redirect to="/diagnostico" />}</Route>
+      <Route path="/sse" component={PublicoSse} />
       <Route path="/dev">{() => <Redirect to="/mesa" />}</Route>
       <Route path="/sobre">{() => <Redirect to="/metodologia" />}</Route>
 

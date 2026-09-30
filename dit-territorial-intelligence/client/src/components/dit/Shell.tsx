@@ -25,8 +25,9 @@ function AlternarTema() {
 
 export const NAV_PUBLICO = [
   { href: "/#como-funciona", rotulo: "Como funciona" },
-  { href: "/radar", rotulo: "Radar" },
   { href: "/metodologia", rotulo: "Metodologia" },
+  { href: "/sse", rotulo: "SSE" },
+  { href: "/radar", rotulo: "Radar" },
   { href: "/entrar", rotulo: "Entrar" },
 ];
 
