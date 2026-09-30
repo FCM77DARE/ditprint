@@ -1,3 +1,4 @@
+import { Acao, TopoPagina } from "./MarcoShell";
 import { Link } from "wouter";
 import { PageShell, Secao, botaoVariants } from "@/components/dit";
 import { Palavras } from "@/components/dit/motion";
@@ -49,25 +50,11 @@ const FAQ: ItemFaq[] = [
 export default function PublicoRadar() {
   return (
     <PageShell>
+      <TopoPagina rotulo="Marco Radar" titulo="Você abre o Marco Radar e sabe o que mudou no seu CEP antes do jornal."
+        acoes={<><Acao href="/diagnostico?interesse=radar" clara>Pedir acesso ao Marco Radar</Acao><Link href="/entrar" className="link-claro">Já assino, quero entrar</Link></>}>
+        <p>Quando o território muda, quem descobre pela imprensa já está atrasado. O Marco Radar entrega a leitura dos seus territórios todos os dias, com a assinatura de um analista.</p>
+      </TopoPagina>
       <div className="container max-w-4xl space-y-12 py-12 md:py-16">
-        <header className="space-y-4">
-          <Palavras as="h1" className="text-3xl md:text-4xl" texto="Você abre o Marco Radar e sabe o que mudou no seu CEP antes do jornal." />
-          <p className="max-w-prose text-tinta-2">
-            Quando o território muda, quem descobre pela imprensa já está atrasado. O Marco Radar entrega a leitura dos seus
-            territórios todos os dias, com a assinatura de um analista.
-          </p>
-          <div className="flex flex-wrap items-center gap-3">
-            <Link
-              href="/diagnostico?interesse=radar"
-              className={cn(botaoVariants({ variant: "primario", size: "lg" }))}
-            >
-              Pedir acesso ao Marco Radar
-            </Link>
-            <Link href="/entrar" className={cn(botaoVariants({ variant: "secundario", size: "lg" }))}>
-              Entrar
-            </Link>
-          </div>
-        </header>
 
         <Secao titulo="O que chega para você, todos os dias.">
           <ul data-mo="stagger" className="grid gap-4 md:grid-cols-2">

@@ -146,6 +146,22 @@ export async function getTodaySnapshot(slug: string): Promise<unknown | null> {
 }
 
 /**
+ * Lê o snapshot mais recente do território (o do dia, ou o último dia salvo).
+ * Usado pelo relatório Marco, que não precisa ser do dia, só do último /analyze.
+ */
+export async function getLatestSnapshot(slug: string): Promise<{ date: string; computedAt?: string; result: unknown } | null> {
+  const dir = snapshotDir(slug);
+  try {
+    const arquivos = (await fs.readdir(dir)).filter((f) => /^\d{4}-\d{2}-\d{2}\.json$/.test(f)).sort();
+    const ultimo = arquivos[arquivos.length - 1];
+    if (!ultimo) return null;
+    return JSON.parse(await fs.readFile(join(dir, ultimo), "utf8"));
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Lê o histórico de STT de um território (array cronológico).
  * Útil para gráfico de tendência no dashboard.
  */

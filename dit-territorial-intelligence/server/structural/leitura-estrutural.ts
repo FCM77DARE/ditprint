@@ -263,7 +263,7 @@ export async function resolverMunicipio(bruto: string): Promise<ResolucaoMunicip
  * Milhar já vem com ponto e 3 dígitos ("246.391"), que a regra não toca.
  */
 export function frasePublica(frase: string): string {
-  return frase.replace(/\s[—–]\s/g, ", ").replace(/(\d)\.(\d{1,2})(?!\d)/g, "$1,$2");
+  return frase.replace(/\s[\u2014\u2013]\s/g, ", ").replace(/(\d)\.(\d{1,2})(?!\d)/g, "$1,$2").replace(/\b1 pessoas\b/, "1 pessoa");
 }
 
 // ─── Perfil ──────────────────────────────────────────────────────────────────

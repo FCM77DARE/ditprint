@@ -1,3 +1,4 @@
+import { TopoPagina } from "./MarcoShell";
 import { Link } from "wouter";
 import { Chip, FAIXAS_TENSAO, PageShell, Secao, botaoVariants } from "@/components/dit";
 import { Palavras } from "@/components/dit/motion";
@@ -16,15 +17,10 @@ const pct = (n: number) => `${Math.round(n * 100)}%`;
 export default function PublicoMetodologia() {
   return (
     <PageShell>
+      <TopoPagina rotulo="Metodologia · antes chamado de STT (Score de Tensão Territorial)" titulo="Como medimos a tensão do território, com um analista por trás de cada número.">
+        <p>Você não deveria confiar em um número que não consegue conferir. Aqui está como a conta funciona, e os pesos estão abertos logo abaixo.</p>
+      </TopoPagina>
       <article className="container max-w-4xl space-y-12 py-12 md:py-16">
-        <header className="space-y-3">
-          <p className="nota">Antes chamado de STT (Score de Tensão Territorial).</p>
-          <Palavras as="h1" className="text-3xl md:text-4xl" texto="Tensão: como medimos o território em seis dimensões, com um analista por trás de cada número." />
-          <p className="max-w-prose text-tinta-2">
-            Você não deveria confiar em um número que não consegue conferir. Aqui está como a conta funciona, e os pesos
-            estão abertos logo abaixo.
-          </p>
-        </header>
 
         <Secao titulo="O território é lido em seis dimensões, e só entra na conta quem foi medida.">
           <ul data-mo="stagger" className="grid gap-x-8 gap-y-3 text-sm md:grid-cols-2">

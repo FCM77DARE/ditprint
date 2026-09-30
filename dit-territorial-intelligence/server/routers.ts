@@ -1280,6 +1280,31 @@ Use linguagem executiva, precisa e direta. Evite jargões desnecessários. Foco 
         };
       }),
 
+    /**
+     * Diagnóstico completo (relatório Marco) de um território: o último /analyze
+     * salvo (snapshot) + os sinais verificados com data e link. Operador vê todos;
+     * assinante só os territórios do contrato (exigirTerritorio).
+     */
+    relatorio: portalProcedure
+      .input(z.object({ slug: z.string().min(2).max(120) }))
+      .query(async ({ ctx, input }) => {
+        exigirTerritorio(ctx.portal, input.slug);
+        const { getLatestSnapshot, getSttHistory: historicoDoSnapshot } = await import("./stt/dit-snapshot-store");
+        const snap = await getLatestSnapshot(input.slug);
+        if (!snap || typeof snap.result !== "object" || snap.result === null) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Este território ainda não tem diagnóstico completo gerado." });
+        }
+        const { montarDados } = await import("./relatorio/montar-dados");
+        const { lerSinaisDoTerritorio } = await import("./relatorio/ler-sinais");
+        const historico = (await historicoDoSnapshot(input.slug)).map((h) => ({ date: h.date, stt: h.stt }));
+        return montarDados({
+          analyze: snap.result as Record<string, any>,
+          sinais: lerSinaisDoTerritorio(input.slug),
+          historico,
+          agora: snap.computedAt ? new Date(snap.computedAt) : undefined,
+        });
+      }),
+
     /** Histórico publicado de um território do assinante. */
     historico: portalProcedure
       .input(z.object({ slug: z.string(), limit: z.number().int().min(1).max(24).default(12) }))

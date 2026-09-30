@@ -91,6 +91,31 @@ function momentoDe(r: { momento?: string; urgency?: string }): RecomendacaoRel["
   return "entrar";
 }
 
+
+/**
+ * Extrai "rótulo: valor" de um sinal estrutural ou de contagem oficial. Só aceita
+ * valor curto e numérico; título de notícia ou frase longa não vira indicador.
+ */
+function indicadorDe(sig: SinalDoStore): { rotulo: string; valor: string } | null {
+  const titulo = sig.title.trim();
+  if (/^not[ií]cia/i.test(titulo)) return null;
+  const maiuscula = (x: string) => x.charAt(0).toUpperCase() + x.slice(1);
+  const curto = (r: string, v: string) =>
+    v.length <= 24 && r.length <= 60 && /\d/.test(v) ? { rotulo: maiuscula(r.trim()), valor: v.trim() } : null;
+  if (sig.source.startsWith("src-estrutural")) {
+    const i = titulo.indexOf(":");
+    return i > 1 ? curto(titulo.slice(0, i), titulo.slice(i + 1)) : null;
+  }
+  const depois = titulo.slice(titulo.lastIndexOf(":") + 1).trim();
+  // "1470 estabelecimentos de saúde cadastrados"
+  const a = depois.match(/^([\d.,]+)\s+([^\d(][^(]*)$/);
+  if (a) return curto(a[2], Number(a[1].replace(/\./g, "").replace(",", ".")).toLocaleString("pt-BR"));
+  // "densidade demográfica 247,7 hab/km² (município 3304904)"
+  const b = depois.match(/^(.+?)\s+([\d.,]+\s*\S+)\s*(?:\(.*\))?$/);
+  if (b) return curto(b[1], b[2]);
+  return null;
+}
+
 export function montarDados(e: EntradaMontagem): DadosRelatorio {
   const a = e.analyze;
   const agora = e.agora ?? new Date();
@@ -119,6 +144,7 @@ export function montarDados(e: EntradaMontagem): DadosRelatorio {
   // ── sinais verificados por dimensão ────────────────────────────────────────
   const porDim = new Map<string, SinalRel[]>();
   const vistos = new Set<string>();
+  const foraDeEscopo = new Set<string>();
   for (const sig of e.sinais) {
     const verificado = sig.structural === true || (sig.metadata as any)?.verificado === true;
     if (!verificado) continue;
@@ -126,16 +152,31 @@ export function montarDados(e: EntradaMontagem): DadosRelatorio {
     if (!dim) continue;
     const titulo = sig.title.trim();
     if (RUIDO.test(titulo)) continue;
+    // "Fora do escopo" é a fonte dizendo que não mede este lugar: não sustenta nada.
+    if (/fora do escopo/i.test(titulo)) {
+      foraDeEscopo.add(sig.source);
+      continue;
+    }
     const chave = `${sig.source}|${titulo.toLowerCase()}`;
     if (vistos.has(chave)) continue;
     vistos.add(chave);
     const imprensa = FONTES_DE_IMPRENSA.has(sig.source);
-    const periodo = s((sig.metadata as any)?.period) || null;
+    const ehNoticia = /^not[ií]cia/i.test(titulo);
+    const publicado = dia(sig.publishedAt);
+    const anoPub = publicado?.slice(0, 4) ?? null;
+    const porPeriodo = sig.structural === true && !ehNoticia;
+    // Indicador estrutural leva o período de referência; leitura de hoje leva "lido em".
+    const periodo = porPeriodo
+      ? s((sig.metadata as any)?.period) ||
+        s(sig.summary).match(/per[ií]odo\s+(\d{4})/i)?.[1] ||
+        (anoPub && anoPub < agora.toISOString().slice(0, 4) ? anoPub : "") ||
+        null
+      : null;
     const item: SinalRel = {
       titulo,
       fonte: nomeFonte.get(sig.source) ?? sig.source,
       fonteId: sig.source,
-      data: sig.structural ? null : dia(sig.publishedAt),
+      data: periodo ? null : publicado,
       periodo,
       url: /^https?:\/\//i.test(sig.url ?? "") ? (sig.url as string) : null,
       procedencia: sig.structural ? s(sig.summary) || null : s((sig.metadata as any)?.provenance) || null,
@@ -169,8 +210,8 @@ export function montarDados(e: EntradaMontagem): DadosRelatorio {
       .sort((x, y) => (y.data ?? "").localeCompare(x.data ?? "") || y.impacto - x.impacto);
     const doDim = fontes.filter((f) => f.dimensao === d.id);
     const naoMedido: FonteNaoMedida[] = doDim
-      .filter((f) => f.status === "vazia")
-      .map((f) => ({ id: f.id, nome: f.nome, tipo: f.tipo }));
+      .filter((f) => f.status === "vazia" || foraDeEscopo.has(f.id))
+      .map((f) => ({ id: f.id, nome: foraDeEscopo.has(f.id) ? `${f.nome} (declarou estar fora do escopo para este território)` : f.nome, tipo: f.tipo }));
     return {
       id: d.id,
       nome: d.nome,
@@ -195,15 +236,12 @@ export function montarDados(e: EntradaMontagem): DadosRelatorio {
     .filter((x) => x.structural === true || x.source === "src-ibge-censo" || x.source === "src-datasus")
     .sort((x, y) => Date.parse(y.publishedAt) - Date.parse(x.publishedAt));
   for (const sig of candidatos) {
-    const i = sig.title.indexOf(":");
-    if (i < 2) continue;
-    const rotulo = sig.title.slice(0, i).trim();
-    const valor = sig.title.slice(i + 1).trim();
-    if (!valor || rotulosVistos.has(rotulo.toLowerCase())) continue;
-    rotulosVistos.add(rotulo.toLowerCase());
+    const par = indicadorDe(sig);
+    if (!par || rotulosVistos.has(par.rotulo.toLowerCase())) continue;
+    rotulosVistos.add(par.rotulo.toLowerCase());
     indicadores.push({
-      rotulo,
-      valor,
+      rotulo: par.rotulo,
+      valor: par.valor,
       fonte: nomeFonte.get(sig.source) ?? sig.source,
       ano: s((sig.metadata as any)?.period) || dia(sig.publishedAt)?.slice(0, 4) || null,
     });
@@ -240,28 +278,45 @@ export function montarDados(e: EntradaMontagem): DadosRelatorio {
     .map((r) => ({ titulo: r.titulo, texto: r.texto, urgencia: r.urgencia }));
 
   // ── camada estratégica ─────────────────────────────────────────────────────
-  const recursos: RecursoRel[] = arr<any>(a.resources).map((r) => ({
+  const recursos: RecursoRel[] = arr<any>(a.resources)
+    .filter((r) => !/em constru[cç][aã]o/i.test(s(r.name)))
+    .map((r) => ({
     categoria: s(r.category),
     nome: s(r.name),
     abundancia: s(r.abundance),
     nota: s(r.notes),
     fontes: arr<string>(r.sources).map(String),
   }));
-  const setores: SetorRel[] = arr<any>(a.sectors).map((x) => ({
+  // Setor "Latente" é texto-padrão sem evidência própria: não entra na lista.
+  const setores: SetorRel[] = arr<any>(a.sectors)
+    .filter((x) => !/latente|inexistente/i.test(s(x.maturity)))
+    .map((x) => ({
     nome: s(x.name),
     maturidade: s(x.maturity),
     insight: s(x.insight),
     sinais: arr<string>(x.signals).map(String),
   }));
-  const pontos: PontoRel[] = arr<any>(a.hotspots).map((h) => ({
-    tipo: s(h.type),
-    categoria: s(h.category),
-    nome: s(h.name),
-    descricao: s(h.description),
-    fonte: s(h.source),
-    lat: n(h.lat),
-    lng: n(h.lng),
-  }));
+  // Pontos repetidos (vários geradores ou torres com o mesmo nome) viram uma linha com a contagem.
+  const agrupados = new Map<string, PontoRel>();
+  for (const h of arr<any>(a.hotspots)) {
+    const chave = `${s(h.category)}|${s(h.name)}|${s(h.type)}`.toLowerCase();
+    const ja = agrupados.get(chave);
+    if (ja) {
+      ja.quantidade += 1;
+      continue;
+    }
+    agrupados.set(chave, {
+      tipo: s(h.type),
+      categoria: s(h.category),
+      nome: s(h.name),
+      descricao: s(h.description),
+      fonte: s(h.source),
+      lat: n(h.lat),
+      lng: n(h.lng),
+      quantidade: 1,
+    });
+  }
+  const pontos: PontoRel[] = Array.from(agrupados.values());
   const casos: CasoRel[] = arr<any>(a.strategicCases).map((c) => ({
     titulo: s(c.title),
     relevancia: s(c.relevance),

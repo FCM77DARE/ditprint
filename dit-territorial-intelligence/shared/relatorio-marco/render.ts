@@ -277,7 +277,11 @@ function rotuloFonteDim(d: DimensaoRel): string {
 }
 
 function linhaSinal(s: SinalRel): string {
-  const quando = s.data ? dataCurta(s.data) : s.periodo ? `ref. ${esc(s.periodo)}` : "";
+  const quando = s.data
+    ? `${s.tipo === "oficial" && !s.url ? "lido em " : ""}${dataCurta(s.data)}`
+    : s.periodo
+      ? `ref. ${esc(s.periodo)}`
+      : "";
   const origem = `${t(s.fonte)}${s.url ? ` · ${esc(hostDe(s.url))}` : ""}`;
   const prov = !s.url && s.procedencia ? `<span class="prov">${t(s.procedencia)}</span>` : "";
   return `<li class="sn"><time class="mono">${quando || "sem data"}</time>
@@ -412,7 +416,7 @@ function recomendacoes(d: DadosRelatorio): string {
     "recomendacoes",
     "07",
     "Recomendações por momento",
-    "Cada recomendação cita o sinal que a sustenta. O momento é definido pela urgência declarada no texto.",
+    "Cada recomendação parte de um sinal desta leitura. O momento segue a urgência declarada no texto: imediato é Responder, curto prazo é Operar, médio prazo é Entrar.",
     `<div class="momentos">${cols}</div>`
   );
 }
@@ -447,7 +451,7 @@ function estrategica(d: DadosRelatorio): string {
   const pontosTop = e.pontos.slice(0, 12);
   const pontosResto = e.pontos.slice(12);
   const linhaPonto = (p: (typeof e.pontos)[number]) =>
-    `<tr><td><b>${t(p.nome)}</b><span class="nota">${t(p.categoria)}</span></td><td>${t(p.tipo)}</td><td>${t(p.fonte)}</td><td class="mono">${p.lat != null && p.lng != null ? `${dec(p.lat, 4)}, ${dec(p.lng, 4)}` : "sem coordenada"}</td></tr>`;
+    `<tr><td><b>${t(p.nome)}${p.quantidade > 1 ? ` <span class="qtd">${p.quantidade} ocorrências</span>` : ""}</b><span class="nota">${t(p.categoria)}</span></td><td>${t(p.tipo)}</td><td>${t(p.fonte)}</td><td class="mono">${p.lat != null && p.lng != null ? `${dec(p.lat, 4)}, ${dec(p.lng, 4)}` : "sem coordenada"}</td></tr>`;
   const pontos = e.pontos.length
     ? `<h3 class="sub-h rv">Pontos georreferenciados</h3><div class="tabela rv"><table><thead><tr><th>Ponto</th><th>Tipo</th><th>Fonte</th><th>Coordenada</th></tr></thead><tbody>${pontosTop.map(linhaPonto).join("")}</tbody></table>${
         pontosResto.length
@@ -463,10 +467,11 @@ function estrategica(d: DadosRelatorio): string {
         )
         .join("")}</div>`
     : "";
+  const soPontos = !e.recursos.length && !e.setores.length && !e.casos.length;
   return secao(
     "estrategica",
     "08",
-    "Ativos, vocações e pontos no território",
+    soPontos ? "Pontos no território" : "Ativos, vocações e pontos no território",
     "Recursos, setores e locais com coordenada. Perfil por mesorregião e OpenStreetMap: contexto, não medição de tensão.",
     `${recursos}${setores}${casos}${pontos}`
   );
@@ -509,7 +514,7 @@ function procedencia(d: DadosRelatorio): string {
         ? `<details class="mais"><summary>Ver as ${vazias.length} fonte(s) sem retorno</summary><table><tbody>${vazias.map(linhaFonte).join("")}</tbody></table></details>`
         : ""
     }</div>
-    <p class="nota rv">Descartado é sinal que a fonte devolveu mas o verificador barrou por não ser sobre este município. Coleta de ${esc(dataLonga(c.coletadoEm ?? d.geradoEm))}.</p>`
+    <p class="nota rv">A tabela detalha ${d.fontes.length} das ${c.fontesConsultadas ?? d.fontes.length} fontes consultadas. Descartado é sinal que a fonte devolveu mas o verificador barrou por não ser sobre este município. Coleta de ${esc(dataLonga(c.coletadoEm ?? d.geradoEm))}.</p>`
   );
 }
 
@@ -812,9 +817,11 @@ color-scheme:light;background:var(--papel);color:var(--tinta);font-family:"Archi
 .mrel td{padding:13px 16px;border-bottom:1px solid var(--regua);vertical-align:top}
 .mrel tr:last-child td{border-bottom:0}
 .mrel td.num,.mrel th:last-child:not(:first-child){font-variant-numeric:tabular-nums}
+.mrel .qtd{font-size:12px;font-weight:600;color:var(--bronze);margin-left:6px}
 .mrel .c-fonte{width:190px}
 .mrel .c-fonte b{display:block;font-size:15px}
 .mrel .c-fonte span{font-size:12px;color:var(--tinta-3)}
+.mrel td .nota{display:block;margin-top:2px}
 .mrel .c-imp{width:130px;white-space:nowrap}
 .mrel .c-imp .mini{display:inline-block;width:70px;vertical-align:middle;margin-right:10px}
 .mrel .tabela details.mais{padding:0 16px 8px;border-top:1px solid var(--regua)}
@@ -830,7 +837,7 @@ color-scheme:light;background:var(--papel);color:var(--tinta);font-family:"Archi
 .mrel .momento article p{font-size:15px;color:var(--tinta-2)}
 
 /* procedência */
-.mrel .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr));border:1px solid var(--regua);border-radius:10px;overflow:hidden;background:var(--superficie);margin-bottom:20px}
+.mrel .kpis{display:grid;grid-template-columns:repeat(5,1fr);border:1px solid var(--regua);border-radius:10px;overflow:hidden;background:var(--superficie);margin-bottom:20px}
 .mrel .kpi{padding:18px 20px;border-right:1px solid var(--regua);display:flex;flex-direction:column;gap:2px}
 .mrel .kpi b{font-variation-settings:"wdth" 125;font-weight:850;font-size:36px;line-height:1.05}
 .mrel .kpi span{font-size:14px;color:var(--tinta-2)}
@@ -851,7 +858,7 @@ color-scheme:light;background:var(--papel);color:var(--tinta);font-family:"Archi
 .mrel #metodologia .nota{margin-top:14px}
 
 /* escada */
-.mrel .escada{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:0;border:1px solid var(--curva);border-radius:12px;overflow:hidden;background:var(--superficie)}
+.mrel .escada{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid var(--curva);border-radius:12px;overflow:hidden;background:var(--superficie)}
 .mrel .degrau{position:relative;padding:clamp(20px,2.2vw,32px);border-right:1px solid var(--regua);display:flex;flex-direction:column;gap:8px}
 .mrel .degrau:last-child{border-right:0}
 .mrel .dg-n{font-size:13px;color:var(--bronze)}
@@ -872,6 +879,8 @@ color-scheme:light;background:var(--papel);color:var(--tinta);font-family:"Archi
 
 /* responsivo */
 @media (max-width:1000px){
+  .mrel .escada{grid-template-columns:1fr 1fr}
+  .mrel .kpis{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
   .mrel .rl-capa{grid-template-columns:1fr;min-height:0}
   .mrel .dim-corpo{grid-template-columns:1fr}
   .mrel .rl-nav{display:none}
@@ -887,6 +896,7 @@ color-scheme:light;background:var(--papel);color:var(--tinta);font-family:"Archi
   .mrel .sn time{grid-column:1/-1}
   .mrel .linha-tempo li{grid-template-columns:1fr;gap:2px}
   .mrel .escala{grid-template-columns:1fr 1fr}
+  .mrel .escada{grid-template-columns:1fr}
   .mrel .degrau{border-right:0;border-bottom:1px solid var(--regua)}
   .mrel .barra-terr{display:none}
   .mrel .cc-dados{grid-template-columns:1fr 1fr}

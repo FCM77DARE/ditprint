@@ -1,3 +1,4 @@
+import { Rodape, Topo, useMagnetico } from "@/pages/publico/MarcoShell";
 import { useEffect, useRef, type ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { Moon, Sun } from "lucide-react";
@@ -69,18 +70,18 @@ export function PageShell({
   className?: string;
 }) {
   const [local] = useLocation();
-  const headerRef = useRef<HTMLElement>(null);
-  const progressoRef = useRef<HTMLSpanElement>(null);
   const mainRef = useRef<HTMLElement>(null);
-  useHeaderAutoHide(headerRef, progressoRef);
   useMotionScan(mainRef);
   // Navegacao entre rotas nao zera o scroll sozinha: volta ao topo, salvo ancora.
   useEffect(() => {
     if (!window.location.hash) window.scrollTo(0, 0);
   }, [local]);
 
+  const raiz = useRef<HTMLDivElement>(null);
+  useMagnetico(raiz, local);
   return (
-    <div className={cn("flex min-h-screen flex-col bg-background text-foreground", className)}>
+    // Páginas públicas vestem a identidade do Marco: mesmo cabeçalho e rodapé da home (MarcoShell).
+    <div ref={raiz} className={cn("mh flex min-h-screen flex-col", className)}>
       <SmoothScroll />
       <a
         href="#conteudo"
@@ -88,53 +89,11 @@ export function PageShell({
       >
         Ir para o conteúdo
       </a>
-      <header ref={headerRef} className="mo-header border-b bg-background">
-        <div className="container flex min-h-16 flex-wrap items-center justify-between gap-x-6 gap-y-2 py-3">
-          <Link href="/" aria-label="Marco, página inicial">
-            <MarcoLogo comDescricao />
-          </Link>
-          <nav aria-label="Principal" className="flex flex-wrap items-center gap-1">
-            {/* Em telas largas os links ficam na linha; abaixo de 768px vão para o menu compacto. */}
-            {NAV_PUBLICO.map(i => (
-              <LinkNav
-                key={i.href}
-                item={i}
-                local={local}
-                className="mo-nav-link hidden min-h-11 items-center px-3 text-sm text-tinta-2 hover:text-tinta aria-[current=page]:text-tinta md:inline-flex"
-              />
-            ))}
-            <details className="mo-menu group relative md:hidden">
-              <summary className="inline-flex min-h-11 cursor-pointer list-none items-center px-3 text-sm text-tinta-2 hover:text-tinta [&::-webkit-details-marker]:hidden">
-                Menu
-              </summary>
-              <div className="mo-menu-painel absolute left-0 top-full z-40 mt-1 flex w-56 flex-col rounded-[6px] border bg-card p-1">
-                {NAV_PUBLICO.map(i => (
-                  <LinkNav
-                    key={i.href}
-                    item={i}
-                    local={local}
-                    className="inline-flex min-h-11 items-center px-3 text-sm text-tinta hover:bg-muted aria-[current=page]:font-medium"
-                  />
-                ))}
-              </div>
-            </details>
-            <Link href="/diagnostico" className={cn(botaoVariants({ variant: "primario", size: "md" }))}>
-              Pedir diagnóstico
-            </Link>
-            <AlternarTema />
-          </nav>
-        </div>
-        <span ref={progressoRef} className="mo-progresso" aria-hidden />
-      </header>
-      <main ref={mainRef} id="conteudo" className={cn("flex-1", hero && "bg-curvas")}>
+      <Topo raiz={raiz} />
+      <main ref={mainRef} id="conteudo" className={cn("flex-1 pt-20", hero && "bg-curvas")}>
         {children}
       </main>
-      <footer className="border-t">
-        <div className="container flex flex-wrap items-center justify-between gap-3 py-6">
-          <MarcoLogo size={20} />
-          <PoweredByPrint />
-        </div>
-      </footer>
+      <Rodape />
     </div>
   );
 }

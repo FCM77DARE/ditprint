@@ -7,6 +7,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import Sistema from "./pages/Sistema";
 import DashboardLogin from "./pages/DashboardLogin";
 import Marco from "./pages/Marco";
+import DiagnosticoRelatorio from "./pages/diagnostico/Relatorio";
 
 // Área pública
 import PublicoInicio from "./pages/publico/Inicio";
@@ -45,6 +46,9 @@ function Router() {
       <Route path="/territorio/:slug" component={PublicoTerritorio} />
       <Route path="/entrar" component={PublicoEntrar} />
       <Route path="/leitura/:slug" component={PublicoLeitura} />
+
+      {/* Diagnóstico completo (operador ou assinante com o território no contrato) */}
+      <Route path="/diagnostico/relatorio/:slug" component={DiagnosticoRelatorio} />
 
       {/* Portal */}
       <Route path="/portal" component={PortalHoje} />

@@ -96,6 +96,8 @@ export interface PontoRel {
   fonte: string;
   lat: number | null;
   lng: number | null;
+  /** Quantas ocorrências iguais foram agrupadas nesta linha. */
+  quantidade: number;
 }
 
 export interface CasoRel {

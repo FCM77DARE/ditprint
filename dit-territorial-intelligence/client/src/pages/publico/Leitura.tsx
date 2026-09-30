@@ -9,7 +9,6 @@ import {
   EmptyState,
   ErrorState,
   LoadingBlock,
-  PageShell,
   Secao,
   TensaoBar,
   botaoVariants,
@@ -30,6 +29,7 @@ import {
   type Municipio,
 } from "@/lib/leitura-estado";
 import BuscaLeitura from "./BuscaLeitura";
+import { Acao, MarcoPagina, Rotulo, Vertice } from "./MarcoShell";
 
 /**
  * Primeira leitura: a isca do funil. Três camadas, na ordem em que chegam.
@@ -369,9 +369,11 @@ function LeituraAoVivo({ s, recomecar }: { s: EstadoLeitura; recomecar: () => vo
                     initial={reduzir ? false : { opacity: 0, y: -6 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: reduzir ? 0 : 0.18 }}
-                    className="flex flex-col gap-1 py-2.5"
+                    className="sinal-vivo"
                   >
-                    <p className="text-sm font-medium text-tinta">{g.titulo}</p>
+                    <Vertice fixo />
+                    <div className="min-w-0">
+                    <p className="sv-t">{g.titulo}</p>
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-tinta-2">
                       <span className="num">{g.dimensao}</span>
                       <span>{g.fonte}</span>
@@ -389,6 +391,7 @@ function LeituraAoVivo({ s, recomecar }: { s: EstadoLeitura; recomecar: () => vo
                           <span className="sr-only">(abre em nova aba)</span>
                         </a>
                       )}
+                    </div>
                     </div>
                   </motion.li>
                 ))}
@@ -582,10 +585,10 @@ function SemLeitura({ s, recomecar, pedir }: { s: EstadoLeitura; recomecar: () =
         titulo={porIp ? "Você já pediu leituras novas demais nesta hora." : "A leitura completa de hoje esgotou."}
         descricao={
           porIp
-            ? "Para manter a leitura gratuita para todos, cada pessoa pode pedir poucas leituras novas por hora. A leitura estrutural acima segue valendo. Deixe seu e-mail e enviamos a leitura completa amanhã cedo."
-            : `O Marco lê poucos territórios novos por dia para não entregar leitura com base fraca. ${nome ? `A leitura estrutural de ${nome} acima segue valendo. ` : ""}Deixe seu e-mail e enviamos a leitura completa amanhã cedo.`
+            ? "Para manter a leitura gratuita para todos, cada pessoa pode pedir poucas leituras novas por hora. A leitura estrutural acima segue valendo. Deixe seu e-mail e um analista da PRINT envia a leitura completa deste território."
+            : `O Marco lê poucos territórios novos por dia para não entregar leitura com base fraca. ${nome ? `A leitura estrutural de ${nome} acima segue valendo. ` : ""}Deixe seu e-mail e um analista da PRINT envia a leitura completa deste território.`
         }
-        acao="Receber a leitura amanhã"
+        acao="Pedir a leitura completa"
         onAcao={() => pedir("Leitura completa deste território")}
       />
     );
@@ -803,25 +806,36 @@ const DEGRAUS: Array<{ id: string; titulo: string; texto: string; acao: string; 
 
 function Escada({ pedir }: { pedir: (i: Interesse) => void }) {
   return (
-    <Secao titulo="Do que você acabou de ler até a decisão em campo." nota="Cada degrau aprofunda o anterior. O pedido vai para um analista da PRINT, sem cobrança automática.">
-      <ol className="grid gap-px border bg-[var(--linha)] md:grid-cols-4">
+    <section className="secao-l escada" aria-labelledby="escada-t">
+      <Rotulo>O que vem depois</Rotulo>
+      <h2 id="escada-t" className="titulo-l">Do que você acabou de ler até a decisão em campo.</h2>
+      <ol className="degraus">
         {DEGRAUS.map((d, i) => (
-          <li key={d.id} className="flex flex-col gap-3 bg-background p-4">
-            <p className="nota">
-              Degrau <span className="num">{i + 1}</span>
-              {d.interesse === null ? ", você está aqui" : ""}
-            </p>
-            <p className="text-base font-semibold text-tinta">{d.titulo}</p>
-            <p className="flex-1 text-sm text-tinta-2">{d.texto}</p>
-            {d.interesse && (
-              <Button variant="secundario" size="sm" onClick={() => pedir(d.interesse!)} className="self-start whitespace-normal text-left">
-                {d.acao}
-              </Button>
-            )}
+          <li key={d.id} className={d.interesse === null ? "aqui" : ""}>
+            <span className="n">{String(i + 1).padStart(2, "0")}</span>
+            <h3>{d.titulo}</h3>
+            <p>{d.texto}</p>
+            {d.interesse ? <Acao onClick={() => pedir(d.interesse!)}>{d.acao.replace(/^Pedir o /, "Pedir ")}</Acao> : <span className="voce-aqui"><Vertice fixo />Você está aqui</span>}
           </li>
         ))}
       </ol>
-    </Secao>
+    </section>
+  );
+}
+
+/** A Tensão no topo escuro: número grande, faixa possível, ponto do valor, Confiança. */
+function TensaoGrande({ tensao, faixa, confianca, completa }: { tensao: number; faixa: { min: number; max: number }; confianca: number; completa: boolean }) {
+  const rotulo = faixaDeTensao(tensao).rotulo;
+  return (
+    <div className="tensao-g">
+      <div className="tg-num"><strong data-mo="count">{fmtInt(tensao)}</strong><span>{completa ? "Tensão" : "Tensão parcial"}<b>{rotulo}</b></span></div>
+      <div className="tg-barra" role="img" aria-label={`Tensão ${fmtInt(tensao)} de 100, faixa possível de ${fmtInt(faixa.min)} a ${fmtInt(faixa.max)}, confiança ${fmtInt(confianca)}%`}>
+        <span className="faixa" style={{ left: `${faixa.min}%`, width: `${Math.max(0, faixa.max - faixa.min)}%` }} />
+        <span className="ponto" style={{ left: `${tensao}%` }} />
+        <span className="escala">{[0, 20, 40, 60, 80, 100].map(n => <i key={n} style={{ left: `${n}%` }}>{n}</i>)}</span>
+      </div>
+      <p className="tg-nota">Faixa possível <b>{fmtInt(faixa.min)} a {fmtInt(faixa.max)}</b>. Confiança <b>{fmtInt(confianca)}%</b>{completa ? "." : ": só as dimensões com dado oficial entram na conta."}</p>
+    </div>
   );
 }
 
@@ -901,105 +915,79 @@ export default function PublicoLeitura() {
     s.fase === "coletando" || s.fase === "pronta" || (s.fase === "erro" && aconteceuAlgo) || (s.fase === "sem_leitura" && aconteceuAlgo);
 
   return (
-    <PageShell>
-      <article className="container max-w-4xl space-y-12 py-12">
-        <header className="space-y-4">
-          <div className="flex flex-wrap items-center gap-3">
-            <p className="nota uppercase tracking-[0.14em]">Primeira leitura</p>
-            {s.fase === "coletando" && <Chip tom="contorno">Leitura ao vivo em andamento</Chip>}
-            {s.noRadar && s.estrutural && <Chip tom="neutro">No Marco Radar</Chip>}
+    <MarcoPagina dep={s.fase}>
+      <section className="hero hero-leitura">
+        <img className="fundo" src="/marco/relevo-hero.jpg" alt="" aria-hidden="true" fetchPriority="high" />
+        <div className="veu" />
+        <div className="largura">
+          <div className="selos">
+            <span className="selo"><Vertice fixo={s.fase === "pronta"} />Primeira leitura</span>
+            {s.fase === "coletando" && <span className="selo vivo"><i />Leitura ao vivo em andamento</span>}
+            {s.noRadar && s.estrutural && <span className="selo">No Marco Radar</span>}
           </div>
-          <h1 className="text-3xl md:text-4xl" aria-live="polite">
-            {tituloDa(s)}
-          </h1>
+          <h1 aria-live="polite">{tituloDa(s)}</h1>
           {semTerritorio && (
-            <div className="space-y-4">
-              <p className="max-w-prose text-tinta">{s.detalhe}</p>
+            <div className="sem-territorio">
+              <p>{s.detalhe}</p>
               <Opcoes s={s} />
-              <BuscaLeitura variante="compacta" />
+              <div className="busca"><BuscaLeitura variante="compacta" /></div>
             </div>
           )}
-        </header>
+          {aguardaEstrutural && <div className="carregando-escuro"><span /><span /><span /><p>Lendo a base estrutural do território</p></div>}
+          {leitura && !semTerritorio && (leitura.tensao !== null ? (
+            <TensaoGrande
+              key={`${completa ? "completa" : "parcial"}-${leitura.tensao}-${leitura.confianca}`}
+              tensao={leitura.tensao} faixa={leitura.faixa} confianca={leitura.confianca} completa={completa}
+            />
+          ) : (
+            <p className="sem-numero">Sem número, de propósito: este município não tem indicador oficial na camada estrutural, e o Marco não preenche o vazio com um valor assumido.</p>
+          ))}
+        </div>
+      </section>
 
-        {aguardaEstrutural && <LoadingBlock linhas={4} rotulo="Lendo a base estrutural do território" />}
-
+      <div className="largura corpo-leitura">
         {s.fase === "erro" && (!s.estrutural || !aconteceuAlgo) && (
-          <ErrorState
-            motivo={s.detalhe ?? "A leitura não carregou."}
-            proximoPasso="Confira a internet e tente de novo."
-            onAcao={recomecar}
-          />
+          <ErrorState motivo={s.detalhe ?? "A leitura não carregou."} proximoPasso="Confira a internet e tente de novo." onAcao={recomecar} />
         )}
+        {s.estrutural && !semTerritorio && <section className="secao-l"><CamadaEstrutural est={s.estrutural} /></section>}
+      </div>
 
-        {leitura && !semTerritorio && (
-          <section aria-label="Tensão e Confiança" className="space-y-3">
-            {leitura.tensao !== null ? (
-              // key: o valor muda quando a leitura completa chega; remontar evita que o contador de
-              // entrada (data-mo="count") congele o número da camada anterior.
-              <TensaoBar
-                key={`${completa ? "completa" : "parcial"}-${leitura.tensao}-${leitura.confianca}`}
-                tensao={leitura.tensao}
-                faixa={leitura.faixa}
-                confianca={leitura.confianca}
-              />
-            ) : (
-              <EmptyState
-                titulo="Sem número, de propósito"
-                descricao="Este município não tem indicador oficial na camada estrutural. O Marco não preenche o vazio com um valor assumido."
-              />
-            )}
-            {!completa && leitura.tensao !== null && (
-              <p className="max-w-prose text-sm text-tinta-2">
-                Tensão parcial: só as dimensões com dado oficial entram na conta.{" "}
-                {s.fase === "coletando" ? "A leitura ao vivo abaixo busca o resto agora." : "O que falta está listado abaixo."}
-              </p>
-            )}
-            {completa && (
-              <p className="max-w-prose text-sm text-tinta-2">
-                Tensão da leitura de hoje: camada estrutural mais os sinais verificados nas fontes.
-              </p>
-            )}
-          </section>
-        )}
+      {s.estrutural && !semTerritorio && mostraAoVivo && (
+        <section className="escuro palco"><div className="largura"><LeituraAoVivo s={s} recomecar={recomecar} /></div></section>
+      )}
 
-        {s.estrutural && !semTerritorio && <CamadaEstrutural est={s.estrutural} />}
+      <div className="largura corpo-leitura">
+        {s.fase === "pronta" && s.teaser && <section className="secao-l"><Teaser isca={s.teaser} /></section>}
+        {s.fase === "sem_leitura" && <section className="secao-l"><SemLeitura s={s} recomecar={recomecar} pedir={pedir} /></section>}
+      </div>
 
-        {s.estrutural && !semTerritorio && mostraAoVivo && <LeituraAoVivo s={s} recomecar={recomecar} />}
-
-        {s.fase === "pronta" && s.teaser && <Teaser isca={s.teaser} />}
-
-        {s.fase === "sem_leitura" && <SemLeitura s={s} recomecar={recomecar} pedir={pedir} />}
-
-        {s.estrutural && !semTerritorio && (
-          <section ref={formRef} id="pedir" aria-labelledby="pedir-titulo" className="space-y-5 scroll-mt-24">
-            <div className="space-y-2">
-              <h2 id="pedir-titulo" className="text-xl">
-                O restante fica atrás de um pedido.
-              </h2>
-              <ul className="space-y-1.5 text-sm text-tinta">
+      {s.estrutural && !semTerritorio && (
+        <section ref={formRef} id="pedir" aria-labelledby="pedir-titulo" className="escuro pedir-l">
+          <img className="fundo" src="/marco/relevo-cta.jpg" alt="" aria-hidden="true" />
+          <div className="largura grade2">
+            <div>
+              <Rotulo>O restante da leitura</Rotulo>
+              <h2 id="pedir-titulo" className="titulo-l">O restante fica atrás de um pedido.</h2>
+              <ul className="travado">
                 {["Relatório completo, com insight, recomendações e previsão por dimensão", "Nota do analista sobre o território", "Acompanhamento diário, com alerta quando a tensão muda"].map((t) => (
-                  <li key={t} className="flex items-start gap-2">
-                    <Lock size={14} aria-hidden className="mt-1 shrink-0 text-tinta-2" />
-                    {t}
-                  </li>
+                  <li key={t}><Lock size={16} aria-hidden />{t}</li>
                 ))}
               </ul>
             </div>
-            <CapturaLead s={s} interesse={interesse} setInteresse={setInteresse} campoRef={primeiroCampo} />
-          </section>
-        )}
+            <div className="form-claro"><CapturaLead s={s} interesse={interesse} setInteresse={setInteresse} campoRef={primeiroCampo} /></div>
+          </div>
+        </section>
+      )}
 
+      <div className="largura corpo-leitura">
         {s.estrutural && !semTerritorio && <Escada pedir={pedir} />}
-
         {!semTerritorio && (
-          <section aria-labelledby="outra-titulo" className="space-y-3 border-t pt-8">
-            <h2 id="outra-titulo" className="text-lg">
-              Quer ler outro território?
-            </h2>
-            <BuscaLeitura variante="compacta" />
+          <section aria-labelledby="outra-titulo" className="secao-l outra">
+            <h2 id="outra-titulo" className="titulo-l pequeno">Quer ler outro território?</h2>
+            <div className="busca"><BuscaLeitura variante="compacta" /></div>
           </section>
         )}
-      </article>
-    </PageShell>
+      </div>
+    </MarcoPagina>
   );
 }

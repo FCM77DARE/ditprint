@@ -91,6 +91,43 @@ async function main() {
       console.log(`    ${b.id.padEnd(26)} aprovados ${String(b.signals).padStart(3)} · rejeitados ${b.rejeitados}`);
     }
     const semLastro = conferirNumerosDoRelatorio(rel, prompt);
+    // Etapas do /analyze que este script antes pulava: leitura Tensão/Confiança,
+    // identidade IBGE e coordenadas, procedência, camada estratégica (gratuita,
+    // sem LLM) e os sinais verificados com data e link. Sem isso o dump só tinha
+    // o texto e os scores, e o relatório saía incompleto.
+    const { completarRodada } = await import("../server/relatorio/completar-rodada");
+    const UFm = m.microrregiao?.mesorregiao?.UF as { nome?: string; regiao?: { nome?: string } } | undefined;
+    const completo = await completarRodada(
+      {
+        relatorio: rel,
+        coverageScore: r.coverageScore,
+        coverageDetail: r.coverageDetail,
+        sourceBreakdown: r.sourceBreakdown,
+        historico: r.historicalConsolidation as never,
+        semLastro,
+        leituraViva: r.leitura,
+        prompt,
+        coletadoEm: r.completedAt,
+      },
+      {
+        id: m.id,
+        nome: m.nome,
+        uf,
+        ufNome: UFm?.nome,
+        mesorregiao: (m as any).microrregiao?.mesorregiao?.nome,
+        microrregiao: (m as any).microrregiao?.nome,
+        regiao: UFm?.regiao?.nome,
+      }
+    );
+    if (process.env.DIT_DUMP) {
+      const { writeFileSync } = await import("node:fs");
+      // Entrada de scripts/gerar-relatorio-marco.ts (<base>.completo.json).
+      writeFileSync(
+        process.env.DIT_DUMP.replace(/\.json$/, ".completo.json"),
+        JSON.stringify({ analyze: completo.analyze, sinais: completo.sinais, buscasBarradas: null, ibge: m.id }, null, 2),
+        "utf8"
+      );
+    }
     if (process.env.DIT_DUMP) {
       const { writeFileSync } = await import("node:fs");
       writeFileSync(

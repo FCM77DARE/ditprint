@@ -51,6 +51,7 @@ async function main() {
       sourceBreakdown: dump.sourceBreakdown,
       historico: dump.historico,
       semLastro: dump.semLastro,
+      prompt: dump.prompt,
       coletadoEm: custo?.em ?? dump.historico?.newestSignalAt,
     },
     {

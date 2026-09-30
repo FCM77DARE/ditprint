@@ -15,7 +15,7 @@
  * `DATA_DIR` precisa estar definido ANTES de importar este módulo.
  */
 
-import { readSignalsInWindow } from "../stt/signal-store";
+import { lerSinaisDoTerritorio } from "./ler-sinais";
 import { consolidateSttFromHistory } from "../stt/consolidator";
 import { leituraDeConsolidado } from "../stt/leitura";
 import { runStrategicLayer } from "../strategic/runner";
@@ -42,6 +42,8 @@ export interface RodadaBruta {
   /** Quando a rodada é ao vivo, o resultado do orquestrador traz a leitura pronta. */
   leituraViva?: unknown;
   coletadoEm?: string;
+  /** Prompt enviado ao LLM nesta rodada: lista os sinais que o texto de fato viu. */
+  prompt?: string;
 }
 
 async function geoDoMunicipio(nome: string, uf: string) {
@@ -68,9 +70,46 @@ async function geoDoMunicipio(nome: string, uf: string) {
   }
 }
 
+/**
+ * O store acumula rodadas; o texto do relatório foi escrito sobre UMA. Quando o
+ * prompt daquela rodada traz um sinal da mesma fonte e do mesmo assunto (mesmo
+ * prefixo antes dos dois pontos) com outro valor, o do store é de outra coleta
+ * (ex.: CNES contou 20 numa coleta e 1.470 na outra) e sai, para o número da
+ * tabela nunca contradizer o texto. O sinal que o texto viu entra no lugar.
+ */
+export function reconciliarComRodada(sinais: SinalDoStore[], prompt: string | undefined, coletadoEm: string): SinalDoStore[] {
+  if (!prompt) return sinais;
+  const vivos: SinalDoStore[] = [];
+  let dim = "";
+  for (const linha of prompt.split("\n")) {
+    const d = linha.match(/^D(\d)\s/);
+    if (d) dim = `D${d[1]}`;
+    const m = linha.match(/^\s*\[(src-[\w-]+)\]\s+\(imp:([\d.]+)\)\s+(.+)$/);
+    if (m && dim) {
+      vivos.push({ source: m[1], dimension: dim, impact: Number(m[2]), publishedAt: coletadoEm, title: m[3].trim(), metadata: { verificado: true } });
+    }
+  }
+  const prefixo = (t: string) => (t.includes(":") ? t.slice(0, t.lastIndexOf(":")) : t);
+  const out = sinais.filter((x) => {
+    if (x.structural || /google-news|universidades/.test(x.source)) return true;
+    const p = prefixo(x.title);
+    return !vivos.some((v) => v.source === x.source && prefixo(v.title) === p && v.title !== x.title);
+  });
+  const chaves = new Set(out.map((x) => `${x.source}|${x.title}`));
+  for (const v of vivos) {
+    if (/google-news|universidades/.test(v.source) || chaves.has(`${v.source}|${v.title}`)) continue;
+    if (sinais.some((x) => x.source === v.source && prefixo(x.title) === prefixo(v.title) && x.title !== v.title)) out.push(v);
+  }
+  return out;
+}
+
 export async function completarRodada(bruta: RodadaBruta, m: MunicipioIbge) {
   const slug = `medicao-${m.id}`;
-  const sinais = (await readSignalsInWindow(slug, 24)) as unknown as SinalDoStore[];
+  const sinais: SinalDoStore[] = reconciliarComRodada(
+    lerSinaisDoTerritorio(slug),
+    bruta.prompt,
+    bruta.coletadoEm ?? new Date().toISOString()
+  );
 
   const consolidado = await consolidateSttFromHistory(0, slug, m.id);
   const leitura =

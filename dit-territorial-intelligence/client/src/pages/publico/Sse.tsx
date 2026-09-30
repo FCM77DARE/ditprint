@@ -1,4 +1,5 @@
 import { Link } from "wouter";
+import { Acao, TopoPagina } from "./MarcoShell";
 import { Chip, PageShell, botaoVariants } from "@/components/dit";
 import { Palavras } from "@/components/dit/motion";
 import { cn } from "@/lib/utils";
@@ -11,30 +12,12 @@ import { cn } from "@/lib/utils";
 export default function PublicoSse() {
   return (
     <PageShell>
+      <TopoPagina rotulo="SSE · A unit by PRINT" titulo="Sector Sensitivity Exposure: cada setor se expõe de um jeito ao mesmo território."
+        acoes={<><Acao href="/diagnostico?interesse=sse" clara>Pedir diagnóstico</Acao><Link href="/metodologia" className="link-claro">Ver como a Tensão é calculada</Link></>}>
+        <p className="destaque">Exposição Setorial no Território</p>
+        <p>O SSE mostra como a presença e a atuação de um determinado setor se relacionam com as características, forças e fragilidades de cada território. Para isso, o indicador cruza a Tensão do território com fatores específicos do setor analisado, permitindo identificar onde a atividade tende a encontrar maior sensibilidade, maior aderência ou maior potencial de impacto na localidade.</p>
+      </TopoPagina>
       <article className="container max-w-4xl space-y-12 py-12 md:py-16">
-        <header className="space-y-4">
-          <Chip tom="contorno">A unit by PRINT</Chip>
-          <Palavras as="h1" className="text-3xl md:text-4xl" texto="SSE, Sector Sensitivity Exposure" />
-          <p className="text-lg text-tinta">Exposição Setorial no Território</p>
-          <p className="max-w-prose text-tinta-2">
-            Cada setor se relaciona de um jeito diferente com o território. O SSE mostra como a presença e a atuação de
-            um determinado setor se relacionam com as características, forças e fragilidades de cada território. Para
-            isso, o indicador cruza a Tensão do território com fatores específicos do setor analisado, permitindo identificar onde a
-            atividade tende a encontrar maior sensibilidade, maior aderência ou maior potencial de impacto na
-            localidade.
-          </p>
-          <div className="flex flex-wrap items-center gap-3 pt-2">
-            <Link
-              href="/diagnostico?interesse=sse"
-              className={cn(botaoVariants({ variant: "primario", size: "lg" }))}
-            >
-              Pedir diagnóstico
-            </Link>
-            <Link href="/metodologia" className={cn(botaoVariants({ variant: "secundario", size: "lg" }))}>
-              Ver como a Tensão é calculada
-            </Link>
-          </div>
-        </header>
 
         <section className="space-y-3" aria-labelledby="como-le">
           <h2 id="como-le" className="text-2xl">
