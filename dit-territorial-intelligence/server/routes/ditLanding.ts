@@ -1107,6 +1107,19 @@ export interface SinalRecente {
   data: string; // AAAA-MM-DD
 }
 
+// Manchete que não diz nada sobre o território na semana: previsão do tempo,
+// horóscopo, loteria, e conteúdo que cita um ano já passado (vídeo antigo
+// republicado, "jingle de 2016"). Regra fixa, sem LLM.
+const RUIDO_DA_SEMANA =
+  /previs[aã]o do tempo|tempo hoje|hor[oó]scopo|resultado d[ao] (mega|lotof|quina)|loteria|jingle|playlist|ao vivo agora/i;
+
+export function ehRuidoDaSemana(titulo: string, ref = new Date()): boolean {
+  if (RUIDO_DA_SEMANA.test(titulo)) return true;
+  const anoAtual = ref.getFullYear();
+  const anos = (titulo.match(/\b(19|20)\d{2}\b/g) ?? []).map(Number);
+  return anos.length > 0 && anos.every((a) => a < anoAtual - 1);
+}
+
 export function selecionarSinaisRecentes(
   dimensions: Partial<Record<DimensionId, DimensionResult>>,
   max = 8,
@@ -1127,6 +1140,7 @@ export function selecionarSinaisRecentes(
       if (Number.isFinite(tColeta) && Math.abs(t - tColeta) < margemColeta) continue;
       const chave = s.title.trim().toLowerCase();
       if (vistos.has(chave)) continue;
+      if (ehRuidoDaSemana(s.title, ref)) continue;
       vistos.add(chave);
       candidatos.push({
         fato: s.title.trim(),
@@ -1267,7 +1281,10 @@ levantados pelo DIT; se não souber, diga menos).
     genérico como "enfrenta desafios na saúde e educação". Se não houver um
     problema reconhecível que você conheça com segurança, escreva "" (vazio).
   • forcas: exatamente 2, concretas e próprias do lugar.
-  • fragilidades: exatamente 2, concretas e próprias do lugar.
+  • fragilidades: exatamente 2, concretas e próprias do lugar. Fragilidade é do
+    TERRITÓRIO, nunca da coleta: é proibido citar falta de sinal, dimensão sem
+    cobertura, fonte consultada ou qualquer limitação do DIT como fragilidade.
+    Lacuna de dado já aparece na dimensão marcada SEM COBERTURA.
   • semana: é DADO. Só pode sair da lista "SINAIS RECENTES" abaixo, copiando
     fato, fonte e data como estão. Não acrescente fato de conhecimento geral.
     Se a lista estiver vazia, devolva "semana": [].

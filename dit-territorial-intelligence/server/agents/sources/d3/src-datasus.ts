@@ -104,12 +104,37 @@ export class SrcDatasus extends BaseSourceAgent {
         const t = (est.tipo_unidade || "OUTROS").trim();
         byTipo.set(t, (byTipo.get(t) || 0) + 1);
       }
-      const totalEstab = items.length;
+      // A API devolve no máximo 20 por página e ignora `limit`. Contar só a
+      // primeira página dava "20 estabelecimentos" para São Gonçalo (~1.470).
+      // O total sai por busca binária no offset: ~11 requisições em qualquer porte.
+      const pagina = items.length;
+      let totalEstab = pagina;
+      if (pagina >= 20) {
+        const temItens = async (offset: number) => {
+          const r = await axios.get(`${url}&offset=${offset}`, {
+            signal: options.signal,
+            timeout: 15000,
+            headers: { "User-Agent": "DIT-PRINT/1.0", Accept: "application/json" },
+            validateStatus: (s) => s < 500,
+          });
+          const d = r.data as { estabelecimentos?: unknown[] } | undefined;
+          return r.status === 200 ? (d?.estabelecimentos?.length ?? 0) : 0;
+        };
+        let lo = 0;
+        let hi = 20;
+        while ((await temItens(hi)) > 0 && hi < 200000) { lo = hi; hi *= 2; }
+        while (hi - lo > 20) {
+          const mid = Math.floor((lo + hi) / 40) * 20;
+          if ((await temItens(mid)) > 0) lo = mid; else hi = mid;
+        }
+        totalEstab = lo + (await temItens(lo));
+      }
+      const amostra = pagina < totalEstab ? ` Distribuição nos primeiros ${pagina} da lista` : " Distribuição";
 
       // Sinal principal: infraestrutura de saúde total
       signals.push({
         title: `CNES · ${territory.name}: ${totalEstab} estabelecimentos de saúde cadastrados`,
-        summary: `Consulta oficial ao CNES/DATASUS retornou ${totalEstab} estabelecimentos ativos no município. Distribuição: ${Array.from(
+        summary: `Consulta oficial ao CNES/DATASUS retornou ${totalEstab} estabelecimentos no município.${amostra}: ${Array.from(
           byTipo.entries()
         )
           .sort((a, b) => b[1] - a[1])
@@ -148,7 +173,8 @@ export class SrcDatasus extends BaseSourceAgent {
           metadata: { ibgeId: codMun6, indicador: "sem_hospital" },
         });
       }
-      if (nUpa === 0 && totalEstab > 5) {
+      // Só afirma ausência de UPA quando a lista inteira foi lida.
+      if (nUpa === 0 && totalEstab > 5 && pagina === totalEstab) {
         signals.push({
           title: `CNES · ${territory.name} sem UPA/Pronto Socorro`,
           summary: `Município tem ${totalEstab} unidades de saúde mas nenhuma classificada como pronto atendimento/UPA.`,
