@@ -68,8 +68,20 @@ export interface DispatchResult {
 type SseClient = {
   id: string;
   territoryId?: number; // undefined = subscribe to all
+  /** Slugs permitidos (assinante). undefined = todos (operador). */
+  slugs?: Set<string>;
   write: (data: string) => void;
 };
+
+/** Um cliente SSE pode receber este alerta? (território pedido + contrato do assinante) */
+export function clientePodeReceber(
+  c: { territoryId?: number; slugs?: Set<string> },
+  payload: { territoryId: number; territorySlug: string }
+): boolean {
+  if (c.territoryId !== undefined && c.territoryId !== payload.territoryId) return false;
+  if (c.slugs && !c.slugs.has(payload.territorySlug)) return false;
+  return true;
+}
 
 const sseClients = new Map<string, SseClient>();
 
@@ -91,15 +103,17 @@ function pushToBuffer(payload: AlertPayload): void {
 export function registerSseClient(
   id: string,
   write: (data: string) => void,
-  territoryId?: number
+  territoryId?: number,
+  slugsPermitidos?: string[]
 ): () => void {
-  sseClients.set(id, { id, territoryId, write });
+  const slugs = slugsPermitidos ? new Set(slugsPermitidos.map((s) => s.toLowerCase())) : undefined;
+  sseClients.set(id, { id, territoryId, slugs, write });
   log.debug({ id, territoryId, total: sseClients.size }, "SSE client registered");
 
   // Replay: envia sinais recentes (em ordem cronológica reversa do mais recente para o mais antigo)
   // Filtra por território se especificado.
   for (const payload of signalBuffer) {
-    if (territoryId !== undefined && payload.territoryId !== territoryId) continue;
+    if (!clientePodeReceber({ territoryId, slugs }, payload)) continue;
     try {
       write(`data: ${JSON.stringify(payload)}\n\n`);
     } catch {
@@ -118,7 +132,7 @@ function broadcastSse(payload: AlertPayload): void {
   const data = `data: ${JSON.stringify(payload)}\n\n`;
   let sent = 0;
   for (const client of Array.from(sseClients.values())) {
-    if (client.territoryId === undefined || client.territoryId === payload.territoryId) {
+    if (clientePodeReceber(client, payload)) {
       try {
         client.write(data);
         sent++;

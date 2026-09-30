@@ -30,6 +30,10 @@ import { runStrategicLayer } from "../strategic/runner";
 import { invokeJson } from "../_core/llm";
 import { comContexto, registrar } from "../_core/aprendiz";
 import { conferirNumerosDoRelatorio } from "../agents/verificador";
+import { confirmarPorEmailSeHouverChave, leadEntradaSchema, registrarLead } from "../leads";
+import { gateAtivo } from "../stt/publicacao-logica";
+import { entradasDeHistorico } from "../visao-publica";
+import { publicadosPorTerritorio, lerPublicacoes } from "../publicacao";
 import { comCustoDoTerritorio, resumoPorExecucao } from "../_core/cost-ledger";
 import { buscarLocalidadeCurada } from "./localidades-curadas";
 import {
@@ -143,9 +147,6 @@ ditLandingRouter.get("/ops", async (_req: Request, res: Response) => {
 // POST /api/dit/lead { email, territory }
 // Salva como subscriber (plan=free_alert). Idempotente por email.
 // Se o banco estiver indisponível, registra em log e devolve { saved:false }.
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const leadFallbackLog: Array<{ email: string; territory: string; ts: string }> = [];
-
 ditLandingRouter.post("/lead", async (req: Request, res: Response) => {
   const ip = (req.ip ?? req.socket.remoteAddress ?? "unknown").slice(0, 50);
   if (isRateLimited(ip)) {
@@ -153,55 +154,51 @@ ditLandingRouter.post("/lead", async (req: Request, res: Response) => {
     return;
   }
 
-  const { email, territory } = req.body as { email?: string; territory?: string };
-  const emailClean = (email ?? "").trim().toLowerCase().slice(0, 320);
-  const territoryClean = (territory ?? "").trim().slice(0, 120);
-
-  if (!emailClean || !EMAIL_RE.test(emailClean)) {
-    res.status(400).json({ error: "Email inválido" });
+  // B6: nome, empresa, email, territorio, momento, decisao, observacao.
+  // `territory` (campo do formulário antigo) segue aceito como `territorio`.
+  const parsed = leadEntradaSchema.safeParse(req.body ?? {});
+  if (!parsed.success) {
+    const campos = parsed.error.issues.map((i) => String(i.path[0] ?? ""));
+    res.status(400).json({
+      error: campos.includes("email") ? "Email inválido" : "Dados inválidos",
+      campos: Array.from(new Set(campos)),
+    });
     return;
   }
-  if (!territoryClean) {
-    res.status(400).json({ error: "Território obrigatório" });
-    return;
-  }
-
-  const db = await getDb();
-  if (!db) {
-    // Sem banco: registra em memória + log estruturado pra captura via Railway logs.
-    leadFallbackLog.push({ email: emailClean, territory: territoryClean, ts: new Date().toISOString() });
-    log.info({ email: emailClean, territory: territoryClean, ip }, "[LEAD] capturado (sem DB)");
-    res.json({ saved: false, captured: true, message: "Registrado em fallback (sem DB)" });
-    return;
-  }
+  const entrada = parsed.data;
 
   try {
-    // Upsert: se email já existe, só atualiza o território de interesse.
-    const existing = await db
-      .select()
-      .from(subscribers)
-      .where(eq(subscribers.email, emailClean))
-      .limit(1);
+    const { lead, novo } = await registrarLead(entrada);
+    log.info({ leadId: lead.id, novo, momento: lead.momento }, "[LEAD] registrado");
 
-    if (existing.length > 0) {
-      log.info({ email: emailClean, territory: territoryClean }, "[LEAD] já cadastrado");
-      res.json({ saved: true, isNew: false });
-      return;
+    // Compatibilidade: com MySQL, o lead também entra em `subscribers`
+    // (alertas por e-mail usam essa tabela). Melhor esforço.
+    try {
+      const db = await getDb();
+      if (db && entrada.territorio) {
+        const existing = await db.select().from(subscribers).where(eq(subscribers.email, entrada.email)).limit(1);
+        if (existing.length === 0) {
+          await db.insert(subscribers).values({
+            name: entrada.nome ?? (entrada.email.split("@")[0] || "Lead"),
+            email: entrada.email,
+            company: entrada.empresa ?? null,
+            territoryInterest: entrada.territorio,
+            plan: "free_alert",
+            active: true,
+          });
+        }
+      }
+    } catch (subErr) {
+      log.warn({ err: (subErr as Error).message }, "[LEAD] subscribers não gravado (não-fatal)");
     }
 
-    await db.insert(subscribers).values({
-      name: emailClean.split("@")[0] || "Lead",
-      email: emailClean,
-      territoryInterest: territoryClean,
-      plan: "free_alert",
-      active: true,
-    });
-    log.info({ email: emailClean, territory: territoryClean }, "[LEAD] novo subscriber salvo");
-    res.json({ saved: true, isNew: true });
+    // Gancho de e-mail: só envia se RESEND_API_KEY existir.
+    void confirmarPorEmailSeHouverChave(lead).catch(() => undefined);
+
+    res.json({ saved: true, isNew: novo, captured: true, leadId: lead.id });
   } catch (err) {
-    log.warn({ err: (err as Error).message, email: emailClean }, "[LEAD] falha ao salvar");
-    leadFallbackLog.push({ email: emailClean, territory: territoryClean, ts: new Date().toISOString() });
-    res.json({ saved: false, captured: true, error: (err as Error).message });
+    log.error({ err: (err as Error).message }, "[LEAD] falha ao gravar");
+    res.status(500).json({ saved: false, captured: false, error: "Não foi possível registrar agora. Tente de novo." });
   }
 });
 
@@ -1370,6 +1367,11 @@ ditLandingRouter.get("/history/:slug", async (req: Request, res: Response) => {
   try {
     const { slug } = req.params;
     if (!slug) { res.status(400).json({ error: "slug obrigatório" }); return; }
+    // Portão (B1): o histórico público é o PUBLICADO por humano, não o snapshot do motor.
+    if (gateAtivo()) {
+      res.json({ slug, history: entradasDeHistorico(await lerPublicacoes(slug)) });
+      return;
+    }
     const { getSttHistory } = await import("../stt/dit-snapshot-store");
     const history = await getSttHistory(slug);
     res.json({ slug, history });
@@ -1383,6 +1385,22 @@ ditLandingRouter.get("/history/:slug", async (req: Request, res: Response) => {
 
 ditLandingRouter.get("/monitored", async (_req: Request, res: Response) => {
   try {
+    // Portão (B1): só territórios com publicação, com o último número PUBLICADO.
+    if (gateAtivo()) {
+      const lista = (await publicadosPorTerritorio()).map((t) => {
+        const entradas = entradasDeHistorico(t.pubs);
+        const ultima = entradas[entradas.length - 1];
+        return {
+          slug: t.slug,
+          latestStt: ultima?.stt,
+          latestScenario: ultima?.scenario,
+          latestDate: ultima?.date,
+          totalDays: entradas.length,
+        };
+      });
+      res.json({ count: lista.length, territories: lista });
+      return;
+    }
     const { listTrackedSlugs, getSttHistory } = await import("../stt/dit-snapshot-store");
     const slugs = await listTrackedSlugs();
     const list = await Promise.all(

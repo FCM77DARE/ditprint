@@ -40,6 +40,9 @@ import { DimRecursos } from "./dimensions/dim-recursos";
 import { logger } from "../_core/logger";
 import { comCentral } from "../_core/central";
 import { registrar } from "../_core/aprendiz";
+import { cenarioDoStt } from "../../shared/metodologia";
+import { observacoesDaRodada, registrarRodadaDeFontes } from "../stt/saude-fontes";
+import { registrarRascunho } from "../publicacao";
 
 const log = logger.child({ module: "orchestrator" });
 
@@ -110,6 +113,10 @@ export class Orchestrator {
 
     // 1. Fetch previous period scores for cumulative memory calculation
     const previousScores = await this._fetchPreviousScores(territory.id, period);
+
+    // Saúde das fontes (B4): foto da memória antes da rodada, para saber depois
+    // quais fontes falharam NESTA rodada (errorCount subiu).
+    const saudeAntes = this.getAgentHealth().map((h) => ({ id: h.id, errorCount: h.errorCount }));
 
     // 2. Run all 6 dimension agents in parallel — passando a janela temporal
     const dimResults = await Promise.allSettled(
@@ -378,6 +385,43 @@ export class Orchestrator {
       log.warn({ err, territory: territory.slug }, "Leitura (tensão/confiança) falhou, seguindo sem ela");
     }
 
+    // B4: grava a saúde de cada fonte desta rodada (último sucesso, último erro,
+    // contagem de 7 dias). Nunca lança.
+    try {
+      const dimensaoDe = new Map<string, string>();
+      for (const dim of this.dimensions) for (const src of dim.sources) dimensaoDe.set(src.id, dim.id);
+      await registrarRodadaDeFontes(
+        observacoesDaRodada(
+          saudeAntes,
+          this.getAgentHealth().map((h) => ({ id: h.id, errorCount: h.errorCount, lastError: h.lastError })),
+          sourceBreakdown,
+          (id) => dimensaoDe.get(id) ?? null
+        )
+      );
+    } catch (err) {
+      log.warn({ err: (err as Error).message }, "Saúde das fontes falhou (não-fatal)");
+    }
+
+    // B1/B5: o que o motor calculou vira RASCUNHO. Só um humano publica.
+    // Fica no livro de rascunhos nos dois modos (MySQL ou disco); a mesa lê daí.
+    {
+      const num = (id: DimensionId) => clampScore(dimensions[id]?.score ?? 0);
+      await registrarRascunho({
+        slug: territory.slug,
+        territoryId: territory.id,
+        nome: territory.name,
+        estado: territory.state ?? null,
+        regiao: territory.region ?? null,
+        period,
+        stt: consolidatedStt,
+        dims: { d1: num("D1"), d2: num("D2"), d3: num("D3"), d4: num("D4"), d5: num("D5"), d6: num("D6"), d7: null },
+        activatedIndex: activatedDimension,
+        notaExecutiva: executiveNote || null,
+        leitura: leitura ?? null,
+        nSinais: totalSignalsCount,
+      });
+    }
+
     const result: OrchestratorResult = {
       territoryId: territory.id,
       territorySlug: territory.slug,
@@ -488,8 +532,18 @@ export class Orchestrator {
 
     const d = (id: DimensionId) => clampScore(dimensions[id]?.score ?? 0);
 
+    // Portão (B1): linha já PUBLICADA neste período não é reescrita pelo motor.
+    // Antes o onDuplicateKeyUpdate trocava stt/dimensões por baixo de um número
+    // que um humano tinha publicado. O novo cálculo vai para o livro de
+    // rascunhos (registrarRascunho) e só chega ao público se alguém publicar.
+    const [jaPublicada] = await db
+      .select({ id: sttScores.id })
+      .from(sttScores)
+      .where(and(eqOp(sttScores.territoryId, territory.id), eqOp(sttScores.period, period), eqOp(sttScores.published, true)))
+      .limit(1);
+
     // Upsert sttScores (unique on territoryId + period)
-    await db
+    if (!jaPublicada) await db
       .insert(sttScores)
       .values({
         territoryId: territory.id,
@@ -656,11 +710,7 @@ function clampScore(v: number): number {
   return Math.min(100, Math.max(0, Number(v) || 0));
 }
 
-function scoreToScenario(stt: number): "estabilidade" | "pressao" | "escalada" {
-  if (stt >= 75) return "escalada";
-  if (stt >= 50) return "pressao";
-  return "estabilidade";
-}
+const scoreToScenario = cenarioDoStt;
 
 function buildDimensionScoreMap(
   dimensions: Partial<Record<DimensionId, DimensionResult>>

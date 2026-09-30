@@ -38,6 +38,7 @@ import { getDb } from "../db";
 import { signals as signalsTable } from "../../drizzle/schema";
 import { and, eq, gte } from "drizzle-orm";
 import { logger } from "../_core/logger";
+import { PESOS_POR_DIMENSAO } from "../../shared/metodologia";
 import { DIMENSIONS_LIST } from "../indicators";
 import type { DimensionId } from "../indicators";
 import { readSignalsInWindow, type StoredSignal } from "./signal-store";
@@ -60,9 +61,7 @@ const WINDOW_MS = WINDOW_MONTHS * 30 * 24 * 60 * 60 * 1000;
 const HALF_LIFE_MONTHS = 12;
 
 // Mesmos pesos do calculator.ts (Σ = 1.0).
-const DIM_WEIGHTS: Record<DimensionId, number> = {
-  D1: 0.22, D2: 0.15, D3: 0.15, D4: 0.22, D5: 0.15, D6: 0.11, D7: 0,
-};
+const DIM_WEIGHTS: Record<DimensionId, number> = PESOS_POR_DIMENSAO;
 
 // Quanto cada sinal RESOLUTIVO de impact=1.0 reduz a dimensão (em pontos).
 // Calibrado pra que ~8-10 sinais resolutivos fortes (impact ≥ 0.6) zerem a

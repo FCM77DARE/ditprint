@@ -21,6 +21,7 @@ import { calculateSTT, DIMENSIONS_LIST } from "../indicators";
 import type { DimensionId } from "../indicators";
 import type { SttCalculatorInput, SttCalculatorOutput } from "./types";
 import { logger } from "../_core/logger";
+import { PESOS_POR_DIMENSAO } from "../../shared/metodologia";
 import { registrar } from "../_core/aprendiz";
 
 const log = logger.child({ module: "stt-calculator" });
@@ -28,9 +29,7 @@ const log = logger.child({ module: "stt-calculator" });
 const PREMISES_DIR = join(import.meta.dirname ?? __dirname, "..", "premises");
 
 // ─── Dimension weight map (same as indicators.ts) ─────────────────────────────
-const DIM_WEIGHTS: Record<DimensionId, number> = {
-  D1: 0.22, D2: 0.15, D3: 0.15, D4: 0.22, D5: 0.15, D6: 0.11, D7: 0,
-};
+const DIM_WEIGHTS: Record<DimensionId, number> = PESOS_POR_DIMENSAO;
 
 // ─── Public API ───────────────────────────────────────────────────────────────
 

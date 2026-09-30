@@ -24,6 +24,7 @@
  */
 
 import type { DimensaoLeitura, FonteDimensao, Leitura } from "../../shared/leitura";
+import { PESOS_POR_DIMENSAO } from "../../shared/metodologia";
 
 export type { DimensaoLeitura, FonteDimensao, Leitura };
 
@@ -35,15 +36,7 @@ export type DimensaoId = "D1" | "D2" | "D3" | "D4" | "D5" | "D6" | "D7";
  * (D1 0,20 ... D7 0,10) que só serve a calculateSTT, caminho que o consolidador
  * não usa. Este módulo segue o consolidador porque é o número que o cliente vê.
  */
-export const PESOS_METODOLOGIA: Record<DimensaoId, number> = {
-  D1: 0.22,
-  D2: 0.15,
-  D3: 0.15,
-  D4: 0.22,
-  D5: 0.15,
-  D6: 0.11,
-  D7: 0,
-};
+export const PESOS_METODOLOGIA: Record<DimensaoId, number> = PESOS_POR_DIMENSAO;
 
 export const NOMES_DIMENSAO: Record<DimensaoId, string> = {
   D1: "Socioambiental",

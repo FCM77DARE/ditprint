@@ -73,3 +73,42 @@ const requireDashboardAdmin = t.middleware(async (opts) => {
 });
 
 export const dashboardProcedure = t.procedure.use(requireDashboardAdmin);
+
+// ─── Portal do assinante (B2) ────────────────────────────────────────────────
+
+export type PortalCtx = {
+  tipo: "assinante" | "operador" | "aberto";
+  email: string | null;
+  /** Slugs permitidos, ou "*" (operador, ou portal aberto com DIT_PORTAL_AUTH=false). */
+  territorios: string[] | "*";
+};
+
+/**
+ * Exige sessão de assinante (token do portal) ou de operador. Com
+ * DIT_PORTAL_AUTH=false volta ao comportamento antigo: portal aberto, sem
+ * restrição de território.
+ */
+const resolvePortal = t.middleware(async (opts) => {
+  const { ctx, next } = opts;
+  const { portalAuthAtivo } = await import("../stt/publicacao-logica");
+  const { identidadeDaRequisicao } = await import("../portal");
+  const id = await identidadeDaRequisicao(ctx.req);
+  let portal: PortalCtx;
+  if (!portalAuthAtivo()) {
+    portal = id
+      ? { tipo: id.tipo, email: id.email, territorios: "*" }
+      : { tipo: "aberto", email: null, territorios: "*" };
+  } else {
+    if (!id) {
+      throw new TRPCError({ code: "UNAUTHORIZED", message: "Entre com o link de acesso." });
+    }
+    portal = {
+      tipo: id.tipo,
+      email: id.email,
+      territorios: id.tipo === "assinante" ? id.territorios : "*",
+    };
+  }
+  return next({ ctx: { ...ctx, portal } });
+});
+
+export const portalProcedure = t.procedure.use(resolvePortal);

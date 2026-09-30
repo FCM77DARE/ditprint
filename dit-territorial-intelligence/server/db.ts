@@ -232,7 +232,9 @@ export async function upsertSttScore(data: InsertSttScore): Promise<void> {
       stt: data.stt, itt: data.itt, ics: data.ics, ivs: data.ivs, ive: data.ive, ici: data.ici,
       activatedIndex: data.activatedIndex, variation: data.variation,
       executiveNote: data.executiveNote, scenario: data.scenario,
-      published: data.published, publishedAt: data.publishedAt,
+      // Só publica; nunca despublica por baixo: um rascunho novo não pode
+      // derrubar o que um humano já publicou neste período.
+      ...(data.published ? { published: true, publishedAt: data.publishedAt } : {}),
     },
   });
 }
