@@ -18,12 +18,14 @@ import RadarTerritoryPage from "./pages/RadarTerritoryPage";
 import RadarAlertas from "./pages/RadarAlertas";
 import RadarConfiguracoes from "./pages/RadarConfiguracoes";
 import DevHub from "./pages/DevHub";
+import Marco from "./pages/Marco";
 
 function Router() {
   return (
     <Switch>
       <Route path={"/dev"} component={DevHub} />
       <Route path={"/"} component={LandingSimple} />
+      <Route path={"/marco"} component={Marco} />
       <Route path={"/sse"} component={SSE} />
       <Route path={"/metodologia"} component={Methodology} />
       {/* Unified territory route — handles all slugs */}
