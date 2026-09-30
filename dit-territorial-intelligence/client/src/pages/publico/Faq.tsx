@@ -33,7 +33,7 @@ export function Faq({ titulo, itens }: { titulo: string; itens: ItemFaq[] }) {
 
   return (
     <Secao titulo={titulo}>
-      <div className="divide-y border-y">
+      <div data-mo="stagger" className="divide-y border-y">
         {itens.map(i => (
           <details key={i.pergunta} className="group py-1">
             <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 py-2 text-base font-medium text-tinta [&::-webkit-details-marker]:hidden">
@@ -41,7 +41,7 @@ export function Faq({ titulo, itens }: { titulo: string; itens: ItemFaq[] }) {
               <span aria-hidden className="num text-tinta-2 group-open:hidden">+</span>
               <span aria-hidden className="num hidden text-tinta-2 group-open:inline">−</span>
             </summary>
-            <p className="max-w-prose pb-3 text-sm text-tinta-2">{i.resposta}</p>
+            <p className="mo-faq-resposta max-w-prose pb-3 text-sm text-tinta-2">{i.resposta}</p>
           </details>
         ))}
       </div>

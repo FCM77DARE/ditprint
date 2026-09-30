@@ -43,6 +43,12 @@ import {
 import { estaNoRadar, RADAR_LANCAMENTO } from "./radar-lancamento";
 import { canSpend, consume, getBudgetStatus } from "../_core/budget";
 import { getStructuralStatus } from "../structural/store";
+import { CAPITAL_IBGE_IDS } from "../structural/leitura-estrutural";
+import { estruturalRouter } from "./estrutural";
+import { criarLeituraStream } from "./leitura-stream";
+import { comProgresso, emitirPara } from "../_core/leitura-progresso";
+import { lerEstrutural } from "../structural/leitura-estrutural";
+import { randomUUID } from "node:crypto";
 import type { TerritoryStrategicContext } from "../strategic/types";
 
 const log = logger.child({ module: "dit-landing" });
@@ -80,6 +86,15 @@ const MIN_COVERAGE = Number(process.env.DIT_MIN_COVERAGE ?? "0.35");
 const PUBLIC_ANALYZE = String(process.env.DIT_PUBLIC_ANALYZE ?? "false").toLowerCase() === "true";
 
 /**
+ * Senha da chamada interna: a rota da primeira leitura ao vivo (/leitura/stream)
+ * chama o /analyze do próprio servidor e precisa passar pela porta acima, que
+ * vale só para a rota antiga. Nasce a cada boot e nunca sai do processo, então
+ * ninguém de fora consegue mandar o cabeçalho certo.
+ */
+const TOKEN_INTERNO = randomUUID();
+const chamadaInterna = (req: Request): boolean => req.headers["x-dit-interno"] === TOKEN_INTERNO;
+
+/**
  * Slug canônico do território = código IBGE do município (+ distrito/localidade).
  *
  * Antes o slug saía do texto digitado, e por isso produção acumulou
@@ -105,6 +120,9 @@ ditLandingRouter.use((_req, res, next) => {
   next();
 });
 ditLandingRouter.options("*", (_req, res) => res.sendStatus(204));
+
+// Leitura estrutural gratuita de qualquer município (custo zero, sem LLM).
+ditLandingRouter.use(estruturalRouter);
 
 // ── HEALTH CHECK (Railway / monitoring) ───────────────────────────────────────
 ditLandingRouter.get("/health", (_req, res) => {
@@ -322,12 +340,7 @@ interface IbgeDistrito {
   municipio: IbgeMunicipio;
 }
 
-const CAPITAL_IBGE_IDS = new Set<number>([
-  1200401, 1302603, 1400100, 1501402, 1600303, 1721000, 2111300, 2211001,
-  2304400, 2408102, 2507507, 2611606, 2704302, 2800308, 2927408, 3106200,
-  3205309, 3304557, 3550308, 4106902, 4205407, 4314902, 5002704, 5103403,
-  5208707, 5300108,
-]);
+
 
 let ibgeCache: IbgeMunicipio[] | null = null;
 let ibgeCachePromise: Promise<IbgeMunicipio[] | null> | null = null;
@@ -1532,6 +1545,106 @@ ditLandingRouter.get("/monitored", async (_req: Request, res: Response) => {
   }
 });
 
+
+/**
+ * Teaser do DIT completo: o que a isca pode mostrar sem cadastro.
+ * Tem: STT, cenário, identidade, 1 parágrafo de síntese, 3 sinais, dimensões
+ * só com nome e complexidade, 1 risco e 1 oportunidade. Não tem: insights
+ * detalhados, recomendações, recursos, hotspots nem casos estratégicos.
+ * Função pura, para a rota e o fallback usarem o mesmo corte.
+ */
+export function derivarIsca(fullResult: Record<string, unknown>): Record<string, unknown> {
+  const forecast = fullResult.forecast as
+    | { horizon?: string; risks?: string[]; opportunities?: unknown }
+    | undefined;
+  return {
+    territory: fullResult.territory,
+    region: fullResult.region,
+    stt: fullResult.stt,
+    scenario: fullResult.scenario,
+    scenarioLabel: fullResult.scenarioLabel,
+    gaugeColor: fullResult.gaugeColor,
+    resolution: fullResult.resolution,
+    coverageScore: fullResult.coverageScore,
+    leitura: fullResult.leitura ?? null,
+    // Identidade do território (contexto + fatos recentes): vai inteira na isca.
+    identidade: fullResult.identidade ?? null,
+    // 1 parágrafo de síntese
+    executiveSummaryTeaser: Array.isArray(fullResult.executiveSummary)
+      ? (fullResult.executiveSummary as string[])[0] ?? ""
+      : "",
+    // Dimensões: só código, nome e complexidade (sem insights, sem signals)
+    dimensionsTeaser: Array.isArray(fullResult.dimensions)
+      ? (fullResult.dimensions as Array<{ code: string; name: string; complexity: string }>).map((d) => ({
+          code: d.code,
+          name: d.name,
+          complexity: d.complexity,
+        }))
+      : [],
+    // 3 sinais mais críticos
+    keySignalsTeaser: Array.isArray(fullResult.keySignals) ? (fullResult.keySignals as unknown[]).slice(0, 3) : [],
+    // 1 risco e 1 oportunidade da previsão
+    forecastTeaser: forecast
+      ? {
+          horizon: forecast.horizon,
+          risks: (forecast.risks ?? []).slice(0, 2),
+          opportunity: typeof forecast.opportunities === "string" ? forecast.opportunities : null,
+        }
+      : null,
+    isIsca: true,
+    fullDitAvailable: true,
+  };
+}
+
+// ── PRIMEIRA LEITURA AO VIVO (SSE) ────────────────────────────────────────────
+// GET /api/dit/leitura/stream?q= — a isca do funil: estrutural na hora e depois
+// o DIT de verdade, com fontes e sinais chegando em tempo real. Ver leitura-stream.ts.
+ditLandingRouter.get(
+  "/leitura/stream",
+  criarLeituraStream({
+    estrutural: lerEstrutural,
+    resolver: async (q) => {
+      const loc = await resolveLocation(q);
+      const ambiguas = takeAmbiguity();
+      return {
+        loc: loc
+          ? {
+              nome: loc.name,
+              municipio: loc.municipality,
+              uf: loc.state,
+              ibgeId: loc.ibgeId,
+              slug: canonicalSlug(loc),
+              tipo: loc.kind,
+            }
+          : null,
+        ambiguas,
+      };
+    },
+    iscaEmCache: (slug) => {
+      const c = analysisCache.get(`isca:${todayKey(slug)}`);
+      return c && Date.now() - c.ts < CACHE_TTL_MS ? (c.result as Record<string, unknown>) : null;
+    },
+    podeGastar: async () => {
+      // Uma leitura nova gasta coleta (analyze) e relatório (llm_report): os dois tetos valem.
+      for (const recurso of ["analyze", "llm_report"] as const) {
+        const d = await canSpend(recurso);
+        if (!d.ok) return { ok: false, motivo: d.reason };
+      }
+      return { ok: true };
+    },
+    executarAnalise: async (territorio, { ip, porta }) => {
+      const r = await fetch(`http://127.0.0.1:${porta}/api/dit/analyze`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-forwarded-for": ip, "x-dit-interno": TOKEN_INTERNO },
+        body: JSON.stringify({ territory: territorio }),
+        signal: AbortSignal.timeout(170000),
+      });
+      return { status: r.status, corpo: await r.json().catch(() => null) };
+    },
+    derivarIsca,
+  })
+);
+
 // ── ROTA ISCA (free preview) ──────────────────────────────────────────────────
 
 ditLandingRouter.post("/isca", async (req: Request, res: Response) => {
@@ -1612,9 +1725,10 @@ ditLandingRouter.post("/isca", async (req: Request, res: Response) => {
     if (iscaCached) {
       res.json(iscaCached.result);
     } else {
-      // Fallback improvável: retorna o full result
-      const full = await r.json();
-      res.json(full);
+      // Fallback improvável: o /analyze respondeu sem gravar a isca. Responde
+      // com o mesmo teaser, nunca com o relatório inteiro (isso é o que fica atrás do cadastro).
+      const full = (await r.json()) as Record<string, unknown>;
+      res.json(full.status ? full : derivarIsca(full));
     }
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
@@ -1721,7 +1835,7 @@ ditLandingRouter.post("/analyze", async (req: Request, res: Response) => {
     // dispara coleta. Vira pedido, e o pedido é o funil (Radar por assinatura,
     // Diagnóstico por ticket). Cache do dia continua sendo servido: quem já
     // tem DIT publicado hoje recebe normalmente.
-    if (!PUBLIC_ANALYZE) {
+    if (!PUBLIC_ANALYZE && !chamadaInterna(req)) {
       // O Radar declarado conta como monitorado desde já — senão a primeira
       // coleta de cada um dos 20 seria recusada e a lista nunca sairia do papel.
       const noRadar = estaNoRadar(loc.municipality, loc.state, loc.fixedSlug ?? slug);
@@ -1801,7 +1915,7 @@ ditLandingRouter.post("/analyze", async (req: Request, res: Response) => {
     let orchestratorResult: Awaited<ReturnType<typeof orchestrator.run>> | null = null;
     try {
       orchestratorResult = await Promise.race([
-        comCustoDoTerritorio(slug, "leitura", () => orchestrator.run(territoryRecord)),
+        comCustoDoTerritorio(slug, "leitura", () => comProgresso(slug, () => orchestrator.run(territoryRecord))),
         new Promise<never>((_, reject) =>
           setTimeout(() => reject(new Error("Orchestrator timeout (140s)")), 140000)
         ),
@@ -1843,6 +1957,12 @@ ditLandingRouter.post("/analyze", async (req: Request, res: Response) => {
     // porta aberta: uma enxurrada de consultas que terminam em cobertura
     // insuficiente rodaria a coleta toda sem mexer no contador.
     await consume("analyze");
+    emitirPara(slug, {
+      tipo: "etapa",
+      id: "consolidacao",
+      rotulo: "Consolidando as dimensões em Tensão e Confiança",
+      detalhe: `${orchestratorResult.totalSignals} sinais verificados`,
+    });
 
     // 3a. PISO DE COBERTURA — o motor precisa saber o suficiente para afirmar.
     // Com cobertura baixa, todas as dimensões chegam vazias no prompt e o
@@ -1939,6 +2059,7 @@ ditLandingRouter.post("/analyze", async (req: Request, res: Response) => {
       return;
     }
     await consume("llm_report");
+    emitirPara(slug, { tipo: "etapa", id: "redacao", rotulo: "Escrevendo a síntese" });
 
     const promptRelatorio = buildReportPrompt(
             resolvedName,
@@ -2095,42 +2216,7 @@ ditLandingRouter.post("/analyze", async (req: Request, res: Response) => {
     // nomes das dimensões com complexidade (sem insights), previsão resumida.
     // Sem: insights detalhados, recomendações completas, recursos, hotspots,
     // casos estratégicos. Isca é salva junto mas enviada só quando solicitada.
-    const fullResult = result as Record<string, unknown>;
-    const iscaResult = {
-      territory: fullResult.territory,
-      region: fullResult.region,
-      stt: fullResult.stt,
-      scenario: fullResult.scenario,
-      scenarioLabel: fullResult.scenarioLabel,
-      gaugeColor: fullResult.gaugeColor,
-      resolution: fullResult.resolution,
-      coverageScore: fullResult.coverageScore,
-      leitura: fullResult.leitura ?? null,
-      // Identidade do território (contexto + fatos recentes): vai inteira na isca.
-      identidade: fullResult.identidade ?? null,
-      // 1 parágrafo de síntese
-      executiveSummaryTeaser: Array.isArray(fullResult.executiveSummary)
-        ? (fullResult.executiveSummary as string[])[0] ?? ""
-        : "",
-      // Dimensões: só código, nome e complexidade (sem insights, sem signals)
-      dimensionsTeaser: Array.isArray(fullResult.dimensions)
-        ? (fullResult.dimensions as Array<{ code: string; name: string; complexity: string }>)
-            .map((d) => ({ code: d.code, name: d.name, complexity: d.complexity }))
-        : [],
-      // 3 sinais mais críticos
-      keySignalsTeaser: Array.isArray(fullResult.keySignals)
-        ? (fullResult.keySignals as unknown[]).slice(0, 3)
-        : [],
-      // 1 risco e 1 oportunidade da previsão
-      forecastTeaser: fullResult.forecast
-        ? {
-            horizon: (fullResult.forecast as { horizon?: string }).horizon,
-            risks: ((fullResult.forecast as { risks?: string[] }).risks ?? []).slice(0, 2),
-          }
-        : null,
-      isIsca: true,
-      fullDitAvailable: true,
-    };
+    const iscaResult = derivarIsca(result as Record<string, unknown>);
     analysisCache.set(`isca:${cacheKey}`, { result: iscaResult, ts: Date.now() });
     persistCacheToDisk();
 

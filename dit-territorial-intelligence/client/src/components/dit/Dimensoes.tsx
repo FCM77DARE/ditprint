@@ -41,11 +41,15 @@ export function DimensaoRow({ dimensao }: { dimensao: DimensaoLeitura }) {
           aria-label={valor === null ? undefined : `${nome}: ${fmtInt(valor)} de 100`}
           aria-hidden={valor === null ? true : undefined}
         >
-          {valor !== null && <div className="h-full" style={{ width: `${valor}%`, background: cor }} />}
+          {valor !== null && <div data-mo="bar" className="h-full" style={{ width: `${valor}%`, background: cor }} />}
         </div>
       </td>
       <td className="num py-2 pr-3 text-right text-tinta">
-        {valor === null ? <span className="font-body text-xs text-tinta-2">não medida</span> : fmtInt(valor)}
+        {valor === null ? (
+          <span className="font-body text-xs text-tinta-2">não medida</span>
+        ) : (
+          <span data-mo="count">{fmtInt(valor)}</span>
+        )}
       </td>
       <td className="num py-2 pr-3 text-right text-tinta-2">
         {peso <= 1 ? `${fmtInt(peso * 100)}%` : fmtInt(peso)}
@@ -103,7 +107,7 @@ export function DimensoesTable({
             <th scope="col" className="pb-2 font-medium">Fonte</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody data-mo="stagger">
           {linhas.map(d => (
             <DimensaoRow key={d.id} dimensao={d} />
           ))}

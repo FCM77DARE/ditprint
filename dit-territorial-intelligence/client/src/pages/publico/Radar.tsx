@@ -1,5 +1,6 @@
 import { Link } from "wouter";
 import { PageShell, Secao, botaoVariants } from "@/components/dit";
+import { Palavras } from "@/components/dit/motion";
 import { cn } from "@/lib/utils";
 import { LIMITE_ALERTA } from "@shared/metodologia";
 import { Faq, type ItemFaq } from "./Faq";
@@ -50,7 +51,7 @@ export default function PublicoRadar() {
     <PageShell>
       <div className="container max-w-4xl space-y-12 py-12 md:py-16">
         <header className="space-y-4">
-          <h1 className="text-3xl md:text-4xl">Você abre o Marco Radar e sabe o que mudou no seu CEP antes do jornal.</h1>
+          <Palavras as="h1" className="text-3xl md:text-4xl" texto="Você abre o Marco Radar e sabe o que mudou no seu CEP antes do jornal." />
           <p className="max-w-prose text-tinta-2">
             Quando o território muda, quem descobre pela imprensa já está atrasado. O Marco Radar entrega a leitura dos seus
             territórios todos os dias, com a assinatura de um analista.
@@ -69,7 +70,7 @@ export default function PublicoRadar() {
         </header>
 
         <Secao titulo="O que chega para você, todos os dias.">
-          <ul className="grid gap-4 md:grid-cols-2">
+          <ul data-mo="stagger" className="grid gap-4 md:grid-cols-2">
             {ENTREGAS.map(e => (
               <li key={e.nome} className="space-y-1 border-t-2 border-tinta pt-3">
                 <h3 className="text-lg">{e.nome}</h3>

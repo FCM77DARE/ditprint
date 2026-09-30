@@ -14,6 +14,7 @@ import {
   fmtDelta,
   fmtInt,
 } from "@/components/dit";
+import { Palavras } from "@/components/dit/motion";
 import { camposPublicados } from "@/lib/publicados";
 import { cn } from "@/lib/utils";
 
@@ -46,7 +47,7 @@ export default function PublicoTerritorio() {
     return (
       <PageShell>
         <div className="container max-w-4xl space-y-5 py-12">
-          <h1 className="text-3xl">Este território ainda não tem leitura publicada.</h1>
+          <Palavras as="h1" className="text-3xl" texto="Este território ainda não tem leitura publicada." />
           <p className="max-w-prose text-tinta-2">
             A leitura pública cobre só o que um analista da PRINT já publicou. Peça o diagnóstico e nós localizamos o
             território.
@@ -136,7 +137,7 @@ export default function PublicoTerritorio() {
         </Secao>
 
         <Secao titulo="Como ler a coluna Fonte">
-          <dl className="grid gap-3 text-sm md:grid-cols-2">
+          <dl data-mo="stagger" className="grid gap-3 text-sm md:grid-cols-2">
             <div>
               <dt className="font-semibold text-tinta">Estrutural</dt>
               <dd className="text-tinta-2">Indicador oficial comparado com o país em percentil nacional.</dd>

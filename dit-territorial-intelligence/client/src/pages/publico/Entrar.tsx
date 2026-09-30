@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, useLocation } from "wouter";
 import { Button, LoadingBlock, PageShell, botaoVariants } from "@/components/dit";
+import { Palavras } from "@/components/dit/motion";
 import { trpc } from "@/lib/trpc";
 import { cn } from "@/lib/utils";
 import { definirSessaoPortal, type SessaoPortal } from "../portal/usePortalSessao";
@@ -71,7 +72,7 @@ export default function PublicoEntrar() {
     return (
       <PageShell>
         <section className="container max-w-xl space-y-6 py-14 md:py-20">
-          <h1 className="text-3xl md:text-4xl">Conferindo seu link de acesso.</h1>
+          <Palavras as="h1" className="text-3xl md:text-4xl" texto="Conferindo seu link de acesso." />
           <LoadingBlock linhas={2} rotulo="Conferindo seu link de acesso" />
         </section>
       </PageShell>
@@ -81,7 +82,7 @@ export default function PublicoEntrar() {
   return (
     <PageShell>
       <section className="container max-w-xl space-y-6 py-14 md:py-20">
-        <h1 className="text-3xl md:text-4xl">Peça o link de acesso ao seu Marco Radar.</h1>
+        <Palavras as="h1" className="text-3xl md:text-4xl" texto="Peça o link de acesso ao seu Marco Radar." />
 
         {linkInvalido && (
           <p role="alert" className="text-sm" style={{ color: "var(--tensao-5)" }}>

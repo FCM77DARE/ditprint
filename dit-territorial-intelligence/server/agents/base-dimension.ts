@@ -25,6 +25,8 @@ import type {
 import type { BaseSourceAgent } from "./base-source";
 import { logger } from "../_core/logger";
 import { comCentral } from "../_core/central";
+import { emitir } from "../_core/leitura-progresso";
+import { DIMENSOES_METODOLOGIA } from "../../shared/metodologia";
 
 // Impact thresholds — matching the plan governance decisions
 export const ALERT_THRESHOLD = 0.7;
@@ -69,8 +71,20 @@ export abstract class BaseDimensionAgent {
     const collectedAt = new Date().toISOString();
 
     // 1. Run all source agents in parallel; failed ones return []
+    // Cada fonte avisa a leitura ao vivo assim que responde (sem ouvinte, não faz nada).
     const sourceResults = await Promise.allSettled(
-      this.sources.map((s) => s.collect(territory, options))
+      this.sources.map((s) =>
+        s.collect(territory, options).then(
+          (r) => {
+            emitir({ tipo: "fonte", dimensao: this.id, fonte: s.id, nome: s.name, ok: true, brutos: r.length });
+            return r;
+          },
+          (err) => {
+            emitir({ tipo: "fonte", dimensao: this.id, fonte: s.id, nome: s.name, ok: false, brutos: 0 });
+            throw err;
+          }
+        )
+      )
     );
 
     let sourcesOk = 0;
@@ -184,6 +198,32 @@ export abstract class BaseDimensionAgent {
       },
       "Dimension run complete"
     );
+
+    // Leitura ao vivo: os sinais verificados desta dimensão, do mais forte ao mais fraco
+    // (no máximo 6, para a tela respirar), e o fechamento da dimensão.
+    const nomesFonte = new Map(this.sources.map((s) => [s.id as string, s.name]));
+    [...classified]
+      .sort((a, b) => b.impactScore - a.impactScore)
+      .slice(0, 6)
+      .forEach((sig) =>
+        emitir({
+          tipo: "sinal",
+          dimensao: this.id,
+          fonte: nomesFonte.get(sig.sourceAgentId) ?? String(sig.sourceAgentId),
+          titulo: sig.title.slice(0, 220),
+          data: sig.publishedAt ? new Date(sig.publishedAt).toISOString().slice(0, 10) : null,
+          url: sig.url ?? null,
+          impacto: sig.impactScore >= ALERT_THRESHOLD ? "alto" : sig.impactScore >= STT_INCLUDE_THRESHOLD ? "medio" : "baixo",
+        })
+      );
+    emitir({
+      tipo: "dimensao",
+      id: this.id,
+      nome: DIMENSOES_METODOLOGIA.find((d) => d.id === this.id)?.nome ?? this.id,
+      sinais: classified.length,
+      fontesOk: sourcesOk,
+      fontesTotal: this.sources.length,
+    });
 
     return {
       dimensionId: this.id,

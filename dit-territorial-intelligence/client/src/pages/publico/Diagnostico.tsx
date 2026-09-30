@@ -1,6 +1,7 @@
 import { useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { Link, useSearch } from "wouter";
 import { Button, ErrorState, PageShell, botaoVariants } from "@/components/dit";
+import { Palavras } from "@/components/dit/motion";
 import { cn } from "@/lib/utils";
 
 type Momento = "Entrar" | "Operar" | "Responder";
@@ -159,7 +160,7 @@ export default function PublicoDiagnostico() {
     return (
       <PageShell>
         <section className="container max-w-2xl space-y-5 py-14 md:py-20" aria-live="polite">
-          <h1 className="text-3xl md:text-4xl">Recebemos. Um analista da PRINT responde por e-mail.</h1>
+          <Palavras as="h1" className="text-3xl md:text-4xl" texto="Recebemos. Um analista da PRINT responde por e-mail." />
           <p className="text-tinta-2">
             Você não precisa fazer mais nada agora. Enquanto isso, veja como o número nasce.
           </p>
@@ -184,7 +185,7 @@ export default function PublicoDiagnostico() {
   return (
     <PageShell>
       <div className="container grid gap-10 py-12 md:grid-cols-[1fr_minmax(0,24rem)] md:py-16">
-        <section className="space-y-6">
+        <section data-mo="up" className="space-y-6">
           <div className="space-y-3">
             <h1 className="text-3xl md:text-4xl">
               {ehRadar
@@ -319,7 +320,7 @@ export default function PublicoDiagnostico() {
           </form>
         </section>
 
-        <aside className="space-y-6 md:pt-2" aria-label="O que acontece depois">
+        <aside data-mo="up" data-mo-delay={0.2} className="space-y-6 md:pt-2" aria-label="O que acontece depois">
           <div className="space-y-3 border-t-2 border-tinta pt-4">
             <h2 className="text-lg">O que acontece depois</h2>
             <ol className="space-y-3 text-sm text-tinta-2">

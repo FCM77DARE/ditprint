@@ -30,7 +30,10 @@ export function KpiTile({ rotulo, valor, unidade, comparacao, carregando, classN
           <span className="text-2xl font-semibold text-tinta-2">sem dado</span>
         ) : (
           <>
-            <span className="num text-4xl font-medium leading-none text-tinta">
+            <span
+              data-mo={typeof valor === "number" ? "count" : undefined}
+              className="num text-4xl font-medium leading-none text-tinta"
+            >
               {typeof valor === "number" ? valor.toLocaleString("pt-BR") : valor}
             </span>
             {unidade && <span className="text-sm text-tinta-2">{unidade}</span>}

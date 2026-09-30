@@ -107,7 +107,7 @@ export function Secao({
   className?: string;
 }) {
   return (
-    <section className={cn("space-y-3", className)}>
+    <section data-mo="up" className={cn("space-y-3", className)}>
       <div>
         <h2 className="text-xl">{titulo}</h2>
         {nota && <p className="nota mt-1">{nota}</p>}

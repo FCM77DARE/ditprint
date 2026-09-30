@@ -16,6 +16,7 @@ import PublicoMetodologia from "./pages/publico/Metodologia";
 import PublicoTerritorio from "./pages/publico/Territorio";
 import PublicoSse from "./pages/publico/Sse";
 import PublicoEntrar from "./pages/publico/Entrar";
+import PublicoLeitura from "./pages/publico/Leitura";
 
 // Portal do assinante
 import PortalHoje from "./pages/portal/Hoje";
@@ -43,6 +44,7 @@ function Router() {
       <Route path="/metodologia" component={PublicoMetodologia} />
       <Route path="/territorio/:slug" component={PublicoTerritorio} />
       <Route path="/entrar" component={PublicoEntrar} />
+      <Route path="/leitura/:slug" component={PublicoLeitura} />
 
       {/* Portal */}
       <Route path="/portal" component={PortalHoje} />

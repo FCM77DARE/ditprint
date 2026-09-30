@@ -1,5 +1,6 @@
 import { Link } from "wouter";
 import { Chip, FAIXAS_TENSAO, PageShell, Secao, botaoVariants } from "@/components/dit";
+import { Palavras } from "@/components/dit/motion";
 import { cn } from "@/lib/utils";
 import {
   DIMENSOES_METODOLOGIA,
@@ -18,7 +19,7 @@ export default function PublicoMetodologia() {
       <article className="container max-w-4xl space-y-12 py-12 md:py-16">
         <header className="space-y-3">
           <p className="nota">Antes chamado de STT (Score de Tensão Territorial).</p>
-          <h1 className="text-3xl md:text-4xl">Tensão: como medimos o território em seis dimensões, com um analista por trás de cada número.</h1>
+          <Palavras as="h1" className="text-3xl md:text-4xl" texto="Tensão: como medimos o território em seis dimensões, com um analista por trás de cada número." />
           <p className="max-w-prose text-tinta-2">
             Você não deveria confiar em um número que não consegue conferir. Aqui está como a conta funciona, e os pesos
             estão abertos logo abaixo.
@@ -26,7 +27,7 @@ export default function PublicoMetodologia() {
         </header>
 
         <Secao titulo="O território é lido em seis dimensões, e só entra na conta quem foi medida.">
-          <ul className="grid gap-x-8 gap-y-3 text-sm md:grid-cols-2">
+          <ul data-mo="stagger" className="grid gap-x-8 gap-y-3 text-sm md:grid-cols-2">
             {DIMENSOES_METODOLOGIA.filter(d => !d.emCalibracao).map(d => (
               <li key={d.id} className="border-t pt-2">
                 <p className="font-medium text-tinta">
@@ -81,7 +82,7 @@ export default function PublicoMetodologia() {
         </Secao>
 
         <Secao titulo="Duas camadas alimentam cada dimensão: a estrutural e a dos sinais.">
-          <div className="grid gap-4 md:grid-cols-2">
+          <div data-mo="stagger" className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2 border-t-2 border-tinta pt-4">
               <h3 className="text-lg">Camada estrutural, peso {dec(PESO_ESTRUTURAL)}</h3>
               <p className="text-sm text-tinta-2">
@@ -108,7 +109,7 @@ export default function PublicoMetodologia() {
         </Secao>
 
         <Secao titulo="A tensão diz quanto pressiona; a confiança diz quanto sabemos; a faixa mostra o que falta.">
-          <dl className="grid gap-4 text-sm md:grid-cols-3">
+          <dl data-mo="stagger" className="grid gap-4 text-sm md:grid-cols-3">
             <div className="space-y-1">
               <dt className="text-base font-semibold text-tinta">Tensão</dt>
               <dd className="text-tinta-2">

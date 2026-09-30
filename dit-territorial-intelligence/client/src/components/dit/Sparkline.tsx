@@ -38,8 +38,17 @@ export function Sparkline({ valores, largura = 120, altura = 32, rotulo, classNa
       aria-label={`${rotulo}: de ${fmtInt(valores[0])} para ${fmtInt(ultimo)}`}
       className={cn("shrink-0 overflow-visible", className)}
     >
-      <polyline points={pontos} fill="none" stroke="var(--tinta-2)" strokeWidth="1.5" strokeLinejoin="round" />
-      <circle cx={x(valores.length - 1)} cy={y(ultimo)} r="3" fill="var(--acento)" />
+      <polyline
+        points={pontos}
+        pathLength={1}
+        data-mo="spark"
+        fill="none"
+        stroke="var(--tinta-2)"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+      />
+      <circle data-mo="dot" data-mo-delay={1.1} cx={x(valores.length - 1)} cy={y(ultimo)} r="3" fill="var(--acento)" />
     </svg>
   );
 }

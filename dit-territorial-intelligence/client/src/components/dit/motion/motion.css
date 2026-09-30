@@ -1,0 +1,210 @@
+/*
+ * Sistema de movimento do Marco. O estado inicial escondido so existe quando o
+ * motor liga (atributo data-mo-on na raiz) e some por elemento (data-mo-ok).
+ * Sem JS ou com prefers-reduced-motion o atributo nunca e posto: tudo visivel.
+ * So transform, opacity e clip-path.
+ */
+[data-mo-on] [data-mo="up"]:not([data-mo-ok]),
+[data-mo-on] [data-mo="row"]:not([data-mo-ok]),
+[data-mo-on] [data-mo="slide"]:not([data-mo-ok]),
+[data-mo-on] [data-mo="stagger"]:not([data-mo-ok]) > *,
+[data-mo-on] [data-mo="fade"]:not([data-mo-ok]),
+[data-mo-on] [data-mo="count"]:not([data-mo-ok]),
+[data-mo-on] [data-mo="mark"]:not([data-mo-ok]),
+[data-mo-on] [data-mo="dot"]:not([data-mo-ok]) {
+  opacity: 0;
+}
+[data-mo-on] [data-mo="up"]:not([data-mo-ok]),
+[data-mo-on] [data-mo="stagger"]:not([data-mo-ok]) > * {
+  transform: translate3d(0, 28px, 0);
+}
+[data-mo-on] [data-mo="slide"]:not([data-mo-ok]) {
+  transform: translate3d(28px, 0, 0);
+}
+[data-mo-on] [data-mo="row"]:not([data-mo-ok]) {
+  transform: translate3d(0, 10px, 0);
+}
+
+/* Palavras sobem por uma mascara. O respiro inferior evita cortar descendente. */
+.mo-wm {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+  padding-bottom: 0.14em;
+  margin-bottom: -0.14em;
+  padding-top: 0.04em;
+  margin-top: -0.04em;
+}
+.mo-w {
+  display: inline-block;
+  will-change: transform;
+}
+[data-mo-on] [data-mo="words"]:not([data-mo-ok]) .mo-w {
+  transform: translate3d(0, 112%, 0);
+}
+/* Texto que acende palavra a palavra com o scroll (a pagina liga via JS). */
+[data-mo-on] [data-lp-scrub] .mo-w {
+  opacity: 0.16;
+}
+
+/* Barras e regua: crescem a partir do zero, sem mudar largura. */
+[data-mo-on] [data-mo="bar"]:not([data-mo-ok]) {
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+}
+/* Faixa plausivel: abre do centro para as pontas. */
+[data-mo-on] [data-mo="open"]:not([data-mo-ok]) {
+  clip-path: inset(0 50% 0 50%);
+}
+/* Linha que se desenha (elementos SVG com pathLength=1). */
+[data-mo-on] [data-mo="spark"]:not([data-mo-ok]),
+[data-mo-on] [data-mo="draw"]:not([data-mo-ok]),
+[data-mo-on] [data-mo="drawgroup"]:not([data-mo-ok]) path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+}
+[data-mo-on] [data-mo="dot"]:not([data-mo-ok]) {
+  transform: scale(0);
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* Cabecalho publico: some ao rolar para baixo, volta ao subir. */
+.mo-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+.mo-header[data-oculto="true"] {
+  transform: translate3d(0, -101%, 0);
+}
+.mo-progresso {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: var(--acento);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  pointer-events: none;
+}
+
+/* Estado ativo da navegacao: traco que se desenha a partir da esquerda. */
+.mo-nav-link {
+  position: relative;
+}
+.mo-nav-link::after {
+  content: "";
+  position: absolute;
+  left: 0.75rem;
+  right: 0.75rem;
+  bottom: 0.55rem;
+  height: 2px;
+  background: var(--acento);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.mo-nav-link:hover::after,
+.mo-nav-link:focus-visible::after {
+  transform: scaleX(0.5);
+}
+.mo-nav-link[aria-current="page"]::after {
+  transform: scaleX(1);
+}
+
+/* Menu compacto abre deslizando. */
+details.mo-menu[open] > .mo-menu-painel {
+  animation: mo-menu-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes mo-menu-in {
+  from { opacity: 0; transform: translate3d(0, -8px, 0); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Transicao de rota no portal e na mesa: o conteudo entra, a moldura fica. */
+.mo-rota {
+  animation: mo-rota-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes mo-rota-in {
+  from { opacity: 0; transform: translate3d(0, 10px, 0); }
+  to { opacity: 1; transform: none; }
+}
+/* Item ativo da barra lateral: a marca cresce de cima para baixo. */
+.mo-lado-ativo {
+  position: relative;
+}
+.mo-lado-ativo::before {
+  content: "";
+  position: absolute;
+  left: -2px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--acento);
+  transform-origin: 50% 0;
+  animation: mo-lado-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes mo-lado-in {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+
+/* Link em texto: sublinhado que engrossa no hover. */
+.mo-link {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  background-size: 100% 1px;
+  transition: background-size 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.mo-link:hover {
+  background-size: 100% 2px;
+}
+
+/* Camadas de curvas do hero: promovidas ao compositor. */
+.mo-camada {
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mo-header { transition: none; }
+  .mo-rota, .mo-lado-ativo::before, details.mo-menu[open] > .mo-menu-painel { animation: none; }
+  .mo-nav-link::after, .mo-link { transition: none; }
+}
+
+/* Resposta do FAQ desliza ao abrir. */
+details[open] > .mo-faq-resposta {
+  animation: mo-menu-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  details[open] > .mo-faq-resposta { animation: none; }
+}
+
+/* Indicador de rolagem do hero. */
+.mo-cue {
+  display: block;
+  width: 1px;
+  height: 44px;
+  background: var(--linha);
+  position: relative;
+  overflow: hidden;
+}
+.mo-cue::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--acento);
+  animation: mo-cue 2.4s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+@keyframes mo-cue {
+  0% { transform: translate3d(0, -100%, 0); }
+  60%, 100% { transform: translate3d(0, 100%, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mo-cue::after { animation: none; transform: none; opacity: 0.5; }
+}

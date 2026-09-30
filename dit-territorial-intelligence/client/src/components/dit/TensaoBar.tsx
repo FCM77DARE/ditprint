@@ -79,7 +79,9 @@ export function TensaoBar({
   return (
     <div className={cn("space-y-3", className)}>
       <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-        <span className="num text-5xl font-medium leading-none text-tinta">{fmtInt(v)}</span>
+        <span data-mo="count" className="num text-5xl font-medium leading-none text-tinta">
+          {fmtInt(v)}
+        </span>
         <span className="flex items-center gap-2 text-base font-semibold text-tinta">
           <span style={{ color: info.cor }}>
             <MarcaFaixa nivel={info.id} />
@@ -91,13 +93,19 @@ export function TensaoBar({
             <span className="num font-medium text-tinta">{fmtDelta(delta)}</span> {comparacao.rotulo}
           </span>
         )}
-        {conf !== undefined && <span className="text-sm text-tinta-2">confiança {fmtInt(conf)}%</span>}
+        {conf !== undefined && (
+          <span className="text-sm text-tinta-2">
+            confiança <span data-mo="count" data-mo-delay={0.2}>{fmtInt(conf)}</span>%
+          </span>
+        )}
       </div>
 
       <div role="img" aria-label={descricao}>
         <div className="relative h-[22px]">
           {faixa && (
             <div
+              data-mo="open"
+              data-mo-delay={0.7}
               className="absolute top-0 h-[6px]"
               style={{
                 left: `${clamp(faixa.min)}%`,
@@ -110,6 +118,7 @@ export function TensaoBar({
           )}
           <div className="absolute bottom-0 h-[12px] w-full" style={{ background: "var(--muted)" }}>
             <div
+              data-mo="bar"
               className="h-full"
               style={{
                 width: `${v}%`,
@@ -122,6 +131,7 @@ export function TensaoBar({
             />
           </div>
           <div
+            data-mo="mark"
             className="absolute bottom-0 h-[22px] w-[2px]"
             style={{ left: `calc(${v}% - 1px)`, background: "var(--tinta)" }}
           />

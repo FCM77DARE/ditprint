@@ -40,7 +40,7 @@ export function TerritoriosPublicados({ max = 3, titulo }: { max?: number; titul
       titulo={titulo}
       nota="Tensão de 0 a 100, publicada por um analista da PRINT. A confiança diz quanto da metodologia foi medido."
     >
-      <ul className="divide-y border-y">
+      <ul data-mo="stagger" className="divide-y border-y">
         {linhas.map(t => {
           const tensao = t.tensao as number;
           const f = faixaDeTensao(tensao);

@@ -113,3 +113,4 @@ temp/
 # custo, sinais, aprendizado. Vive no volume da Railway, nao no repositorio.
 data/
 saidas-locais/
+.env.qa

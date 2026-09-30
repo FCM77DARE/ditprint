@@ -2,6 +2,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import { Chip, EmptyState, ErrorState, KpiTile, LoadingBlock } from "@/components/dit";
+import { detalheDaOrigem, ehPrimeiraLeitura } from "@/lib/leitura-estado";
 import { CLASSE_SELECT, MesaLayout, Seletor, Tabela, TD, TH, fmtHa, fmtQuando } from "./comum";
 
 type Status = "novo" | "em_contato" | "proposta" | "ganho" | "perdido";
@@ -30,6 +31,7 @@ export default function MesaLeads() {
   const novos = (todos.data ?? []).filter(l => l.status === "novo").length;
   const emAndamento = (todos.data ?? []).filter(l => l.status === "em_contato" || l.status === "proposta").length;
   const total = todos.data?.length ?? 0;
+  const daLeitura = (todos.data ?? []).filter(l => ehPrimeiraLeitura(l.observacao)).length;
 
   const titulo = todos.isLoading
     ? "Leads"
@@ -52,9 +54,10 @@ export default function MesaLeads() {
   return (
     <MesaLayout titulo={titulo}>
       <div className="space-y-6">
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <KpiTile rotulo="Leads novos" valor={todos.isLoading ? null : novos} carregando={todos.isLoading} />
           <KpiTile rotulo="Em contato ou proposta" valor={todos.isLoading ? null : emAndamento} carregando={todos.isLoading} />
+          <KpiTile rotulo="Da primeira leitura" valor={todos.isLoading ? null : daLeitura} carregando={todos.isLoading} />
           <KpiTile rotulo="Total de leads" valor={todos.isLoading ? null : total} carregando={todos.isLoading} />
         </div>
 
@@ -79,12 +82,12 @@ export default function MesaLeads() {
             titulo={filtro === "todos" ? "Nenhum lead ainda" : "Nenhum lead com este status"}
             descricao={
               filtro === "todos"
-                ? "Pedidos feitos em /diagnostico aparecem aqui, com território, momento e decisão."
+                ? "Pedidos feitos em /diagnostico e na primeira leitura aparecem aqui, com território, origem e decisão."
                 : "Troque o filtro de status para ver os outros."
             }
           />
         ) : (
-          <Tabela legenda="Leads do diagnóstico e do Marco Radar">
+          <Tabela legenda="Leads do diagnóstico, da primeira leitura e do Marco Radar">
             <thead>
               <tr>
                 <th className={TH}>Quem</th>
@@ -108,13 +111,22 @@ export default function MesaLeads() {
                         {l.email}
                       </a>
                     </th>
-                    <td className={TD}>{l.territorio || <span className="text-tinta-2">não informado</span>}</td>
+                    <td className={TD}>
+                      {l.territorio || <span className="text-tinta-2">não informado</span>}
+                      {ehPrimeiraLeitura(l.observacao) ? (
+                        <span className="mt-1 block">
+                          <Chip tom="acento">Primeira leitura</Chip>
+                        </span>
+                      ) : null}
+                    </td>
                     <td className={TD}>
                       {l.momento ? <Chip tom="neutro">{MOMENTO[l.momento] ?? l.momento}</Chip> : "não informado"}
                     </td>
                     <td className={`${TD} max-w-[24rem]`}>
                       {l.decisao ? <p>{l.decisao}</p> : <p className="text-tinta-2">sem decisão descrita</p>}
-                      {l.observacao ? <p className="nota">{l.observacao}</p> : null}
+                      {l.observacao ? (
+                        <p className="nota">{ehPrimeiraLeitura(l.observacao) ? detalheDaOrigem(l.observacao) : l.observacao}</p>
+                      ) : null}
                       {l.reenvios > 0 ? (
                         <p className="nota">Reenviou {l.reenvios} {l.reenvios === 1 ? "vez" : "vezes"}.</p>
                       ) : null}

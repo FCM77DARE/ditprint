@@ -1,5 +1,6 @@
 import { Link } from "wouter";
 import { Chip, PageShell, botaoVariants } from "@/components/dit";
+import { Palavras } from "@/components/dit/motion";
 import { cn } from "@/lib/utils";
 
 /**
@@ -13,7 +14,7 @@ export default function PublicoSse() {
       <article className="container max-w-4xl space-y-12 py-12 md:py-16">
         <header className="space-y-4">
           <Chip tom="contorno">A unit by PRINT</Chip>
-          <h1 className="text-3xl md:text-4xl">SSE, Sector Sensitivity Exposure</h1>
+          <Palavras as="h1" className="text-3xl md:text-4xl" texto="SSE, Sector Sensitivity Exposure" />
           <p className="text-lg text-tinta">Exposição Setorial no Território</p>
           <p className="max-w-prose text-tinta-2">
             Cada setor se relaciona de um jeito diferente com o território. O SSE mostra como a presença e a atuação de
@@ -39,7 +40,7 @@ export default function PublicoSse() {
           <h2 id="como-le" className="text-2xl">
             O mesmo território pode expor setores diferentes de formas diferentes.
           </h2>
-          <ol className="grid gap-4 md:grid-cols-3">
+          <ol data-mo="stagger" className="grid gap-4 md:grid-cols-3">
             <li className="space-y-2 border-t-2 border-tinta pt-4">
               <p className="num text-sm text-tinta-2">1. O território</p>
               <p className="text-sm text-tinta-2">A Tensão mede o território e a Confiança diz quanto dele foi medido.</p>
