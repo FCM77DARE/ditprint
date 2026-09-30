@@ -1091,6 +1091,57 @@ function horizontePrevisao(ref = new Date()): string {
     : `Próximos três meses, ${meses[ini.getMonth()]} de ${anoIni} a ${meses[fim.getMonth()]} de ${anoFim}`;
 }
 
+/**
+ * Sinais mais recentes para o bloco "Nesta semana" da identidade do território.
+ *
+ * A data vem de `ClassifiedSignal.publishedAt` (types.ts, herdado de RawSignal).
+ * Cuidado: várias fontes estruturais (IBGE, DATASUS, SNIS etc.) gravam
+ * `publishedAt = new Date()`, ou seja, a data da coleta e não a do fato. Por isso
+ * só entram sinais com `url` (notícia ou documento com endereço próprio) e cuja
+ * data não coincida com o instante da coleta da dimensão (margem de 10 min).
+ * Sem isso, dado estrutural apareceria como "fato da semana".
+ */
+export interface SinalRecente {
+  fato: string;
+  fonte: string;
+  data: string; // AAAA-MM-DD
+}
+
+export function selecionarSinaisRecentes(
+  dimensions: Partial<Record<DimensionId, DimensionResult>>,
+  max = 8,
+  janelaDias = 30,
+  ref = new Date()
+): SinalRecente[] {
+  const limite = ref.getTime() - janelaDias * 24 * 3600 * 1000;
+  const margemColeta = 10 * 60 * 1000;
+  const vistos = new Set<string>();
+  const candidatos: Array<SinalRecente & { t: number }> = [];
+  for (const dim of Object.values(dimensions)) {
+    if (!dim) continue;
+    const tColeta = Date.parse(dim.collectedAt);
+    for (const s of dim.signals) {
+      if (!s.url || !s.publishedAt) continue;
+      const t = new Date(s.publishedAt).getTime();
+      if (!Number.isFinite(t) || t < limite || t > ref.getTime() + 24 * 3600 * 1000) continue;
+      if (Number.isFinite(tColeta) && Math.abs(t - tColeta) < margemColeta) continue;
+      const chave = s.title.trim().toLowerCase();
+      if (vistos.has(chave)) continue;
+      vistos.add(chave);
+      candidatos.push({
+        fato: s.title.trim(),
+        fonte: s.sourceAgentId,
+        data: new Date(t).toISOString().slice(0, 10),
+        t,
+      });
+    }
+  }
+  return candidatos
+    .sort((a, b) => b.t - a.t)
+    .slice(0, max)
+    .map(({ fato, fonte, data }) => ({ fato, fonte, data }));
+}
+
 export function buildReportPrompt(
   territoryName: string,
   region: string,
@@ -1101,6 +1152,11 @@ export function buildReportPrompt(
   geo: ReportPromptGeo = {}
 ): string {
   const { scenario, scenarioLabel, gaugeColor } = scenarioFromStt(stt);
+  const sinaisRecentes = selecionarSinaisRecentes(dimensions);
+  const recentesBloco =
+    sinaisRecentes.length > 0
+      ? sinaisRecentes.map(r => `  - (${r.data}) [${r.fonte}] ${r.fato}`).join("\n")
+      : "  (NENHUM sinal com data nos últimos 30 dias)";
 
   const dimBlocks = (["D1", "D2", "D3", "D4", "D5", "D6"] as DimensionId[])
     .map(code => {
@@ -1194,7 +1250,32 @@ movimenta o calendário religioso baiano.
 Quando referir-se a "tensões" ou "áreas a monitorar", NUNCA seja abstrato. Cite
 bairro, distrito, BR, rio, APA, comunidade, terra indígena com nome próprio.
 
-5. keySignals: use os sinais reais dos agentes. Se não houver dados reais suficientes, crie sinais plausíveis baseados no conhecimento do território com fontes reais (IBAMA, CEMADEN, IBGE, etc.).
+═══ IDENTIDADE DO TERRITÓRIO (síntese que responde "o que há de PARTICULAR aqui?") ═══
+O objeto "identidade" do JSON dá rosto ao lugar: quem é o município e o que está
+acontecendo nele. Os itens localizacao, conhecidoPor, problemaCaracteristico,
+forcas e fragilidades são CONTEXTO e podem vir do seu conhecimento (mesma regra
+de contexto, nunca dado: sem número, data ou ocorrência apresentados como
+levantados pelo DIT; se não souber, diga menos).
+  • localizacao: região, proximidade de centros importantes, posição em
+    corredores logísticos (rodovia, porto, ferrovia). 1 frase.
+  • conhecidoPor: aquilo que faz a pessoa pensar "ah, entendi qual é dessa
+    cidade" (atividade econômica emblemática, evento famoso, patrimônio,
+    produção, importância regional, característica geográfica ou cultural).
+    Só o que é relevante para ESTE lugar, não tudo. 1 frase.
+  • problemaCaracteristico: o problema que, quando alguém fala deste município,
+    é reconhecido na hora como questão DESTE território. É PROIBIDO algo
+    genérico como "enfrenta desafios na saúde e educação". Se não houver um
+    problema reconhecível que você conheça com segurança, escreva "" (vazio).
+  • forcas: exatamente 2, concretas e próprias do lugar.
+  • fragilidades: exatamente 2, concretas e próprias do lugar.
+  • semana: é DADO. Só pode sair da lista "SINAIS RECENTES" abaixo, copiando
+    fato, fonte e data como estão. Não acrescente fato de conhecimento geral.
+    Se a lista estiver vazia, devolva "semana": [].
+
+═══ SINAIS RECENTES (últimos 30 dias, mais novos primeiro) ═══
+${recentesBloco}
+
+5. keySignals: use SOMENTE sinais reais da lista de sinais coletados acima. É proibido criar sinal plausível ou completar com conhecimento geral. Se houver menos de 5 sinais reais, devolva menos de 5 itens (pode ser lista vazia). Nunca preencha para chegar a 5.
 
 Responda APENAS com JSON válido, sem texto fora do JSON:
 
@@ -1205,8 +1286,16 @@ Responda APENAS com JSON válido, sem texto fora do JSON:
   "scenario": "${scenario}",
   "scenarioLabel": "${scenarioLabel}",
   "gaugeColor": "${gaugeColor}",
+  "identidade": {
+    "localizacao": "<1 frase: região, proximidade de centros, corredor logístico>",
+    "conhecidoPor": "<1 frase: o que faz reconhecer este município>",
+    "problemaCaracteristico": "<problema reconhecível deste território, nunca genérico; \"\" se não souber>",
+    "forcas": ["<força 1>", "<força 2>"],
+    "fragilidades": ["<fragilidade 1>", "<fragilidade 2>"],
+    "semana": [ { "fato": "<título do sinal recente>", "fonte": "<fonte>", "data": "<AAAA-MM-DD>" } ]
+  },
   "executiveSummary": [
-    "<parágrafo 1: apresente o território + STT ${stt} + cenário ${scenarioLabel}, 2-3 frases concretas>",
+    "<parágrafo 1: ABRA pela identidade do lugar (quem é o município, pelo que é conhecido, onde fica), sem começar pelo score; só no fim cite o STT ${stt} e o cenário ${scenarioLabel}, 2-3 frases concretas>",
     "<parágrafo 2: dimensões mais críticas (sem mencionar números de score), 2-3 frases específicas com sinais reais>",
     "<parágrafo 3: implicação direta para decisor/investidor que atua nesse território, 2-3 frases acionáveis>"
   ],
@@ -1847,7 +1936,22 @@ ditLandingRouter.post("/analyze", async (req: Request, res: Response) => {
     // estruturados. STT/scenario/dimensões SEMPRE vêm do orchestrator (fonte
     // canônica). LLM pode "inventar" um STT diferente no free-form output —
     // sobrescrevemos aqui para garantir consistência com o consolidator 24mo.
+    // "Nesta semana" é DADO: sobrescreve o que o LLM devolveu pela lista
+    // calculada no servidor, para o modelo nunca poder fabricar fato recente.
+    const identidadeLLM =
+      typeof llmReport === "object" && llmReport !== null
+        ? (llmReport as { identidade?: unknown }).identidade
+        : undefined;
+    const identidade =
+      identidadeLLM && typeof identidadeLLM === "object"
+        ? {
+            ...(identidadeLLM as Record<string, unknown>),
+            semana: selecionarSinaisRecentes(orchestratorResult.dimensions),
+          }
+        : undefined;
+
     const baseExtra = {
+      ...(identidade ? { identidade } : {}),
       resolution,
       territoryGeo: geo ? { centroid: geo.centroid, bbox: geo.bbox } : null,
       coverageScore: orchestratorResult?.coverageScore ?? null,
@@ -1954,6 +2058,8 @@ ditLandingRouter.post("/analyze", async (req: Request, res: Response) => {
       gaugeColor: fullResult.gaugeColor,
       resolution: fullResult.resolution,
       coverageScore: fullResult.coverageScore,
+      // Identidade do território (contexto + fatos recentes): vai inteira na isca.
+      identidade: fullResult.identidade ?? null,
       // 1 parágrafo de síntese
       executiveSummaryTeaser: Array.isArray(fullResult.executiveSummary)
         ? (fullResult.executiveSummary as string[])[0] ?? ""

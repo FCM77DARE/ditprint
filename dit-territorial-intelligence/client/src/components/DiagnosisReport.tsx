@@ -87,7 +87,17 @@ interface TerritoryGeo {
   bbox?: [number, number, number, number];
 }
 
+export interface Identidade {
+  localizacao?: string;
+  conhecidoPor?: string;
+  problemaCaracteristico?: string;
+  forcas?: string[];
+  fragilidades?: string[];
+  semana?: Array<{ fato?: string; fonte?: string; data?: string }>;
+}
+
 export interface DitAnalyzeResult {
+  identidade?: Identidade;
   territory?: string;
   region?: string;
   stt?: number;
@@ -241,6 +251,16 @@ export default function DiagnosisReport({ result: t }: Props) {
       ? [t.executiveSummary]
       : [];
 
+  // Identidade do território: campo opcional (relatório antigo não tem).
+  const ident = t.identidade && typeof t.identidade === "object" ? t.identidade : null;
+  const identForcas = (Array.isArray(ident?.forcas) ? ident.forcas : []).filter(Boolean);
+  const identFragil = (Array.isArray(ident?.fragilidades) ? ident.fragilidades : []).filter(Boolean);
+  const identSemana = (Array.isArray(ident?.semana) ? ident.semana : []).filter(x => x && x.fato);
+  const temIdentidade = !!ident && !!(
+    ident.localizacao || ident.conhecidoPor || ident.problemaCaracteristico ||
+    identForcas.length || identFragil.length
+  );
+
   const signals = Array.isArray(t.keySignals) ? t.keySignals : [];
   const dims = Array.isArray(t.dimensions) ? t.dimensions : [];
   const fc = t.forecast || {};
@@ -288,6 +308,16 @@ export default function DiagnosisReport({ result: t }: Props) {
         .dit-report-root .exec-summary-label { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.25em; color:#6B9B7C; text-transform:uppercase; margin-bottom:12px; }
         .dit-report-root .exec-summary-text { font-size:16px; line-height:1.75; color:#2C2C2C; }
         .dit-report-root .exec-summary-text p + p { margin-top:12px; }
+        .dit-report-root .ident { margin-bottom:24px; padding-bottom:20px; border-bottom:1px solid #D4C9B8; }
+        .dit-report-root .ident-linha { font-size:14px; line-height:1.6; color:#2C2C2C; margin:0 0 4px; }
+        .dit-report-root .ident-linha b { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:#6B9B7C; margin-right:8px; font-weight:400; }
+        .dit-report-root .ident-problema { margin:14px 0; padding:12px 16px; background:#fff; border-left:3px solid #B84A3A; border-radius:8px; font-size:15px; line-height:1.5; color:#2C2C2C; }
+        .dit-report-root .ident-problema span { display:block; font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:#B84A3A; margin-bottom:4px; }
+        .dit-report-root .ident-cols { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:14px; }
+        .dit-report-root .ident h4 { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:#6B9B7C; margin:0 0 6px; font-weight:400; }
+        .dit-report-root .ident ul { margin:0; padding-left:18px; font-size:14px; line-height:1.5; }
+        .dit-report-root .ident-meta { color:#6B6B6B; font-size:12px; font-family:'DM Mono',monospace; }
+        @media (max-width:640px) { .dit-report-root .ident-cols { grid-template-columns:1fr; } }
         .dit-report-root .result-section-title { font-family:'Bebas Neue',sans-serif; font-size:32px; color:#2D5340; letter-spacing:.04em; margin-bottom:20px; display:flex; align-items:center; gap:14px; }
         .dit-report-root .result-section-title::after { content:''; flex:1; height:1px; background:#D4C9B8; }
         .dit-report-root .signals-section,
@@ -512,9 +542,49 @@ export default function DiagnosisReport({ result: t }: Props) {
         </div>
 
         {/* Executive Summary */}
-        {execSummary.length > 0 && (
+        {(execSummary.length > 0 || temIdentidade) && (
           <div className="exec-summary">
             <div className="exec-summary-label">Síntese Executiva · DIT PRINT Intelligence</div>
+            {temIdentidade && ident && (
+              <div className="ident">
+                {ident.localizacao && (
+                  <p className="ident-linha"><b>Onde fica</b>{ident.localizacao}</p>
+                )}
+                {ident.conhecidoPor && (
+                  <p className="ident-linha"><b>Conhecido por</b>{ident.conhecidoPor}</p>
+                )}
+                {ident.problemaCaracteristico && (
+                  <div className="ident-problema">
+                    <span>Problema característico</span>
+                    {ident.problemaCaracteristico}
+                  </div>
+                )}
+                {(identForcas.length > 0 || identFragil.length > 0) && (
+                  <div className="ident-cols">
+                    <div>
+                      <h4>Forças</h4>
+                      <ul>{identForcas.slice(0, 2).map((f, i) => <li key={i}>{f}</li>)}</ul>
+                    </div>
+                    <div>
+                      <h4>Fragilidades</h4>
+                      <ul>{identFragil.slice(0, 2).map((f, i) => <li key={i}>{f}</li>)}</ul>
+                    </div>
+                  </div>
+                )}
+                <h4>Nesta semana</h4>
+                {identSemana.length > 0 ? (
+                  <ul>
+                    {identSemana.map((x, i) => (
+                      <li key={i}>
+                        {x.fato} <span className="ident-meta">· {x.fonte}{x.data ? ` · ${x.data}` : ""}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="ident-linha ident-meta">Sem fato novo captado nos últimos 30 dias.</p>
+                )}
+              </div>
+            )}
             <div className="exec-summary-text">
               {execSummary.map((p, i) => <p key={i}>{p}</p>)}
             </div>
