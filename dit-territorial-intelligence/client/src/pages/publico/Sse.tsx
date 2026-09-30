@@ -18,7 +18,7 @@ export default function PublicoSse() {
           <p className="max-w-prose text-tinta-2">
             Cada setor se relaciona de um jeito diferente com o território. O SSE mostra como a presença e a atuação de
             um determinado setor se relacionam com as características, forças e fragilidades de cada território. Para
-            isso, o indicador cruza o STT com fatores específicos do setor analisado, permitindo identificar onde a
+            isso, o indicador cruza a Tensão do território com fatores específicos do setor analisado, permitindo identificar onde a
             atividade tende a encontrar maior sensibilidade, maior aderência ou maior potencial de impacto na
             localidade.
           </p>
@@ -30,7 +30,7 @@ export default function PublicoSse() {
               Pedir diagnóstico
             </Link>
             <Link href="/metodologia" className={cn(botaoVariants({ variant: "secundario", size: "lg" }))}>
-              Ver como o STT é calculado
+              Ver como a Tensão é calculada
             </Link>
           </div>
         </header>
@@ -42,11 +42,11 @@ export default function PublicoSse() {
           <ol className="grid gap-4 md:grid-cols-3">
             <li className="space-y-2 border-t-2 border-tinta pt-4">
               <p className="num text-sm text-tinta-2">1. O território</p>
-              <p className="text-sm text-tinta-2">O STT mede a tensão do território e a Confiança da leitura.</p>
+              <p className="text-sm text-tinta-2">A Tensão mede o território e a Confiança diz quanto dele foi medido.</p>
             </li>
             <li className="space-y-2 border-t-2 border-tinta pt-4">
               <p className="num text-sm text-tinta-2">2. O setor</p>
-              <p className="text-sm text-tinta-2">Fatores específicos do setor analisado são cruzados com o STT.</p>
+              <p className="text-sm text-tinta-2">Fatores específicos do setor analisado são cruzados com a Tensão.</p>
             </li>
             <li className="space-y-2 border-t-2 border-tinta pt-4">
               <p className="num text-sm text-tinta-2">3. A exposição</p>

@@ -5,8 +5,8 @@ import {
   Button,
   Chip,
   DimensoesTable,
-  DitLogo,
-  DitMark,
+  MarcoLogo,
+  MarcoMark,
   EmptyState,
   ErrorState,
   FAIXAS_TENSAO,
@@ -61,9 +61,9 @@ function PainelDeComponentes() {
     <div className="space-y-8 bg-background p-6 text-foreground">
       <Bloco titulo="Símbolo e assinatura">
         <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
-          <DitMark size={40} title="Símbolo do DIT" />
-          <DitLogo />
-          <DitLogo comDescricao />
+          <MarcoMark size={40} title="Símbolo do Marco" />
+          <MarcoLogo />
+          <MarcoLogo comDescricao />
           <PoweredByPrint />
         </div>
       </Bloco>
@@ -177,7 +177,7 @@ export default function Sistema() {
   const [vista, setVista] = useState<"lado" | "claro" | "escuro">("lado");
   return (
     <AppShell
-      titulo="Sistema visual do DIT"
+      titulo="Sistema visual do Marco"
       itens={[{ href: "/sistema", rotulo: "Componentes" }]}
       acoes={
         <div role="group" aria-label="Modo de visualização" className="flex gap-1">
@@ -223,7 +223,7 @@ export default function Sistema() {
         </Secao>
 
         <Secao
-          titulo="Shell público: cabeçalho com DitLogo e nav, rodapé com assinatura"
+          titulo="Shell público: cabeçalho com MarcoLogo e nav, rodapé com assinatura"
           nota="Prévia reduzida. O fundo de curvas de nível (prop hero) é só para o hero público."
         >
           <div className="overflow-hidden rounded-[6px] border">

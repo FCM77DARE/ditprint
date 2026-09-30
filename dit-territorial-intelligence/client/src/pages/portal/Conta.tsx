@@ -157,7 +157,7 @@ function ConteudoConta({ email }: { email: string }) {
   if (territorios.itens.length === 0) {
     return (
       <EmptyState
-        titulo="Você ainda não tem territórios no Radar"
+        titulo="Você ainda não tem territórios no Marco Radar"
         descricao="Sem território não há alerta para configurar. Escolha os seus com o time PRINT."
         acao="Falar com a PRINT"
         onAcao={() => {
@@ -171,7 +171,7 @@ function ConteudoConta({ email }: { email: string }) {
     <div className="space-y-8">
       <div className="space-y-1">
         <p className="max-w-[60ch] font-display text-xl font-semibold leading-snug text-tinta md:text-2xl">
-          Defina quando e por onde o Radar te avisa.
+          Defina quando e por onde o Marco Radar te avisa.
         </p>
         <p className="nota">
           {ativos} de {territorios.itens.length} territórios com alerta ativo. Os avisos vão para {email}.
@@ -204,7 +204,7 @@ function ConteudoConta({ email }: { email: string }) {
 
       <Secao
         titulo="Alertas por território"
-        nota="Impacto mínimo de 0,70 é o padrão do Radar; abaixo disso chegam sinais menos relevantes."
+        nota="Impacto mínimo de 0,70 é o padrão do Marco Radar; abaixo disso chegam sinais menos relevantes."
       >
         <div className="hidden overflow-x-auto md:block">
           <table className="w-full border-collapse">

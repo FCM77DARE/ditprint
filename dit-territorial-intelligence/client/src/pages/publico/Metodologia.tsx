@@ -17,7 +17,8 @@ export default function PublicoMetodologia() {
     <PageShell>
       <article className="container max-w-4xl space-y-12 py-12 md:py-16">
         <header className="space-y-3">
-          <h1 className="text-3xl md:text-4xl">STT: como medimos a tensão do território em seis dimensões, com um analista por trás de cada número.</h1>
+          <p className="nota">Antes chamado de STT (Score de Tensão Territorial).</p>
+          <h1 className="text-3xl md:text-4xl">Tensão: como medimos o território em seis dimensões, com um analista por trás de cada número.</h1>
           <p className="max-w-prose text-tinta-2">
             Você não deveria confiar em um número que não consegue conferir. Aqui está como a conta funciona, e os pesos
             estão abertos logo abaixo.
@@ -156,7 +157,7 @@ export default function PublicoMetodologia() {
         <Secao titulo="Um analista da PRINT publica cada leitura; a IA escreve, mas não muda a conta.">
           <ul className="list-disc space-y-1 pl-5 text-sm text-tinta-2">
             <li>A conta da tensão é determinística. O modelo de linguagem entra uma vez por território por dia, para redigir a nota executiva, e seu resultado é conferido contra a conta.</li>
-            <li>Nada chega ao cliente antes da publicação por um analista. O que não foi publicado não aparece no site nem no Radar.</li>
+            <li>Nada chega ao cliente antes da publicação por um analista. O que não foi publicado não aparece no site nem no Marco Radar.</li>
             <li>A nota executiva diz o que mudou, por quê e o que observar.</li>
           </ul>
         </Secao>

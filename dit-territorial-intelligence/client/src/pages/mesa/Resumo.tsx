@@ -9,7 +9,7 @@ import { buttonLinkClass } from "./estilos";
 
 interface Pendencia {
   chave: string;
-  tipo: "STT pendente" | "Fonte" | "Sem publicação" | "Confiança" | "Lead";
+  tipo: "Tensão pendente" | "Fonte" | "Sem publicação" | "Confiança" | "Lead";
   texto: string;
   href: string;
 }
@@ -69,7 +69,7 @@ export default function MesaResumo() {
     for (const i of fila.filter(x => x.alertas.length > 0)) {
       pendencias.push({
         chave: `stt-${i.chave}`,
-        tipo: "STT pendente",
+        tipo: "Tensão pendente",
         texto: `${i.nome}: ${i.delta !== null ? `${fmtDelta(i.delta)} ${Math.abs(i.delta) === 1 ? "ponto" : "pontos"}. ` : ""}${i.alertas.join("; ")}.`,
         href: "/mesa/publicacao",
       });
@@ -103,7 +103,7 @@ export default function MesaResumo() {
       pendencias.push({
         chave: `terr-${t.id}`,
         tipo: "Sem publicação",
-        texto: `${t.name}: ${p ? `última publicação ${fmtHa(p.publishedAt)}` : "nunca teve STT publicado"}.`,
+        texto: `${t.name}: ${p ? `última publicação ${fmtHa(p.publishedAt)}` : "nunca teve Tensão publicada"}.`,
         href: `/mesa/analise/${t.slug}`,
       });
     }
@@ -128,7 +128,7 @@ export default function MesaResumo() {
   const b = (calc?.mudas.length ?? 0) + (calc?.falhando.length ?? 0);
   const novos = leads.data?.length ?? 0;
   const partes = [
-    a > 0 ? `${a} ${a === 1 ? "STT espera" : "STT esperam"} publicação` : null,
+    a > 0 ? `${a} ${a === 1 ? "Tensão espera" : "Tensões esperam"} publicação` : null,
     b > 0 ? `${b} ${b === 1 ? "fonte pede" : "fontes pedem"} atenção` : null,
     novos > 0 ? `${novos} ${novos === 1 ? "lead espera" : "leads esperam"} resposta` : null,
   ].filter((x): x is string => x !== null);
@@ -166,7 +166,7 @@ export default function MesaResumo() {
           {/* TODO backend B5: mesa.resumo com as contagens de ontem para a comparacao de cada KPI. */}
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <Link href="/mesa/publicacao" className="block">
-              <KpiTile rotulo="Aguardando publicação" valor={a} unidade="STT" />
+              <KpiTile rotulo="Aguardando publicação" valor={a} unidade={a === 1 ? "Tensão" : "Tensões"} />
             </Link>
             <Link href="/mesa/fontes" className="block">
               <KpiTile rotulo="Fontes mudas ou falhando" valor={b} unidade={`de ${calc.total}`} />
@@ -215,15 +215,15 @@ export default function MesaResumo() {
 
           <Secao
             titulo={calc.pendencias.length === 0 ? "Nada exige você agora" : "Exige você"}
-            nota={`STT com alerta de revisão (variação acima de ${LIMITE_DELTA_REVISAO} pontos, troca de faixa, confiança baixa ou dimensão sem medida), fontes falhando ou mudas há mais de 48 h, confiança publicada abaixo de ${PISO_CONFIANCA}%, territórios sem publicação há mais de ${DIAS_SEM_PUBLICAR} dias e leads novos.`}
+            nota={`Tensão com alerta de revisão (variação acima de ${LIMITE_DELTA_REVISAO} pontos, troca de faixa, confiança baixa ou dimensão sem medida), fontes falhando ou mudas há mais de 48 h, confiança publicada abaixo de ${PISO_CONFIANCA}%, territórios sem publicação há mais de ${DIAS_SEM_PUBLICAR} dias e leads novos.`}
           >
             {calc.pendencias.length === 0 ? (
               <EmptyState
                 titulo="Tudo em dia"
                 descricao={
                   a === 0
-                    ? "Nenhum STT aguarda, nenhuma fonte falha ou está muda há dois dias e todos os territórios ativos foram publicados há pouco. Acompanhe a próxima rodada acima."
-                    : `Há ${a} STT na fila, mas nenhum com alerta: dá para publicar em lote.`
+                    ? "Nenhuma Tensão aguarda, nenhuma fonte falha ou está muda há dois dias e todos os territórios ativos foram publicados há pouco. Acompanhe a próxima rodada acima."
+                    : `Há ${a} ${a === 1 ? "Tensão" : "Tensões"} na fila, mas nenhuma com alerta: dá para publicar em lote.`
                 }
                 acao={a > 0 ? "Abrir a fila" : undefined}
                 onAcao={a > 0 ? () => navegar("/mesa/publicacao") : undefined}
@@ -251,7 +251,7 @@ export default function MesaResumo() {
           {a > 0 && (
             <div>
               <Link href="/mesa/publicacao" className={buttonLinkClass("primario", "md")}>
-                Publicar os {a} STT pendentes
+                Publicar {a === 1 ? "a Tensão pendente" : `as ${a} Tensões pendentes`}
               </Link>
             </div>
           )}

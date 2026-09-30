@@ -13,7 +13,7 @@ const MOMENTOS = [
     nome: "Entrar",
     pergunta: "Vale entrar neste território?",
     entrega:
-      "Diagnóstico: a tensão do território, as seis dimensões e uma nota do analista antes da decisão de investimento.",
+      "Marco Diagnóstico: a Tensão do território, as seis dimensões e uma nota do analista antes da decisão de investimento.",
     acao: "Pedir diagnóstico",
     href: "/diagnostico?momento=entrar",
   },
@@ -30,7 +30,7 @@ const MOMENTOS = [
     nome: "Responder",
     pergunta: "O que está acontecendo aqui agora?",
     entrega:
-      "Diagnóstico sob demanda: a leitura do território no momento em que a operação precisa responder. Toda crise tem um CEP.",
+      "Diagnóstico de urgência: a leitura do território no momento em que a operação precisa responder. Toda crise tem um CEP.",
     acao: "Pedir diagnóstico",
     href: "/diagnostico?momento=responder",
   },
@@ -60,7 +60,7 @@ const FAQ: ItemFaq[] = [
   {
     pergunta: "Quanto custa?",
     resposta:
-      "O Radar é por assinatura e o Diagnóstico é por ticket. O valor depende do escopo, e um analista da PRINT responde ao seu pedido por e-mail.",
+      "O Marco Radar é por assinatura e o Marco Diagnóstico é por ticket. O valor depende do escopo, e um analista da PRINT responde ao seu pedido por e-mail.",
   },
   {
     pergunta: "Vale para qualquer operação?",
@@ -89,7 +89,7 @@ export default function PublicoInicio() {
             </a>
           </div>
           <p className="text-sm text-tinta-2">
-            Já assina o Radar?{" "}
+            Já assina o Marco Radar?{" "}
             <Link href="/entrar" className="text-acento-texto underline underline-offset-4">
               Entrar
             </Link>
@@ -98,21 +98,20 @@ export default function PublicoInicio() {
       </section>
 
       <div className="space-y-14 border-t bg-background pb-16 pt-14 md:space-y-20 md:pb-24 md:pt-20">
-        {/* 1b. O que é o DIT */}
+        {/* 1b. O que é o Marco */}
         <section className="container" aria-labelledby="o-que-e">
           <div className="max-w-3xl space-y-3">
-            <p className="nota uppercase tracking-wide">O que é o DIT</p>
+            <p className="nota uppercase tracking-wide">O que é o Marco</p>
             <h2 id="o-que-e" className="text-2xl">
-              Diagnóstico de Inteligência Territorial
+              Inteligência territorial da PRINT
             </h2>
             <p className="text-tinta-2">
               Reunimos e cruzamos dados de diferentes fontes sobre o território, transformando-os em inteligência para
               compreender o contexto e orientar decisões.
             </p>
             <p className="text-tinta-2">
-              Para isso, o DIT publica o STT, Score de Tensão Territorial: uma escala de 0 a 100 que integra seis
-              dimensões do território, sempre acompanhada da Confiança, que diz quanto do território foi de fato
-              medido.
+              Para isso, o Marco publica a Tensão do território, de 0 a 100 sobre seis dimensões, sempre
+              acompanhada da Confiança, que diz quanto do território foi de fato medido.
             </p>
           </div>
         </section>
@@ -194,7 +193,7 @@ export default function PublicoInicio() {
               <div>
                 <h3 className="text-lg text-tinta">Confiança</h3>
                 <p>
-                  Quanto da metodologia foi de fato medido. Confiança baixa alarga a faixa: o DIT mostra o que não sabe
+                  Quanto da metodologia foi de fato medido. Confiança baixa alarga a faixa: o Marco mostra o que não sabe
                   em vez de esconder.
                 </p>
               </div>
@@ -215,23 +214,23 @@ export default function PublicoInicio() {
         {/* 6. Dois produtos, sem preço */}
         <section className="container" aria-labelledby="produtos">
           <h2 id="produtos" className="text-2xl">
-            Dois jeitos de usar o DIT: por assinatura ou por pedido.
+            Dois jeitos de usar o Marco: por assinatura ou por pedido.
           </h2>
           <div className="mt-6 grid gap-4 md:grid-cols-2">
             <article className="flex flex-col gap-3 rounded-[6px] border bg-superficie p-5">
               <p className="nota uppercase tracking-wide">Assinatura</p>
-              <h3 className="text-xl">Radar</h3>
+              <h3 className="text-xl">Marco Radar</h3>
               <p className="flex-1 text-sm text-tinta-2">
-                Você abre o Radar e sabe o que mudou no seu CEP antes do jornal. Leitura diária dos seus territórios,
+                Você abre o Marco Radar e sabe o que mudou no seu CEP antes do jornal. Leitura diária dos seus territórios,
                 nota do analista e alerta quando um sinal verificado pesa.
               </p>
               <Link href="/radar" className={cn(botaoVariants({ variant: "secundario", size: "md" }), "self-start")}>
-                Ver o Radar
+                Ver o Marco Radar
               </Link>
             </article>
             <article className="flex flex-col gap-3 rounded-[6px] border bg-superficie p-5">
               <p className="nota uppercase tracking-wide">Por ticket</p>
-              <h3 className="text-xl">Diagnóstico</h3>
+              <h3 className="text-xl">Marco Diagnóstico</h3>
               <p className="flex-1 text-sm text-tinta-2">
                 Leitura completa de um território para uma decisão: Tensão e Confiança, as seis dimensões, atores,
                 cenários e nota executiva.

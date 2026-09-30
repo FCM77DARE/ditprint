@@ -84,7 +84,7 @@ export default function PublicoTerritorio() {
           <h1 className="text-3xl">{nomeCompleto}: cobertura insuficiente para medir a tensão.</h1>
           <EmptyState
             titulo="Sem número, de propósito"
-            descricao="Ainda não há dimensões medidas neste território. O DIT não preenche o vazio com um valor assumido. Um analista pode levantar o que falta no diagnóstico."
+            descricao="Ainda não há dimensões medidas neste território. O Marco não preenche o vazio com um valor assumido. Um analista pode levantar o que falta no diagnóstico."
           />
           <CtaDiagnostico nome={nomeCompleto} rotulo="Pedir diagnóstico deste território" />
         </div>
@@ -123,7 +123,7 @@ export default function PublicoTerritorio() {
         </Secao>
 
         {nota ? (
-          <Secao titulo="O que o analista escreveu" nota="Primeiro parágrafo da nota executiva. A nota completa é do Radar.">
+          <Secao titulo="O que o analista escreveu" nota="Primeiro parágrafo da nota executiva. A nota completa é do Marco Radar.">
             <p className="max-w-prose whitespace-pre-line text-tinta">{nota}</p>
           </Secao>
         ) : null}

@@ -1,4 +1,4 @@
-export { DitMark, DitLogo, PoweredByPrint } from "./Marca";
+export { MarcoMark, MarcoLogo, PoweredByPrint } from "./Marca";
 export { TensaoBar, MarcaFaixa, type TensaoBarProps } from "./TensaoBar";
 export { DimensaoRow, DimensoesTable, type DimensoesTableProps } from "./Dimensoes";
 export { Sparkline, type SparklineProps } from "./Sparkline";

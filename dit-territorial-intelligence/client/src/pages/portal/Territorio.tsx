@@ -118,7 +118,7 @@ function ConteudoTerritorio() {
   if (!territorio) {
     return (
       <EmptyState
-        titulo="Este território não está no seu Radar."
+        titulo="Este território não está no seu Marco Radar."
         descricao="O endereço não corresponde a nenhum território do seu contrato."
         acao="Voltar para Hoje"
         onAcao={() => navegar("/portal")}
@@ -201,7 +201,7 @@ function ConteudoTerritorio() {
             />
             <p className="nota">
               {territorio.serie.length < 12
-                ? `Histórico com ${territorio.serie.length} de 12 pontos: o gráfico completa conforme o Radar acumula publicações.`
+                ? `Histórico com ${territorio.serie.length} de 12 pontos: o gráfico completa conforme o Marco Radar acumula publicações.`
                 : "Últimas 12 leituras publicadas."}
             </p>
           </div>

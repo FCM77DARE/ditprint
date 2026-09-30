@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
-import { DitMark } from "./Marca";
+import { MarcoMark } from "./Marca";
 import { Button } from "./Button";
 
 export function EmptyState({
@@ -19,7 +19,7 @@ export function EmptyState({
 }) {
   return (
     <div className={cn("flex flex-col items-start gap-3 rounded-[6px] border border-dashed p-6", className)}>
-      <DitMark size={24} className="text-tinta-2" />
+      <MarcoMark size={24} className="text-tinta-2" />
       <div className="space-y-1">
         <p className="text-base font-semibold text-tinta">{titulo}</p>
         <p className="max-w-prose text-sm text-tinta-2">{descricao}</p>

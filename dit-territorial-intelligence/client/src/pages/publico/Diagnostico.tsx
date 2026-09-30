@@ -96,7 +96,7 @@ async function enviarPedido(f: Form, interesse: string | null): Promise<void> {
       territorio: f.territorio.trim() || undefined,
       momento,
       decisao: f.decisao.trim() || undefined,
-      observacao: `Interesse: ${interesse === "radar" ? "Radar" : "Diagnóstico"}.`,
+      observacao: `Interesse: ${interesse === "radar" ? "Marco Radar" : "Marco Diagnóstico"}.`,
     }),
   });
   if (r.status === 429) throw new Error("Muitas tentativas em sequência. Aguarde 1 minuto e envie de novo.");
@@ -131,7 +131,7 @@ export default function PublicoDiagnostico() {
     if (erros[k]) setErros(e => ({ ...e, [k]: undefined }));
   };
 
-  const rotuloBotao = ehRadar ? "Pedir acesso ao Radar" : "Pedir diagnóstico";
+  const rotuloBotao = ehRadar ? "Pedir acesso ao Marco Radar" : "Pedir diagnóstico";
 
   async function onSubmit(ev: FormEvent) {
     ev.preventDefault();
@@ -188,7 +188,7 @@ export default function PublicoDiagnostico() {
           <div className="space-y-3">
             <h1 className="text-3xl md:text-4xl">
               {ehRadar
-                ? "Diga o território que você acompanha e peça acesso ao Radar."
+                ? "Diga o território que você acompanha e peça acesso ao Marco Radar."
                 : "Diga o território e a decisão que você precisa tomar."}
             </h1>
             <p className="max-w-prose text-tinta-2">
@@ -331,7 +331,7 @@ export default function PublicoDiagnostico() {
                 medir.
               </li>
               <li>
-                <span className="num text-tinta">3.</span> Você decide se quer o diagnóstico completo ou o Radar.
+                <span className="num text-tinta">3.</span> Você decide se quer o diagnóstico completo ou o Marco Radar.
               </li>
             </ol>
           </div>
@@ -341,7 +341,7 @@ export default function PublicoDiagnostico() {
             </p>
             <p>
               <Link href="/radar" className="text-acento-texto underline underline-offset-4">
-                Prefere acompanhar por assinatura? Ver o Radar
+                Prefere acompanhar por assinatura? Ver o Marco Radar
               </Link>
             </p>
           </div>

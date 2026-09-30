@@ -32,12 +32,12 @@ const FAQ: ItemFaq[] = [
   {
     pergunta: "Posso acompanhar qualquer território?",
     resposta:
-      "Você escolhe os territórios no pedido. Onde a cobertura de dados é insuficiente, o Radar diz isso em vez de mostrar um número sem base.",
+      "Você escolhe os territórios no pedido. Onde a cobertura de dados é insuficiente, o Marco Radar diz isso em vez de mostrar um número sem base.",
   },
   {
-    pergunta: "Qual a diferença para o Diagnóstico?",
+    pergunta: "Qual a diferença para o Marco Diagnóstico?",
     resposta:
-      "O Radar é a leitura contínua, por assinatura. O Diagnóstico é a leitura completa de um território para uma decisão, por ticket.",
+      "O Marco Radar é a leitura contínua, por assinatura. O Marco Diagnóstico é a leitura completa de um território para uma decisão, por ticket.",
   },
   {
     pergunta: "Quanto custa?",
@@ -50,9 +50,9 @@ export default function PublicoRadar() {
     <PageShell>
       <div className="container max-w-4xl space-y-12 py-12 md:py-16">
         <header className="space-y-4">
-          <h1 className="text-3xl md:text-4xl">Você abre o Radar e sabe o que mudou no seu CEP antes do jornal.</h1>
+          <h1 className="text-3xl md:text-4xl">Você abre o Marco Radar e sabe o que mudou no seu CEP antes do jornal.</h1>
           <p className="max-w-prose text-tinta-2">
-            Quando o território muda, quem descobre pela imprensa já está atrasado. O Radar entrega a leitura dos seus
+            Quando o território muda, quem descobre pela imprensa já está atrasado. O Marco Radar entrega a leitura dos seus
             territórios todos os dias, com a assinatura de um analista.
           </p>
           <div className="flex flex-wrap items-center gap-3">
@@ -60,7 +60,7 @@ export default function PublicoRadar() {
               href="/diagnostico?interesse=radar"
               className={cn(botaoVariants({ variant: "primario", size: "lg" }))}
             >
-              Pedir acesso ao Radar
+              Pedir acesso ao Marco Radar
             </Link>
             <Link href="/entrar" className={cn(botaoVariants({ variant: "secundario", size: "lg" }))}>
               Entrar
@@ -81,7 +81,7 @@ export default function PublicoRadar() {
 
         <TerritoriosPublicados titulo="Territórios com leitura agora" />
 
-        <Secao titulo="Nenhum número chega ao Radar sem a publicação de um analista.">
+        <Secao titulo="Nenhum número chega ao Marco Radar sem a publicação de um analista.">
           <p className="max-w-prose text-sm text-tinta-2">
             A leitura soma seis dimensões, com a camada estrutural nacional e os sinais verificados do dia.{" "}
             <Link href="/metodologia" className="text-acento-texto underline underline-offset-4">
@@ -98,7 +98,7 @@ export default function PublicoRadar() {
             href="/diagnostico?interesse=radar"
             className={cn(botaoVariants({ variant: "primario", size: "lg" }))}
           >
-            Pedir acesso ao Radar
+            Pedir acesso ao Marco Radar
           </Link>
         </div>
       </div>

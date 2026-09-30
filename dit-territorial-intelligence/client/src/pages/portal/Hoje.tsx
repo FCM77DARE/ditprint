@@ -221,7 +221,7 @@ function ConteudoHoje() {
   if (itens.length === 0) {
     return (
       <EmptyState
-        titulo="Você ainda não tem territórios no Radar"
+        titulo="Você ainda não tem territórios no Marco Radar"
         descricao="Escolha os seus com o time PRINT. Assim que um território for publicado, ele aparece aqui."
         acao="Falar com a PRINT"
         onAcao={() => {

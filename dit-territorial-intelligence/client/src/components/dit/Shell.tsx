@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter";
 import { Moon, Sun } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/contexts/ThemeContext";
-import { DitLogo, PoweredByPrint } from "./Marca";
+import { MarcoLogo, PoweredByPrint } from "./Marca";
 import { Button, botaoVariants } from "./Button";
 
 function AlternarTema() {
@@ -27,11 +27,11 @@ export const NAV_PUBLICO = [
   { href: "/#como-funciona", rotulo: "Como funciona" },
   { href: "/metodologia", rotulo: "Metodologia" },
   { href: "/sse", rotulo: "SSE" },
-  { href: "/radar", rotulo: "Radar" },
+  { href: "/radar", rotulo: "Marco Radar" },
   { href: "/entrar", rotulo: "Entrar" },
 ];
 
-/** Shell das paginas publicas: header com DitLogo e nav, footer com PoweredByPrint. */
+/** Shell das paginas publicas: header com MarcoLogo e nav, footer com PoweredByPrint. */
 export function PageShell({
   children,
   hero = false,
@@ -52,8 +52,8 @@ export function PageShell({
       </a>
       <header className="border-b bg-background">
         <div className="container flex min-h-16 flex-wrap items-center justify-between gap-x-6 gap-y-2 py-3">
-          <Link href="/" aria-label="DIT, página inicial">
-            <DitLogo comDescricao />
+          <Link href="/" aria-label="Marco, página inicial">
+            <MarcoLogo comDescricao />
           </Link>
           <nav aria-label="Principal" className="flex flex-wrap items-center gap-1">
             {/* Em telas largas os links ficam na linha; abaixo de 768px vão para o menu compacto. */}
@@ -94,7 +94,7 @@ export function PageShell({
       </main>
       <footer className="border-t">
         <div className="container flex flex-wrap items-center justify-between gap-3 py-6">
-          <DitLogo size={20} />
+          <MarcoLogo size={20} />
           <PoweredByPrint />
         </div>
       </footer>
@@ -142,7 +142,7 @@ export function AppShell({
       >
         <div className="flex items-center justify-between gap-3 px-4 py-3 md:block md:py-6">
           <Link href="/">
-            <DitLogo size={22} />
+            <MarcoLogo size={22} />
           </Link>
         </div>
         <nav className="flex gap-1 overflow-x-auto px-2 pb-2 md:flex-col md:pb-0">

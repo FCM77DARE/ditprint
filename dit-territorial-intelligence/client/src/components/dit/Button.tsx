@@ -3,7 +3,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 /**
- * Botao do DIT. Primario = bronze, com verbo de acao. Secundario = contorno.
+ * Botao do Marco. Primario = bronze, com verbo de acao. Secundario = contorno.
  * Fantasma = so texto. Sem sombra, sem gradiente, transicao so de cor/opacidade.
  */
 export const botaoVariants = cva(

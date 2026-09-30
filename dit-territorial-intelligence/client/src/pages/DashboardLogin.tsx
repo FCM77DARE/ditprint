@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "wouter";
-import { Button, DitLogo, PoweredByPrint } from "@/components/dit";
+import { Button, MarcoLogo, PoweredByPrint } from "@/components/dit";
 import { trpc } from "@/lib/trpc";
 
 const CAMPO =
@@ -14,7 +14,7 @@ export default function DashboardLogin() {
   const [erro, setErro] = useState<string | null>(null);
 
   useEffect(() => {
-    document.title = "Entrar na Mesa DIT";
+    document.title = "Entrar na Mesa do Marco";
   }, []);
 
   const login = trpc.dashboardAuth.login.useMutation({
@@ -37,8 +37,8 @@ export default function DashboardLogin() {
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <header className="container flex min-h-16 items-center">
-        <Link href="/" aria-label="DIT, voltar ao início">
-          <DitLogo size={24} />
+        <Link href="/" aria-label="Marco, voltar ao início">
+          <MarcoLogo size={24} />
         </Link>
       </header>
 
@@ -110,7 +110,7 @@ export default function DashboardLogin() {
           </form>
 
           <p className="text-sm text-tinta-2">
-            É assinante do Radar?{" "}
+            É assinante do Marco Radar?{" "}
             <Link href="/entrar" className="text-acento-texto underline underline-offset-4">
               Entre pelo portal
             </Link>

@@ -165,7 +165,7 @@ function PainelRevisao({
 
   return (
     <aside
-      aria-label={`Revisão do STT de ${item.nome}`}
+      aria-label={`Revisão da Tensão de ${item.nome}`}
       className="space-y-5 rounded-[6px] border bg-card p-4 xl:sticky xl:top-4 xl:max-h-[calc(100vh-2rem)] xl:overflow-y-auto"
     >
       <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -191,7 +191,7 @@ function PainelRevisao({
           {item.raw.rascunho.nSinais !== null ? `, com ${fmtInt(item.raw.rascunho.nSinais)} sinais` : ""}.
         </p>
       ) : (
-        <p className="nota">Este território ainda não tem STT publicado para comparar.</p>
+        <p className="nota">Este território ainda não tem Tensão publicada para comparar.</p>
       )}
       {item.lp.derivada && <p className="nota">O motor não informou a confiança desta linha.</p>}
       {dev && (
@@ -417,7 +417,7 @@ export default function MesaPublicacao() {
       const motivo = err instanceof Error ? err.message : "erro desconhecido";
       setErros(e => ({
         ...e,
-        [item.chave]: `Não publicamos o STT de ${item.nome}: ${motivo}. Nada mudou para os assinantes.`,
+        [item.chave]: `Não publicamos a Tensão de ${item.nome}: ${motivo}. Nada mudou para os assinantes.`,
       }));
       return false;
     } finally {
@@ -429,11 +429,11 @@ export default function MesaPublicacao() {
     marcarEmCurso(item.chave, true);
     try {
       await devolver.mutateAsync({ ...referenciaDaFila(item), motivo });
-      setAviso(`STT de ${item.nome} devolvido ao motor. Ele volta à fila quando o motor calcular de novo.`);
+      setAviso(`Tensão de ${item.nome} devolvida ao motor. Ele volta à fila quando o motor calcular de novo.`);
       await depois();
     } catch (err) {
       const m = err instanceof Error ? err.message : "erro desconhecido";
-      setErros(e => ({ ...e, [item.chave]: `Não devolvemos o STT de ${item.nome}: ${m}.` }));
+      setErros(e => ({ ...e, [item.chave]: `Não devolvemos a Tensão de ${item.nome}: ${m}.` }));
     } finally {
       marcarEmCurso(item.chave, false);
     }
@@ -456,7 +456,7 @@ export default function MesaPublicacao() {
     setMarcados(new Set());
     setAviso(
       ok === itens.length
-        ? `${ok} ${ok === 1 ? "STT publicado" : "STT publicados"} às ${new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}.`
+        ? `${ok} ${ok === 1 ? "Tensão publicada" : "Tensões publicadas"} às ${new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}.`
         : `${ok} de ${itens.length} publicados. As outras seguem na fila com o motivo ao lado.`
     );
     await depois();
@@ -473,8 +473,8 @@ export default function MesaPublicacao() {
   const titulo = fila0.isLoading
     ? "Fila de publicação"
     : fila.length === 0
-      ? "Nenhum STT aguarda publicação"
-      : `Revise o que mudou e publique: ${fila.length} ${fila.length === 1 ? "STT aguarda" : "STT aguardam"}, ${acima} com variação acima de ${LIMITE_DELTA_REVISAO} pontos`;
+      ? "Nenhuma Tensão aguarda publicação"
+      : `Revise o que mudou e publique: ${fila.length} ${fila.length === 1 ? "Tensão aguarda" : "Tensões aguardam"}, ${acima} com variação acima de ${LIMITE_DELTA_REVISAO} pontos`;
 
   return (
     <MesaLayout titulo={titulo}>
@@ -492,7 +492,7 @@ export default function MesaPublicacao() {
       ) : fila.length === 0 ? (
         <div className="space-y-4">
           <EmptyState
-            titulo={verDevolvidos ? "Nenhum STT pendente, nem devolvido" : "Nenhum STT pendente"}
+            titulo={verDevolvidos ? "Nenhuma Tensão pendente, nem devolvida" : "Nenhuma Tensão pendente"}
             descricao="Tudo que o motor calculou já foi publicado. A próxima leitura aparece aqui quando o motor rodar de novo. Abra Fontes para ver quando foi a última coleta."
           />
           {!verDevolvidos && (
@@ -538,7 +538,7 @@ export default function MesaPublicacao() {
               className="space-y-3 rounded-[6px] border border-acento p-4"
             >
               <p className="text-sm text-tinta">
-                Publicar {marcados.size} STT?{" "}
+                Publicar {marcados.size} {marcados.size === 1 ? "Tensão" : "Tensões"}?{" "}
                 {alcance === null
                   ? "Os assinantes com acesso a esses territórios passam a ver o número novo."
                   : alcance === 0
@@ -558,7 +558,7 @@ export default function MesaPublicacao() {
 
           <div className="grid grid-cols-[minmax(0,1fr)] gap-4 xl:grid-cols-[minmax(0,1fr)_420px]">
             <Secao
-              titulo="STT aguardando publicação"
+              titulo="Tensão aguardando publicação"
               nota="Tensão nova contra a última publicada do mesmo território. Clique numa linha para revisar ao lado."
             >
               <Tabela legenda="Fila de publicação, ordenada pela maior variação">
@@ -659,7 +659,7 @@ export default function MesaPublicacao() {
                 onPublicar={async nota => {
                   const ok = await publicarUm(sel, nota);
                   if (ok) {
-                    setAviso(`STT de ${sel.nome} publicado.`);
+                    setAviso(`Tensão de ${sel.nome} publicada.`);
                     await depois();
                   }
                 }}

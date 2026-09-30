@@ -241,7 +241,7 @@ export default function MesaFontes() {
                 </tbody>
               </Tabela>
             )}
-            {/* TODO backend B4: scheduler.runNow escopado a uma fonte, territorios afetados e peso da dimensao no STT por fonte. */}
+            {/* TODO backend B4: scheduler.runNow escopado a uma fonte, territorios afetados e peso da dimensao na Tensao por fonte. */}
             <p className="nota">
               Uma fonte só aparece aqui depois da primeira rodada em que foi observada. A saúde é por fonte, não por fonte
               e território.

@@ -53,7 +53,7 @@ export function PortalFrame({
           descricao={
             erro
               ? "O servidor não respondeu. Tente de novo em instantes; se continuar, peça um novo link à PRINT."
-              : "O Radar mostra só os territórios do seu contrato. Peça o link de acesso à PRINT para abrir o portal."
+              : "O Marco Radar mostra só os territórios do seu contrato. Peça o link de acesso à PRINT para abrir o portal."
           }
           acao="Pedir link de acesso"
           onAcao={() => navegar("/entrar")}

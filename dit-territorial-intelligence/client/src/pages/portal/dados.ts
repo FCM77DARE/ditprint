@@ -157,7 +157,7 @@ export const NOME_CANAL: Record<string, string> = {
   sse: "Painel ao vivo",
 };
 
-/** Rotulo textual do impacto (0 a 1). Corte de 0,7 = limite de alerta imediato do Radar. */
+/** Rotulo textual do impacto (0 a 1). Corte de 0,7 = limite de alerta imediato do Marco Radar. */
 export function rotuloImpacto(v: number | null): string {
   if (v === null) return "Sem impacto medido";
   if (v >= 0.9) return "Imediato, crítico";

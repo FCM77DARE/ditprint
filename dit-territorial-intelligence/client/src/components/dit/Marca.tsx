@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 
 /** Vertice geodesico: triangulo equilatero com ponto no centro, traco fino. */
-export function DitMark({
+export function MarcoMark({
   size = 28,
   className,
   title,
@@ -33,8 +33,8 @@ export function DitMark({
   );
 }
 
-/** Simbolo + "DIT" + descricao opcional. */
-export function DitLogo({
+/** Simbolo + "Marco" + descricao opcional. */
+export function MarcoLogo({
   comDescricao = false,
   size = 28,
   className,
@@ -45,12 +45,12 @@ export function DitLogo({
 }) {
   return (
     <span className={cn("inline-flex items-center gap-3 text-tinta", className)}>
-      <DitMark size={size} />
+      <MarcoMark size={size} />
       <span className="flex flex-col leading-none">
-        <span className="font-display text-lg font-bold tracking-wide">DIT</span>
+        <span className="font-display text-lg font-bold tracking-wide">Marco</span>
         {comDescricao && (
           <span className="mt-1 text-[11px] font-medium text-tinta-2">
-            Diagnóstico de Inteligência Territorial
+            Inteligência territorial da PRINT
           </span>
         )}
       </span>

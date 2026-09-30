@@ -129,7 +129,7 @@ export default function MesaAnalise() {
       ) : !atual || !la ? (
         <EmptyState
           titulo="Nenhuma leitura calculada"
-          descricao="O motor ainda não gerou STT para este território. Colete os sinais em Sinais e aguarde a próxima rodada."
+          descricao="O motor ainda não gerou Tensão para este território. Colete os sinais em Sinais e aguarde a próxima rodada."
         />
       ) : (
         <div className="space-y-8">
@@ -227,7 +227,7 @@ export default function MesaAnalise() {
               titulo={anterior ? `O que mudou desde ${anterior.period}` : "O que mudou"}
               nota="Diferença em pontos de cada dimensão. Comparações de 7 e 30 dias dependem do histórico diário, que o servidor ainda não guarda."
             >
-              {/* TODO backend B3: delta7, delta30 e contribuicao de cada dimensao ao STT vindos do servidor. */}
+              {/* TODO backend B3: delta7, delta30 e contribuicao de cada dimensao à Tensão vindos do servidor. */}
               {!anterior ? (
                 <EmptyState
                   titulo="Sem período anterior"

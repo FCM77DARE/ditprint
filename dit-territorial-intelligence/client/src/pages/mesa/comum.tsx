@@ -50,7 +50,7 @@ export function MesaLayout({
 }) {
   const { isLoading, isAuthenticated } = useDashboardAuth();
   useEffect(() => {
-    document.title = `${titulo} · Mesa DIT`;
+    document.title = `${titulo} · Mesa do Marco`;
   }, [titulo]);
 
   if (isLoading) {

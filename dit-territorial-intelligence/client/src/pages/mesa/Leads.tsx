@@ -84,7 +84,7 @@ export default function MesaLeads() {
             }
           />
         ) : (
-          <Tabela legenda="Leads do diagnóstico e do Radar">
+          <Tabela legenda="Leads do diagnóstico e do Marco Radar">
             <thead>
               <tr>
                 <th className={TH}>Quem</th>

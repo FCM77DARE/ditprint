@@ -81,7 +81,7 @@ export default function PublicoEntrar() {
   return (
     <PageShell>
       <section className="container max-w-xl space-y-6 py-14 md:py-20">
-        <h1 className="text-3xl md:text-4xl">Peça o link de acesso ao seu Radar.</h1>
+        <h1 className="text-3xl md:text-4xl">Peça o link de acesso ao seu Marco Radar.</h1>
 
         {linkInvalido && (
           <p role="alert" className="text-sm" style={{ color: "var(--tensao-5)" }}>
@@ -104,7 +104,7 @@ export default function PublicoEntrar() {
                 href="/diagnostico?interesse=radar"
                 className={cn(botaoVariants({ variant: "primario", size: "md" }))}
               >
-                Pedir acesso ao Radar
+                Pedir acesso ao Marco Radar
               </Link>
               <Button variant="fantasma" onClick={() => setPendente(false)}>
                 Usar outro e-mail
@@ -151,7 +151,7 @@ export default function PublicoEntrar() {
         <p className="text-sm text-tinta-2">
           Ainda não assina?{" "}
           <Link href="/radar" className="text-acento-texto underline underline-offset-4">
-            Conheça o Radar
+            Conheça o Marco Radar
           </Link>
         </p>
       </section>
