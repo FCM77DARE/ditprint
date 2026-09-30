@@ -25,7 +25,9 @@ function AlternarTema() {
 
 export const NAV_PUBLICO = [
   { href: "/#como-funciona", rotulo: "Como funciona" },
+  { href: "/radar", rotulo: "Radar" },
   { href: "/metodologia", rotulo: "Metodologia" },
+  { href: "/entrar", rotulo: "Entrar" },
 ];
 
 /** Shell das paginas publicas: header com DitLogo e nav, footer com PoweredByPrint. */
@@ -62,7 +64,7 @@ export function PageShell({
                 {i.rotulo}
               </a>
             ))}
-            <a href="/#pedir-diagnostico" className={cn(botaoVariants({ variant: "primario", size: "md" }))}>
+            <a href="/diagnostico" className={cn(botaoVariants({ variant: "primario", size: "md" }))}>
               Pedir diagnóstico
             </a>
             <AlternarTema />
@@ -108,6 +110,12 @@ export function AppShell({
   className?: string;
 }) {
   const [local] = useLocation();
+  // Ativo é o item de href mais longo que casa com a rota: /mesa/fontes acende Fontes, não Resumo (/mesa).
+  const casa = (href: string) => local === href || (href !== "/" && local.startsWith(href + "/"));
+  const hrefAtivo = itens
+    .map(i => i.href)
+    .filter(casa)
+    .sort((a, b) => b.length - a.length)[0];
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground md:flex-row">
       <aside
@@ -121,7 +129,7 @@ export function AppShell({
         </div>
         <nav className="flex gap-1 overflow-x-auto px-2 pb-2 md:flex-col md:pb-0">
           {itens.map(i => {
-            const ativo = local === i.href || (i.href !== "/" && local.startsWith(i.href + "/"));
+            const ativo = i.href === hrefAtivo;
             return (
               <Link
                 key={i.href}

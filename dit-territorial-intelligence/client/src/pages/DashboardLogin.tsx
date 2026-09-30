@@ -22,7 +22,7 @@ export default function DashboardLogin() {
     onSuccess: (data) => {
       toast.success(`Bem-vindo, ${data.name}!`);
       // Usar reload completo para garantir que o cookie seja lido
-      setTimeout(() => { window.location.href = "/dashboard"; }, 500);
+      setTimeout(() => { window.location.href = "/mesa"; }, 500);
     },
     onError: (e) => {
       toast.error(e.message);
