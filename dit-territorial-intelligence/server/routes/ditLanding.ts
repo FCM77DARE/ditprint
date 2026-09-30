@@ -1110,6 +1110,13 @@ export interface SinalRecente {
 const RUIDO_DA_SEMANA =
   /previs[aã]o do tempo|tempo hoje|hor[oó]scopo|resultado d[ao] (mega|lotof|quina)|loteria|jingle|playlist|ao vivo agora/i;
 
+const MEDICAO_CADASTRAL = new Set([
+  "src-siconfi",
+  "src-ibama-embargos",
+  "src-s2id-reconhecimentos",
+  "src-terrabrasilis-prodes",
+]);
+
 export function ehRuidoDaSemana(titulo: string, ref = new Date()): boolean {
   if (RUIDO_DA_SEMANA.test(titulo)) return true;
   const anoAtual = ref.getFullYear();
@@ -1138,6 +1145,9 @@ export function selecionarSinaisRecentes(
       const chave = s.title.trim().toLowerCase();
       if (vistos.has(chave)) continue;
       if (ehRuidoDaSemana(s.title, ref)) continue;
+      // Medição cadastral (declaração ao Tesouro, contagem de embargos, PRODES)
+      // leva a data da coleta, não de um fato da semana.
+      if (MEDICAO_CADASTRAL.has(s.sourceAgentId)) continue;
       vistos.add(chave);
       candidatos.push({
         fato: s.title.trim(),

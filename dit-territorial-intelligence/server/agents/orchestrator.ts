@@ -27,7 +27,7 @@ import { calculateSttWithLLM } from "../stt/calculator";
 import { detectAnomalies } from "../stt/anomalyDetector";
 import type { TerritoryContextData } from "../stt/types";
 import { dispatchAlert, dispatchAnomalyAlert, broadcastSignalToFeed } from "../alertEngine";
-import { consolidateSttFromHistory } from "../stt/consolidator";
+import { consolidateSttFromHistory, OFICIAIS_POR_IMPACTO } from "../stt/consolidator";
 import { leituraDeConsolidado, leituraDeDimensoes } from "../stt/leitura";
 import { modeloMedicao } from "../stt/medicao";
 import type { BaseDimensionAgent } from "./base-dimension";
@@ -261,7 +261,10 @@ export class Orchestrator {
         s.triggersAlert ||
         // Fonte oficial que respondeu "zero ocorrências" é evidência resolutiva
         // de baixa tensão: precisa ficar no histórico, não só na cobertura.
-        (s.metadata as Record<string, unknown> | undefined)?.evidenciaOficial === true
+        (s.metadata as Record<string, unknown> | undefined)?.evidenciaOficial === true ||
+        // Vale para toda fonte oficial de medição (Siconfi, PNCP, Câmara também):
+        // sem isso o "tudo em ordem" delas nunca chegava ao consolidador.
+        OFICIAIS_POR_IMPACTO.has(s.sourceAgentId)
     );
     await this._persistSignals(territory, signalsToPersist);
 
