@@ -120,10 +120,14 @@ const TENSIONING_SOURCES = new Set<string>([
 // Fontes OFICIAIS de contagem (D1): a polaridade depende do que elas mediram.
 // Zero ocorrência ou ocorrência antiga (impacto < 0.3) é evidência resolutiva de
 // baixa tensão; ocorrência recente (impacto >= 0.3) é tensionante.
-const OFICIAIS_POR_IMPACTO = new Set<string>([
+export const OFICIAIS_POR_IMPACTO = new Set<string>([
   "src-ibama-embargos",
   "src-s2id-reconhecimentos",
   "src-terrabrasilis-prodes",
+  "src-siconfi",
+  "src-pncp",
+  "src-pncp-obras",
+  "src-camara-proposicoes",
 ]);
 
 /** Decide polaridade do sinal: resolutivo, tensionante ou neutro (Google News etc) */
@@ -439,7 +443,12 @@ export async function consolidateSttFromHistory(
       //  tensioning  → adiciona ao score (confirma complexidade)
       //  neutral     → resolutivo fraco (sinal foi coletado, mas é genérico)
       if (polarity === "resolutive") {
-        const delta = weightedImpact * w * FATOR_RESOLUTIVO;
+        // Fonte oficial de medição: impacto baixo é evidência FORTE de calma
+        // ("nenhum embargo", "desmatamento zero"), então resolve por (1 - impacto).
+        // Antes usava o próprio impacto e a evidência mais forte resolvia menos:
+        // São Gonçalo ficava com D1 = 96,8 com três fontes dizendo "nada".
+        const forca = OFICIAIS_POR_IMPACTO.has(row.source) ? 1 - weightedImpact : weightedImpact;
+        const delta = forca * w * FATOR_RESOLUTIVO;
         dimAccum[dim].score -= delta;
         dimAccum[dim].resolutive += 1;
       } else if (polarity === "tensioning") {

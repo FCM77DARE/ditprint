@@ -112,3 +112,4 @@ temp/
 # Dado de execucao: camada estrutural (regenerada do IBGE no boot), livro de
 # custo, sinais, aprendizado. Vive no volume da Railway, nao no repositorio.
 data/
+saidas-locais/
