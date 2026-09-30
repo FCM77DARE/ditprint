@@ -4,10 +4,10 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --radius-sm: 2px;
+  --radius-md: 2px;
+  --radius-lg: 6px;
+  --radius-xl: 6px;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -41,131 +41,166 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
-  /* PRINT Brandbook — Manrope como substituta web da Nexa
-     (geometria e proporções muito próximas do Nexa Extra Bold) */
-  --font-display: "Manrope", system-ui, sans-serif;
-  --font-body: "Manrope", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", monospace;
+  /* Tokens semanticos do DIT, como utilitarios (bg-tensao-3, text-acento-texto...) */
+  --color-papel: var(--papel);
+  --color-superficie: var(--superficie);
+  --color-tinta: var(--tinta);
+  --color-tinta-2: var(--tinta-2);
+  --color-linha: var(--linha);
+  --color-curva: var(--curva);
+  --color-acento: var(--acento);
+  --color-acento-texto: var(--acento-texto);
+  --color-tensao-1: var(--tensao-1);
+  --color-tensao-2: var(--tensao-2);
+  --color-tensao-3: var(--tensao-3);
+  --color-tensao-4: var(--tensao-4);
+  --color-tensao-5: var(--tensao-5);
+  --color-confianca-faixa: var(--confianca-faixa);
+  --color-status-ok: var(--status-ok);
+  --color-status-atencao: var(--status-atencao);
+  --color-status-mudo: var(--status-mudo);
+
+  --font-display: "Archivo", system-ui, sans-serif;
+  --font-body: "Archivo", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
 }
 
-/* ─── PRINT Brandbook Palette ─────────────────────────────────────────────────
-   Verde Floresta  #2D5340  — primary, institutional
-   Verde Sálvia    #6B9B7C  — secondary green, sage
-   Off-white       #F5F1ED  — background, warm paper
-   Grafite         #2C2C2C  — foreground text
-   Areia           #D4C9B8  — border, subtle warm
-   Dourado         #D4A574  — accent gold
-   Azul Ardósia    #5B8FA3  — data / charts
-   Marrom          #6B5346  — tertiary brown
-──────────────────────────────────────────────────────────────────────────── */
+/* DIT: sistema visual "marco geodesico".
+   Papel, tinta e linha sao neutros. Bronze e o acento unico (acao principal e o
+   que responde a pergunta). A escala de Tensao vai de salvia a oxido, sem
+   vermelho de alarme; cada faixa tambem tem rotulo textual e marca de forma.
+   Regra: nenhum valor solto de cor, espaco ou raio fora destes tokens. */
 
-:root {
-  /* Verde Floresta #2D5340 */
-  --primary: oklch(0.33 0.07 155);
-  --primary-foreground: oklch(0.97 0.01 75);
+:root,
+.claro {
+  /* Base */
+  --papel: #ECEBE3;
+  --superficie: #F4F3EE;
+  --tinta: #18201B;
+  --tinta-2: #4A524C;
+  --linha: #CFCDC2;
+  --curva: #A9B2A3;
+  --acento: #9A6224;        /* bronze: marcas, botao primario */
+  --acento-texto: #7F501D;  /* bronze para texto pequeno sobre papel */
+  --acento-fg: #F4F3EE;     /* texto sobre bronze */
 
-  /* Off-white #F5F1ED — warm paper background */
-  --background: oklch(0.96 0.01 75);
-  --foreground: oklch(0.19 0.005 0);
+  /* Escala de Tensao, baixa a critica. No claro, todos >= 3:1 contra o papel. */
+  --tensao-1: #6F8C6F;
+  --tensao-2: #8A8A48;
+  --tensao-3: #A67A35;
+  --tensao-4: #B0582D;
+  --tensao-5: #8A3F22;
 
-  /* Cards — slightly whiter than background */
-  --card: oklch(0.98 0.005 75);
-  --card-foreground: oklch(0.19 0.005 0);
+  /* Confianca: faixa min-max em cinza, nunca cor forte */
+  --confianca-faixa: #B9B8AE;
 
-  /* Popovers */
-  --popover: oklch(0.99 0.003 75);
-  --popover-foreground: oklch(0.19 0.005 0);
+  /* Saude de agentes (sempre com forma e texto) */
+  --status-ok: #4F7A5A;
+  --status-atencao: #A67A35;
+  --status-mudo: #7A807B;
 
-  /* Secondary — light sage wash */
-  --secondary: oklch(0.93 0.02 155);
-  --secondary-foreground: oklch(0.33 0.07 155);
+  /* Espaco */
+  --espaco-1: 4px;
+  --espaco-2: 8px;
+  --espaco-3: 12px;
+  --espaco-4: 16px;
+  --espaco-6: 24px;
+  --espaco-8: 32px;
+  --espaco-12: 48px;
+  --espaco-16: 64px;
 
-  /* Muted — warm light grey */
-  --muted: oklch(0.91 0.01 75);
-  --muted-foreground: oklch(0.48 0.01 75);
+  /* Raio e movimento */
+  --raio-1: 2px;
+  --raio-2: 6px;
+  --dur: 160ms;
+  --ease: cubic-bezier(0.2, 0, 0, 1);
 
-  /* Verde Sálvia #6B9B7C */
-  --accent: oklch(0.59 0.07 155);
-  --accent-foreground: oklch(0.99 0 0);
 
-  /* Destructive */
-  --destructive: oklch(0.54 0.22 25);
-  --destructive-foreground: oklch(0.99 0 0);
+  /* Literais claros dos tons de superficie apagada */
+  --muted: #E3E2D9;
+  --accent: #E3E2D9;
+  --sidebar: #E3E2D9;
 
-  /* Areia #D4C9B8 */
-  --border: oklch(0.83 0.02 75);
-  --input: oklch(0.83 0.02 75);
-  --ring: oklch(0.33 0.07 155);
+  --radius: 6px;
+}
 
-  /* Charts — full palette */
-  --chart-1: oklch(0.56 0.07 225);  /* Azul Ardósia #5B8FA3 */
-  --chart-2: oklch(0.33 0.07 155);  /* Verde Floresta */
-  --chart-3: oklch(0.72 0.09 60);   /* Dourado #D4A574 */
-  --chart-4: oklch(0.59 0.07 155);  /* Verde Sálvia */
-  --chart-5: oklch(0.39 0.05 40);   /* Marrom #6B5346 */
-
-  /* Sidebar */
-  --sidebar: oklch(0.94 0.015 155);
-  --sidebar-foreground: oklch(0.19 0.005 0);
-  --sidebar-primary: oklch(0.33 0.07 155);
-  --sidebar-primary-foreground: oklch(0.97 0.01 75);
-  --sidebar-accent: oklch(0.90 0.02 155);
-  --sidebar-accent-foreground: oklch(0.33 0.07 155);
-  --sidebar-border: oklch(0.83 0.02 75);
-  --sidebar-ring: oklch(0.33 0.07 155);
-
-  --radius: 0.625rem;
+/* Nomes shadcn apontando para o sistema. Ficam num seletor compartilhado para
+   reavaliar as var() dentro de .dark e .claro (aninhamento na pagina /sistema). */
+:root,
+.claro,
+.dark {
+  --background: var(--papel);
+  --foreground: var(--tinta);
+  --card: var(--superficie);
+  --card-foreground: var(--tinta);
+  --popover: var(--superficie);
+  --popover-foreground: var(--tinta);
+  --primary: var(--acento);
+  --primary-foreground: var(--acento-fg);
+  --secondary: var(--superficie);
+  --secondary-foreground: var(--tinta);
+  --muted-foreground: var(--tinta-2);
+  --accent-foreground: var(--tinta);
+  --destructive: var(--tensao-5);
+  --destructive-foreground: var(--superficie);
+  --border: var(--linha);
+  --input: var(--linha);
+  --ring: var(--acento);
+  --chart-1: var(--tinta-2);
+  --chart-2: var(--acento);
+  --chart-3: var(--tensao-1);
+  --chart-4: var(--curva);
+  --chart-5: var(--tensao-5);
+  --sidebar-foreground: var(--tinta-2);
+  --sidebar-primary: var(--acento);
+  --sidebar-primary-foreground: var(--acento-fg);
+  --sidebar-accent: var(--papel);
+  --sidebar-accent-foreground: var(--tinta);
+  --sidebar-border: var(--linha);
+  --sidebar-ring: var(--acento);
 }
 
 .dark {
-  /* Dark mode — deep forest night */
-  --primary: oklch(0.59 0.07 155);
-  --primary-foreground: oklch(0.12 0.02 155);
+  /* A tinta vira fundo, o papel vira texto */
+  --papel: #141A16;
+  --superficie: #1B221D;
+  --tinta: #ECEBE3;
+  --tinta-2: #B4BBAE;
+  --linha: #2E372F;
+  --curva: #3C473E;
+  --acento: #D39A52;
+  --acento-texto: #D39A52;
+  --acento-fg: #141A16;
 
-  --background: oklch(0.14 0.02 155);
-  --foreground: oklch(0.93 0.01 75);
+  --tensao-1: #8FA58F;
+  --tensao-2: #B5B07A;
+  --tensao-3: #C99A5B;
+  --tensao-4: #D08A5E;
+  --tensao-5: #D9785A;
 
-  --card: oklch(0.18 0.02 155);
-  --card-foreground: oklch(0.93 0.01 75);
+  --confianca-faixa: #4A544C;
 
-  --popover: oklch(0.16 0.02 155);
-  --popover-foreground: oklch(0.93 0.01 75);
+  --status-ok: #8FB79A;
+  --status-atencao: #C99A5B;
+  --status-mudo: #8A918B;
 
-  --secondary: oklch(0.22 0.03 155);
-  --secondary-foreground: oklch(0.80 0.04 155);
+  --muted: #222A24;
+  --accent: #222A24;
+  --destructive: #D9785A;
+  --destructive-foreground: #141A16;
 
-  --muted: oklch(0.22 0.02 155);
-  --muted-foreground: oklch(0.60 0.03 155);
-
-  --accent: oklch(0.72 0.09 60);
-  --accent-foreground: oklch(0.12 0.02 60);
-
-  --destructive: oklch(0.60 0.22 25);
-  --destructive-foreground: oklch(0.99 0 0);
-
-  --border: oklch(0.25 0.03 155);
-  --input: oklch(0.25 0.03 155);
-  --ring: oklch(0.59 0.07 155);
-
-  --chart-1: oklch(0.65 0.08 225);
-  --chart-2: oklch(0.59 0.07 155);
-  --chart-3: oklch(0.78 0.10 60);
-  --chart-4: oklch(0.72 0.07 155);
-  --chart-5: oklch(0.55 0.06 40);
-
-  --sidebar: oklch(0.12 0.02 155);
-  --sidebar-foreground: oklch(0.93 0.01 75);
-  --sidebar-primary: oklch(0.59 0.07 155);
-  --sidebar-primary-foreground: oklch(0.12 0.02 155);
-  --sidebar-accent: oklch(0.20 0.03 155);
-  --sidebar-accent-foreground: oklch(0.80 0.04 155);
-  --sidebar-border: oklch(0.25 0.03 155);
-  --sidebar-ring: oklch(0.59 0.07 155);
+  --sidebar: #101511;
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
+  }
+  html {
+    color-scheme: light;
+  }
+  html.dark {
+    color-scheme: dark;
   }
   body {
     @apply bg-background text-foreground;
@@ -184,15 +219,19 @@
     @apply cursor-pointer;
   }
 
-  /* Typography — Nunito with brandbook weights */
+  /* Titulos em Archivo expandida */
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
-    font-weight: 800;
-    letter-spacing: -0.02em;
+    font-weight: 700;
+    font-stretch: 125%;
+    font-variation-settings: "wdth" 125;
+    letter-spacing: -0.01em;
   }
 
   .font-display {
     font-family: var(--font-display);
+    font-stretch: 125%;
+    font-variation-settings: "wdth" 125;
   }
 
   .font-body {
@@ -202,6 +241,12 @@
   .font-mono {
     font-family: var(--font-mono);
     font-variant-numeric: tabular-nums;
+  }
+
+  /* Foco visivel em tudo que e interativo */
+  :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 2px solid var(--acento);
+    outline-offset: 2px;
   }
 }
 
@@ -234,65 +279,26 @@
     }
   }
 
-  /* ── Topographic contour line pattern (brandbook graphic element) ── */
-  .bg-topo-pattern {
-    background-color: var(--background);
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cpath d='M-30 150 Q75 110 150 150 Q225 190 330 150' fill='none' stroke='%232D5340' stroke-width='0.8' opacity='0.07'/%3E%3Cpath d='M-30 120 Q75 80 150 120 Q225 160 330 120' fill='none' stroke='%232D5340' stroke-width='0.8' opacity='0.06'/%3E%3Cpath d='M-30 180 Q75 140 150 180 Q225 220 330 180' fill='none' stroke='%232D5340' stroke-width='0.8' opacity='0.06'/%3E%3Cpath d='M-30 90 Q75 50 150 90 Q225 130 330 90' fill='none' stroke='%232D5340' stroke-width='0.6' opacity='0.04'/%3E%3Cpath d='M-30 210 Q75 170 150 210 Q225 250 330 210' fill='none' stroke='%232D5340' stroke-width='0.6' opacity='0.04'/%3E%3Cpath d='M-30 60 Q75 20 150 60 Q225 100 330 60' fill='none' stroke='%232D5340' stroke-width='0.5' opacity='0.03'/%3E%3Cpath d='M-30 240 Q75 200 150 240 Q225 280 330 240' fill='none' stroke='%232D5340' stroke-width='0.5' opacity='0.03'/%3E%3C/svg%3E");
-    background-size: 300px 300px;
+  /* Numero tabular (tabelas, KPI, deltas) */
+  .num {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
   }
 
-  /* Neural grid — kept as alias for topo pattern */
-  .bg-neural-pattern {
-    background-color: var(--background);
-    background-image:
-      linear-gradient(oklch(0.33 0.07 155 / 0.04) 1px, transparent 1px),
-      linear-gradient(90deg, oklch(0.33 0.07 155 / 0.04) 1px, transparent 1px);
-    background-size: 40px 40px;
+  /* Texto pequeno de apoio: legenda, fonte, definicao */
+  .nota {
+    font-size: 0.75rem;
+    line-height: 1.4;
+    color: var(--tinta-2);
   }
 
-  /* ── Warm glass effect (brandbook: off-white translucency) ── */
-  .glass {
-    background: oklch(0.96 0.01 75 / 0.82);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid oklch(0.83 0.02 75 / 0.6);
-    box-shadow: 0 4px 24px oklch(0.33 0.07 155 / 0.06);
+  /* Curvas de nivel: textura opcional SOMENTE no hero publico, nunca atras de dado */
+  .bg-curvas {
+    background-color: var(--papel);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400' viewBox='0 0 600 400' fill='none' stroke='%23A9B2A3' stroke-width='1'%3E%3Cpath d='M-20 300C80 240 160 330 280 280S480 200 620 260' opacity='.55'/%3E%3Cpath d='M-20 260C80 200 160 290 280 240S480 160 620 220' opacity='.5'/%3E%3Cpath d='M-20 220C80 160 160 250 280 200S480 120 620 180' opacity='.45'/%3E%3Cpath d='M-20 180C80 120 160 210 280 160S480 80 620 140' opacity='.4'/%3E%3Cpath d='M-20 140C80 80 160 170 280 120S480 40 620 100' opacity='.35'/%3E%3Cpath d='M-20 100C80 40 160 130 280 80S480 0 620 60' opacity='.3'/%3E%3C/svg%3E");
+    background-size: 600px 400px;
   }
 
-  .dark .glass {
-    background: oklch(0.16 0.02 155 / 0.85);
-    border: 1px solid oklch(0.25 0.03 155 / 0.5);
-    box-shadow: 0 4px 24px oklch(0.10 0.01 155 / 0.30);
-  }
-
-  /* ── Glow — verde floresta ── */
-  .glow {
-    box-shadow: 0 0 20px oklch(0.33 0.07 155 / 0.15),
-                0 0 40px oklch(0.33 0.07 155 / 0.08);
-  }
-
-  /* ── Glow — dourado ── */
-  .glow-gold {
-    box-shadow: 0 0 20px oklch(0.72 0.09 60 / 0.20),
-                0 0 40px oklch(0.72 0.09 60 / 0.10);
-  }
-
-  /* ── Glow — azul ardósia ── */
-  .glow-cyan {
-    box-shadow: 0 0 20px oklch(0.56 0.07 225 / 0.15),
-                0 0 40px oklch(0.56 0.07 225 / 0.08);
-  }
-
-  /* ── Text shadows ── */
-  .text-glow {
-    text-shadow: 0 0 30px oklch(0.33 0.07 155 / 0.20);
-  }
-
-  .text-glow-gold {
-    text-shadow: 0 0 30px oklch(0.72 0.09 60 / 0.25);
-  }
-
-  /* ── Hide scrollbar ── */
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -302,8 +308,38 @@
     display: none;
   }
 
-  /* ── Scanline removed (not in PRINT brand) ── */
+  /* Aliases legados para as telas antigas nao quebrarem. Sem efeito decorativo:
+     glass, glow, sombra de texto e padroes de fundo saem do sistema. */
+  .glass {
+    background: var(--superficie);
+    border: 1px solid var(--linha);
+  }
+  .glow,
+  .glow-gold,
+  .glow-cyan {
+    box-shadow: none;
+  }
+  .text-glow,
+  .text-glow-gold {
+    text-shadow: none;
+  }
+  .bg-topo-pattern,
+  .bg-neural-pattern {
+    background-color: var(--papel);
+  }
   .scanline {
     display: none;
+  }
+}
+
+/* Movimento reduzido: sem transicao nem animacao */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

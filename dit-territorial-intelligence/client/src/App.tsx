@@ -18,10 +18,12 @@ import RadarTerritoryPage from "./pages/RadarTerritoryPage";
 import RadarAlertas from "./pages/RadarAlertas";
 import RadarConfiguracoes from "./pages/RadarConfiguracoes";
 import DevHub from "./pages/DevHub";
+import Sistema from "./pages/Sistema";
 
 function Router() {
   return (
     <Switch>
+      <Route path={"/sistema"} component={Sistema} />
       <Route path={"/dev"} component={DevHub} />
       <Route path={"/"} component={LandingSimple} />
       <Route path={"/sse"} component={SSE} />
