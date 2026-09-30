@@ -28,6 +28,7 @@ import { detectAnomalies } from "../stt/anomalyDetector";
 import type { TerritoryContextData } from "../stt/types";
 import { dispatchAlert, dispatchAnomalyAlert, broadcastSignalToFeed } from "../alertEngine";
 import { consolidateSttFromHistory } from "../stt/consolidator";
+import { leituraDeConsolidado, leituraDeDimensoes } from "../stt/leitura";
 import type { BaseDimensionAgent } from "./base-dimension";
 import { DimSocioambiental } from "./dimensions/dim-socioambiental";
 import { DimSocioeconomico } from "./dimensions/dim-socioeconomico";
@@ -367,6 +368,16 @@ export class Orchestrator {
       .map(([id, v]) => ({ id, name: v.name, signals: v.signals, rejeitados: v.rejeitados, dimensoes: v.dimensoes }))
       .sort((a, b) => b.signals - a.signals);
 
+    // Leitura (Tensão, Confiança, faixa): aditiva, nunca derruba a coleta.
+    // Com consolidado usa os scores e a evidência dele (mesma base do STT
+    // publicado); sem consolidado, só os sinais do dia.
+    let leitura: OrchestratorResult["leitura"];
+    try {
+      leitura = historical ? leituraDeConsolidado(historical) : leituraDeDimensoes(dimensions);
+    } catch (err) {
+      log.warn({ err, territory: territory.slug }, "Leitura (tensão/confiança) falhou, seguindo sem ela");
+    }
+
     const result: OrchestratorResult = {
       territoryId: territory.id,
       territorySlug: territory.slug,
@@ -392,6 +403,7 @@ export class Orchestrator {
             snapshotSttForComparison: stt,
           }
         : null,
+      leitura,
       completedAt: new Date().toISOString(),
     };
 

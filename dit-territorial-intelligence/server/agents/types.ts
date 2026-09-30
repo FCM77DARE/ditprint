@@ -7,6 +7,7 @@
 
 import type { Territory } from "../../drizzle/schema";
 import type { DimensionId, SourceId } from "../indicators";
+import type { Leitura } from "../../shared/leitura";
 
 // ─── Raw Signal (output of a source agent) ───────────────────────────────────
 
@@ -121,6 +122,11 @@ export interface OrchestratorResult {
     /** STT calculado a partir do snapshot do dia (não publicado, só pra debug) */
     snapshotSttForComparison: number;
   } | null;
+  /**
+   * Tensão, Confiança e faixa (shared/leitura.ts). Aditivo: o `stt` acima segue
+   * como sempre; a leitura separa o que foi medido do que a malha não sabe.
+   */
+  leitura?: Leitura;
   /** ISO timestamp of when this run completed */
   completedAt: string;
 }

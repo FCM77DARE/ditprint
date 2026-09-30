@@ -23,6 +23,7 @@ import {
   getSubscribersByTerritory,
   getDb,
   getIndexHistory,
+  getLatestIndexHistory,
   getCollectionSnapshots,
   seedIndexHistory,
   getPublicTerritoryOverview,
@@ -47,6 +48,17 @@ import { signals, sttScores, territories, alertPreferences, alertLog, subscriber
 import { eq, and, desc, inArray } from "drizzle-orm";
 import { orchestrator } from "./agents/orchestrator";
 import { sendDailyDigest } from "./alertEngine";
+import { anexarLeitura, anexarLeituraMulti, leituraDoTerritorio, leituraPorId, scoresDeLinha } from "./stt/leitura";
+
+/** Leitura do último período do index_history; null se não houver ou se falhar. */
+async function leituraDoUltimoIndice(territoryId: number) {
+  try {
+    const row = await getLatestIndexHistory(territoryId);
+    return row ? await leituraPorId(territoryId, scoresDeLinha(row)) : null;
+  } catch {
+    return null;
+  }
+}
 
 export const appRouter = router({
   system: systemRouter,
@@ -82,7 +94,8 @@ export const appRouter = router({
       .query(async ({ input }) => {
         const territory = await getTerritoryBySlug(input.slug);
         if (!territory) return [];
-        return getSttHistory(territory.id, input.limit ?? 6);
+        // `leitura` (Tensão/Confiança/faixa) é campo novo; os antigos seguem iguais.
+        return anexarLeitura(territory.id, await getSttHistory(territory.id, input.limit ?? 6));
       }),
 
     toggle: dashboardProcedure
@@ -277,13 +290,19 @@ IMPORTANTE: Retorne APENAS o JSON válido, sem markdown, sem explicações adici
   stt: router({
     latest: publicProcedure
       .input(z.object({ territoryId: z.number() }))
-      .query(async ({ input }) => getLatestSttScore(input.territoryId)),
+      .query(async ({ input }) => {
+        const row = await getLatestSttScore(input.territoryId);
+        if (!row) return null;
+        return { ...row, leitura: await leituraPorId(row.territoryId, scoresDeLinha(row)) };
+      }),
 
     history: publicProcedure
       .input(z.object({ territoryId: z.number(), limit: z.number().optional() }))
-      .query(async ({ input }) => getSttHistory(input.territoryId, input.limit ?? 6)),
+      .query(async ({ input }) =>
+        anexarLeitura(input.territoryId, await getSttHistory(input.territoryId, input.limit ?? 6))
+      ),
 
-    all: dashboardProcedure.query(async () => getAllSttScores()),
+    all: dashboardProcedure.query(async () => anexarLeituraMulti(await getAllSttScores())),
 
     upsert: dashboardProcedure
       .input(z.object({
@@ -657,7 +676,12 @@ Use linguagem executiva, precisa e direta. Evite jargões desnecessários. Foco 
   }),
 
   publicData: router({
-    territories: publicProcedure.query(async () => getPublicTerritoryOverview()),
+    territories: publicProcedure.query(async () => {
+      const lista = await getPublicTerritoryOverview();
+      return Promise.all(
+        lista.map(async (t) => ({ ...t, leitura: await leituraDoUltimoIndice(t.id) }))
+      );
+    }),
 
     territoryDetail: publicProcedure
       .input(z.object({ slug: z.string() }))
@@ -666,14 +690,23 @@ Use linguagem executiva, precisa e direta. Evite jargões desnecessários. Foco 
         if (!detail) {
           throw new TRPCError({ code: "NOT_FOUND", message: "Território não encontrado." });
         }
-        return detail;
+        const leitura = await leituraDoTerritorio(
+          { id: detail.id, slug: detail.slug, contextData: detail.contextData },
+          scoresDeLinha(detail)
+        );
+        return { ...detail, leitura };
       }),
 
     sampleSignals: publicProcedure
       .input(z.object({ limit: z.number().min(1).max(6).optional() }))
       .query(async ({ input }) => getPublicSampleSignals(input.limit ?? 4)),
 
-    territoriesComparison: dashboardProcedure.query(async () => getAllTerritoriesComparison()),
+    territoriesComparison: dashboardProcedure.query(async () => {
+      const lista = await getAllTerritoriesComparison();
+      return Promise.all(
+        lista.map(async (t) => ({ ...t, leitura: await leituraDoUltimoIndice(t.id) }))
+      );
+    }),
   }),
 
   dashboardAuth: router({
@@ -726,12 +759,13 @@ Use linguagem executiva, precisa e direta. Evite jargões desnecessários. Foco 
         if (!db) return [];
         const territory = await getTerritoryBySlug(input.territorySlug);
         if (!territory) return [];
-        return db
+        const pendentes = await db
           .select()
           .from(sttScores)
           .where(and(eq(sttScores.territoryId, territory.id), eq(sttScores.published, false)))
           .orderBy(desc(sttScores.period))
           .limit(10);
+        return anexarLeitura(territory.id, pendentes);
       }),
 
     /** Publish (or re-publish) an STT score, optionally updating the executive note. */

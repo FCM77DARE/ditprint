@@ -1852,6 +1852,8 @@ ditLandingRouter.post("/analyze", async (req: Request, res: Response) => {
       territoryGeo: geo ? { centroid: geo.centroid, bbox: geo.bbox } : null,
       coverageScore: orchestratorResult?.coverageScore ?? null,
       coverageDetail: orchestratorResult?.coverageDetail ?? null,
+      /** Tensão, Confiança e faixa (shared/leitura.ts). Aditivo: `stt` segue igual. */
+      leitura: orchestratorResult?.leitura ?? null,
       /**
        * Procedência do relatório, exposta junto com ele.
        *
@@ -1954,6 +1956,7 @@ ditLandingRouter.post("/analyze", async (req: Request, res: Response) => {
       gaugeColor: fullResult.gaugeColor,
       resolution: fullResult.resolution,
       coverageScore: fullResult.coverageScore,
+      leitura: fullResult.leitura ?? null,
       // 1 parágrafo de síntese
       executiveSummaryTeaser: Array.isArray(fullResult.executiveSummary)
         ? (fullResult.executiveSummary as string[])[0] ?? ""
