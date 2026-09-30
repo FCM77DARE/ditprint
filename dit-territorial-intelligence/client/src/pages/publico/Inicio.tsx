@@ -149,7 +149,7 @@ function DobraCompleta() {
 
   return (
     <section className="secao escuro completa" id="completa">
-      <img className="fundo" src="/marco/relevo-cta.jpg" alt="" aria-hidden="true" data-giro />
+      <img className="fundo" src="/arte/relevo-cta.jpg" alt="" aria-hidden="true" data-giro />
       <div className="largura grade2">
         <div>
           <Rotulo>Diagnóstico completo</Rotulo>
@@ -306,7 +306,7 @@ export default function Inicio() {
       <main>
         {/* 1 · Hero: o relevo é a arte da marca; o marco fica no topo do morro */}
         <section className="hero" id="leitura">
-          <img className="fundo" src="/marco/relevo-hero.jpg" alt="" aria-hidden="true" fetchPriority="high" />
+          <img className="fundo" src="/arte/relevo-hero.jpg" alt="" aria-hidden="true" fetchPriority="high" />
           <div className="veu" />
           <div className="largura">
             <span className="selo entra"><Vertice fixo className="hero-vx" />Primeira leitura gratuita · qualquer município do Brasil</span>
@@ -340,7 +340,7 @@ export default function Inicio() {
 
         {/* 3 · Como funciona: a leitura de Macaé toca sozinha */}
         <section className="como" id="como-funciona" aria-labelledby="t-como">
-          <img className="curvas" src="/marco/relevo-papel.jpg" alt="" aria-hidden="true" />
+          <img className="curvas" src="/arte/relevo-papel.jpg" alt="" aria-hidden="true" />
           <div className="largura como-grade">
             <div>
               <Rotulo>Como funciona</Rotulo>
@@ -385,7 +385,7 @@ export default function Inicio() {
         {/* 5 · Antes e depois, atravessado pelos estratos */}
         <section id="antes-depois">
           <div className="estratos">
-            <img src="/marco/estratos.jpg" alt="" aria-hidden="true" data-paralaxe="12" />
+            <img src="/arte/estratos.jpg" alt="" aria-hidden="true" data-paralaxe="12" />
             <div className="largura">
               <Rotulo>Os três momentos</Rotulo>
               <h2 className="titulo dividir">Entrar, operar ou responder. Em qualquer um deles, o território decide antes do contrato.</h2>
@@ -414,7 +414,7 @@ export default function Inicio() {
 
         {/* 6 · Chamada */}
         <section className="escuro chamada">
-          <img className="fundo" src="/marco/relevo-escuro.jpg" alt="" aria-hidden="true" data-escala />
+          <img className="fundo" src="/arte/relevo-escuro.jpg" alt="" aria-hidden="true" data-escala />
           <div className="largura">
             <h2 className="dividir">Antes de assinar, leia o lugar. <em>A primeira leitura é gratuita e sai na sua tela.</em></h2>
             <div className="busca sobe"><BuscaLeitura variante="hero" /></div>

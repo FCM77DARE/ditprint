@@ -917,7 +917,7 @@ export default function PublicoLeitura() {
   return (
     <MarcoPagina dep={s.fase}>
       <section className="hero hero-leitura">
-        <img className="fundo" src="/marco/relevo-hero.jpg" alt="" aria-hidden="true" fetchPriority="high" />
+        <img className="fundo" src="/arte/relevo-hero.jpg" alt="" aria-hidden="true" fetchPriority="high" />
         <div className="veu" />
         <div className="largura">
           <div className="selos">
@@ -963,7 +963,7 @@ export default function PublicoLeitura() {
 
       {s.estrutural && !semTerritorio && (
         <section ref={formRef} id="pedir" aria-labelledby="pedir-titulo" className="escuro pedir-l">
-          <img className="fundo" src="/marco/relevo-cta.jpg" alt="" aria-hidden="true" />
+          <img className="fundo" src="/arte/relevo-cta.jpg" alt="" aria-hidden="true" />
           <div className="largura grade2">
             <div>
               <Rotulo>O restante da leitura</Rotulo>

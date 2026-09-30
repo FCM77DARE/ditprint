@@ -34,8 +34,8 @@ export function PoweredBy() {
   return (
     <a className="origem" href="https://www.printrio.net" target="_blank" rel="noopener noreferrer">
       powered by
-      <img className="preta" src="/marco/print-preta.png" alt="PRINT" />
-      <img className="clara" src="/marco/print-clara.png" alt="PRINT" />
+      <img className="preta" src="/arte/print-preta.png" alt="PRINT" />
+      <img className="clara" src="/arte/print-clara.png" alt="PRINT" />
     </a>
   );
 }
@@ -162,7 +162,7 @@ export function MarcoPagina({ children, dep }: { children: ReactNode; dep?: unkn
 }
 
 /** Topo escuro das páginas internas: relevo ao fundo, rótulo, título grande, texto e ações. */
-export function TopoPagina({ rotulo, titulo, children, acoes, imagem = "/marco/relevo-escuro.jpg" }: {
+export function TopoPagina({ rotulo, titulo, children, acoes, imagem = "/arte/relevo-escuro.jpg" }: {
   rotulo?: string; titulo: string; children?: ReactNode; acoes?: ReactNode; imagem?: string;
 }) {
   return (
