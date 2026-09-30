@@ -8,6 +8,17 @@ import App from "./App";
 import { getLoginUrl } from "./const";
 import "./index.css";
 
+// Analytics so carrega quando o endpoint existe (evita 400 e erro de MIME no console).
+const analyticsEndpoint = import.meta.env.VITE_ANALYTICS_ENDPOINT as string | undefined;
+const analyticsWebsiteId = import.meta.env.VITE_ANALYTICS_WEBSITE_ID as string | undefined;
+if (analyticsEndpoint && analyticsWebsiteId) {
+  const tag = document.createElement("script");
+  tag.defer = true;
+  tag.src = `${analyticsEndpoint}/umami`;
+  tag.dataset.websiteId = analyticsWebsiteId;
+  document.body.appendChild(tag);
+}
+
 const queryClient = new QueryClient();
 
 const redirectToLoginIfUnauthorized = (error: unknown) => {

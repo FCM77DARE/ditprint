@@ -1,8 +1,27 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Redirect, Link } from "wouter";
-import { AppShell, LoadingBlock, type ItemNav } from "@/components/dit";
+import { LogOut } from "lucide-react";
+import { AppShell, Button, LoadingBlock, type ItemNav } from "@/components/dit";
+import { trpc } from "@/lib/trpc";
 import { useDashboardAuth } from "@/hooks/useDashboardAuth";
 import { cn } from "@/lib/utils";
+
+/** Encerra a sessao do operador (limpa o cookie no servidor) e volta ao login. */
+function BotaoSairMesa() {
+  const utils = trpc.useUtils();
+  const sair = trpc.dashboardAuth.logout.useMutation({
+    onSuccess: async () => {
+      await utils.dashboardAuth.me.invalidate();
+      window.location.href = "/mesa/login";
+    },
+  });
+  return (
+    <Button variant="fantasma" size="sm" onClick={() => sair.mutate()} disabled={sair.isPending}>
+      <LogOut size={16} aria-hidden />
+      Sair
+    </Button>
+  );
+}
 
 /** Menu da mesa. */
 export const ITENS_MESA: ItemNav[] = [
@@ -44,7 +63,16 @@ export function MesaLayout({
   if (!isAuthenticated) return <Redirect to="/mesa/login" />;
 
   return (
-    <AppShell itens={ITENS_MESA} titulo={titulo} acoes={acoes}>
+    <AppShell
+      itens={ITENS_MESA}
+      titulo={titulo}
+      acoes={
+        <>
+          {acoes}
+          <BotaoSairMesa />
+        </>
+      }
+    >
       {children}
     </AppShell>
   );
@@ -54,7 +82,7 @@ export function MesaLayout({
 export const TH = "px-3 py-2 text-left text-xs font-medium text-tinta-2";
 export const THR = "px-3 py-2 text-right text-xs font-medium text-tinta-2";
 export const TD = "px-3 py-2 align-middle";
-export const TDR = "num px-3 py-2 text-right align-middle";
+export const TDR = "num whitespace-nowrap px-3 py-2 text-right align-middle";
 
 export function Tabela({
   legenda,

@@ -83,7 +83,7 @@ export default function MesaAnalise() {
       ? nome
       : ta === null
         ? `${nome}: tensão ainda não medida`
-        : `${nome}: tensão ${fmtInt(ta)}${delta !== null ? `, ${fmtDelta(delta)} sobre o período anterior` : ""}${puxadaPor ? `, ${delta !== null ? "puxada" : "maior peso"} por ${puxadaPor.nome}` : ""}; ${altos} ${altos === 1 ? "sinal pesou" : "sinais pesaram"}`;
+        : `${nome}: tensão ${fmtInt(ta)}${delta !== null ? `, ${fmtDelta(delta)} sobre o período anterior` : ""}${puxadaPor ? `, ${delta !== null ? "puxada por" : "maior valor em"} ${puxadaPor.nome}` : ""}${altos > 0 ? `; ${altos} ${altos === 1 ? "sinal pesou" : "sinais pesaram"}` : ""}`;
 
   return (
     <MesaLayout

@@ -20,6 +20,9 @@ export default function MesaTerritorios() {
   const territorios = trpc.territories.listAll.useQuery();
   const scores = trpc.stt.all.useQuery();
   const assinantes = trpc.dashboard.assinantes.list.useQuery();
+  // A leitura CONGELADA na publicacao (tensao, confianca, cobertura) vem do livro de publicacoes;
+  // stt.all recalcula a leitura com a evidencia de agora e pode divergir do que foi publicado.
+  const congeladas = trpc.publicData.territories.useQuery();
   // Uma consulta leve por territorio: ultima coleta. TODO backend B5: incluir no resumo da mesa.
   const coletas = trpc.useQueries(t =>
     (territorios.data ?? []).map(x => t.analytics.collectionSnapshots({ territoryId: x.id, limit: 1 }))
@@ -33,12 +36,19 @@ export default function MesaTerritorios() {
 
   const publicados = useMemo(() => ultimosPublicados(scores.data ?? []), [scores.data]);
 
+  const leituraCongelada = useMemo(() => {
+    const m = new Map<string, NonNullable<NonNullable<typeof congeladas.data>[number]["leitura"]>>();
+    for (const c of congeladas.data ?? []) if (c.leitura) m.set(c.slug, c.leitura);
+    return m;
+  }, [congeladas.data]);
+
   const linhas = useMemo(() => {
     const agora = Date.now();
     return (territorios.data ?? [])
       .map((t, idx) => {
         const pub = publicados.get(t.id) ?? null;
-        const leitura = pub ? adaptarLeitura(pub) : null;
+        const congelada = leituraCongelada.get(t.slug);
+        const leitura = pub ? adaptarLeitura(congelada ? { leitura: congelada } : pub) : null;
         const ultimaColeta = coletas[idx]?.data?.[0]?.collectedAt ?? null;
         const dias = pub ? diasDesde(pub.publishedAt ?? pub.updatedAt, agora) : null;
         const medidas = leitura ? leitura.dimensoes.filter(d => d.medida && d.score !== null).length : null;
@@ -51,7 +61,7 @@ export default function MesaTerritorios() {
         const db = b.dias === null ? Infinity : b.dias;
         return db - da;
       });
-  }, [territorios.data, publicados, coletas]);
+  }, [territorios.data, publicados, coletas, leituraCongelada]);
 
   const ativos = linhas.filter(l => l.t.active);
   const semPublicar = ativos.filter(l => l.dias === null || l.dias > DIAS_SEM_PUBLICAR).length;

@@ -27,7 +27,7 @@ export function fraseHoje(itens: TerritorioPortal[]): string {
   const total = itens.length;
   const medidos = itens.filter(t => t.delta !== null);
   if (medidos.length === 0) {
-    return `Ainda não há publicação de 7 dias atrás para comparar nos seus ${total} ${total === 1 ? "território" : "territórios"}.`;
+    return `Ainda não há publicação de 7 dias atrás para comparar ${total === 1 ? "no seu território" : `nos seus ${total} territórios`}.`;
   }
   const maior = [...medidos].sort((a, b) => Math.abs(b.delta as number) - Math.abs(a.delta as number))[0];
   const maiorAbs = Math.abs(maior.delta as number);
@@ -298,7 +298,7 @@ function ConteudoHoje() {
           nota={
             [
               destaque.notaPeriodo ? `Período ${destaque.notaPeriodo}` : null,
-              destaque.publicadoPor ? `publicada por ${destaque.publicadoPor}` : null,
+              destaque.publicadoPor ? "publicada por um analista da PRINT" : null,
             ]
               .filter(Boolean)
               .join(", ") || undefined

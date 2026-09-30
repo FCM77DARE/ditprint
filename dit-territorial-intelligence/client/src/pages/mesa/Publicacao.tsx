@@ -571,10 +571,10 @@ export default function MesaPublicacao() {
                     <th className={THR}>Proposto</th>
                     <th className={THR}>Publicado</th>
                     <th className={THR}>Δ</th>
-                    <th className={TH}>Faixa</th>
+                    <th className={`${TH} hidden 2xl:table-cell`}>Faixa</th>
                     <th className={THR}>Confiança</th>
                     <th className={TH}>Situação</th>
-                    <th className={TH}>Cálculo</th>
+                    <th className={`${TH} hidden 2xl:table-cell`}>Cálculo</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -612,7 +612,7 @@ export default function MesaPublicacao() {
                         <td className={TDR}>{tp === null ? "não medida" : fmtInt(tp)}</td>
                         <td className={TDR}>{ta === null ? "sem base" : fmtInt(ta)}</td>
                         <td className={TDR}>{i.delta === null ? "sem base" : fmtDelta(i.delta)}</td>
-                        <td className={TD}>
+                        <td className={`${TD} hidden 2xl:table-cell`}>
                           <span className="inline-flex items-center gap-2 text-xs text-tinta-2">
                             {tp !== null && (
                               <span style={{ color: faixaDeTensao(tp).cor }}>
@@ -635,7 +635,7 @@ export default function MesaPublicacao() {
                           )}
                           {erros[id] && <span className="nota ml-2">falhou</span>}
                         </td>
-                        <td className="px-3 py-2 text-xs text-tinta-2">{fmtQuando(i.raw.rascunho.geradoEm)}</td>
+                        <td className="hidden px-3 py-2 text-xs text-tinta-2 2xl:table-cell">{fmtQuando(i.raw.rascunho.geradoEm)}</td>
                       </tr>
                     );
                   })}

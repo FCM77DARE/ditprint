@@ -104,7 +104,8 @@ describe("B1 e B7: o público só vê o publicado", () => {
     const latest = await publico.stt.latest({ slug: "macae-3302403" });
     expect(latest?.notaExecutiva).toBe("Primeiro parágrafo.");
     expect(latest?.executiveNote).toBe("Primeiro parágrafo.");
-    expect(latest?.publishedBy).toBe("operador@print.com.br");
+    // A visão pública nunca expõe o e-mail do operador.
+    expect(latest?.publishedBy).toBe("Analista PRINT");
     expect(latest?.serie).toHaveLength(1);
 
     const detalhe = await publico.publicData.territoryDetail({ slug: "macae-3302403" });

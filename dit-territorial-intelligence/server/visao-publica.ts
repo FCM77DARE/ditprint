@@ -17,6 +17,12 @@ import {
 } from "./stt/publicacao-logica";
 import type { TerritorioComPublicacoes } from "./publicacao";
 
+/**
+ * Quem publicou e o e-mail do operador: nao sai para assinante nem para o publico.
+ * A leitura externa mostra so que foi um analista da PRINT.
+ */
+export const PUBLICADO_POR_EXTERNO = "Analista PRINT";
+
 export interface CamposPublicados {
   notaExecutiva: string | null;
   delta7: number | null;
@@ -36,7 +42,7 @@ export function camposPublicados(pubs: Publicacao[], opcoes: { notaCompleta: boo
     serie: v.serie,
     publicado: v.ultima !== null,
     publishedAt: v.ultima?.publishedAt ?? null,
-    publishedBy: v.ultima?.publishedBy ?? null,
+    publishedBy: v.ultima ? PUBLICADO_POR_EXTERNO : null,
   };
 }
 
@@ -118,7 +124,7 @@ export function linhaCompativel(
     scenario: p.scenario ?? cenarioDoStt(p.stt),
     published: true as const,
     publishedAt: new Date(p.publishedAt),
-    publishedBy: p.publishedBy,
+    publishedBy: PUBLICADO_POR_EXTERNO,
     leitura,
   };
 }

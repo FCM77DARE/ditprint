@@ -39,7 +39,9 @@ export default function MesaFontes() {
   const titulo =
     saude.isLoading || !resumo
       ? "Saúde das fontes"
-      : `${resumo.mudas} ${resumo.mudas === 1 ? "fonte está muda" : "fontes estão mudas"} e ${resumo.falhando} ${resumo.falhando === 1 ? "falha" : "falham"}; ${resumo.ok} ${resumo.ok === 1 ? "está" : "estão"} ok`;
+      : resumo.mudas + resumo.falhando + resumo.ok === 0
+        ? "Nenhuma fonte registrou rodada ainda"
+        : `${resumo.mudas} ${resumo.mudas === 1 ? "fonte está muda" : "fontes estão mudas"} e ${resumo.falhando} ${resumo.falhando === 1 ? "falha" : "falham"}; ${resumo.ok} ${resumo.ok === 1 ? "está" : "estão"} ok`;
 
   async function coletar() {
     setConfirma(false);

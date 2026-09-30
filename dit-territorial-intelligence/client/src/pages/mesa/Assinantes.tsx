@@ -261,7 +261,7 @@ export default function MesaAssinantes() {
                         ) : (
                           a.territorios.map(t => (
                             <Chip key={t} tom="neutro">
-                              {t}
+                              {territorios.data?.find(x => x.slug === t)?.name ?? t}
                             </Chip>
                           ))
                         )}

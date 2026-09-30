@@ -83,7 +83,9 @@ export default function MesaSinais() {
     ? "Sinais"
     : lista.isLoading
       ? `Sinais de ${territorio.name}`
-      : aCurar === 0
+      : (lista.data ?? []).length === 0
+        ? `Nenhum sinal coletado em ${territorio.name}`
+        : aCurar === 0
         ? `Nada a curar em ${territorio.name}`
         : `${aCurar} ${aCurar === 1 ? "sinal espera" : "sinais esperam"} curadoria em ${territorio.name}; ${altos} com impacto acima de ${IMPACTO_ALTO.toLocaleString("pt-BR")}`;
 

@@ -170,7 +170,7 @@ function ConteudoTerritorio() {
             <p className="max-w-[70ch] whitespace-pre-line text-sm text-tinta">{territorio.nota}</p>
             <p className="nota">
               {territorio.notaPeriodo ? `Publicada para o período ${territorio.notaPeriodo}` : "Publicada"}
-              {territorio.publicadoPor ? ` por ${territorio.publicadoPor}` : ""}.
+              {territorio.publicadoPor ? " por um analista da PRINT" : ""}.
             </p>
           </div>
         ) : (
@@ -246,7 +246,7 @@ function ConteudoTerritorio() {
                     <td className="num py-2 pr-4 text-tinta-2">
                       {h.publishedAt ? new Date(h.publishedAt).toLocaleDateString("pt-BR") : "sem data"}
                     </td>
-                    <td className="py-2 text-tinta-2">{h.publishedBy ?? "não informado"}</td>
+                    <td className="py-2 text-tinta-2">{h.publishedBy ? "Analista PRINT" : "não informado"}</td>
                   </tr>
                 ))}
               </tbody>

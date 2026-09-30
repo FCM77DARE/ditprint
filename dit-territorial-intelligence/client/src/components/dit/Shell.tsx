@@ -56,15 +56,32 @@ export function PageShell({
             <DitLogo comDescricao />
           </Link>
           <nav aria-label="Principal" className="flex flex-wrap items-center gap-1">
+            {/* Em telas largas os links ficam na linha; abaixo de 768px vão para o menu compacto. */}
             {NAV_PUBLICO.map(i => (
               <a
                 key={i.href}
                 href={i.href}
-                className="inline-flex min-h-11 items-center px-3 text-sm text-tinta-2 hover:text-tinta"
+                className="hidden min-h-11 items-center px-3 text-sm text-tinta-2 hover:text-tinta md:inline-flex"
               >
                 {i.rotulo}
               </a>
             ))}
+            <details className="group relative md:hidden">
+              <summary className="inline-flex min-h-11 cursor-pointer list-none items-center px-3 text-sm text-tinta-2 hover:text-tinta [&::-webkit-details-marker]:hidden">
+                Menu
+              </summary>
+              <div className="absolute left-0 top-full z-40 mt-1 flex w-56 flex-col rounded-[6px] border bg-card p-1">
+                {NAV_PUBLICO.map(i => (
+                  <a
+                    key={i.href}
+                    href={i.href}
+                    className="inline-flex min-h-11 items-center px-3 text-sm text-tinta hover:bg-muted"
+                  >
+                    {i.rotulo}
+                  </a>
+                ))}
+              </div>
+            </details>
             <a href="/diagnostico" className={cn(botaoVariants({ variant: "primario", size: "md" }))}>
               Pedir diagnóstico
             </a>
@@ -137,7 +154,7 @@ export function AppShell({
                 href={i.href}
                 aria-current={ativo ? "page" : undefined}
                 className={cn(
-                  "flex min-h-11 items-center gap-2 whitespace-nowrap border-l-2 px-3 text-sm",
+                  "flex min-h-11 shrink-0 items-center gap-2 whitespace-nowrap border-l-2 px-3 text-sm",
                   ativo
                     ? "border-acento font-medium text-tinta"
                     : "border-transparent text-sidebar-foreground hover:text-tinta"
@@ -156,7 +173,7 @@ export function AppShell({
       <div className={cn("flex min-w-0 flex-1 flex-col", className)}>
         <div className="flex min-h-14 flex-wrap items-center justify-between gap-3 border-b px-4 py-2 md:px-6">
           <h1 className="text-lg">{titulo}</h1>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {acoes}
             <AlternarTema />
           </div>

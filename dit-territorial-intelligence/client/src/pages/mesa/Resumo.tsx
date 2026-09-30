@@ -127,11 +127,18 @@ export default function MesaResumo() {
   const a = calc?.fila.length ?? 0;
   const b = (calc?.mudas.length ?? 0) + (calc?.falhando.length ?? 0);
   const novos = leads.data?.length ?? 0;
+  const partes = [
+    a > 0 ? `${a} ${a === 1 ? "STT espera" : "STT esperam"} publicação` : null,
+    b > 0 ? `${b} ${b === 1 ? "fonte pede" : "fontes pedem"} atenção` : null,
+    novos > 0 ? `${novos} ${novos === 1 ? "lead espera" : "leads esperam"} resposta` : null,
+  ].filter((x): x is string => x !== null);
   const titulo = !calc
     ? "Hoje na mesa"
-    : a === 0 && b === 0 && novos === 0
+    : partes.length === 0
       ? "Tudo publicado, fontes em dia e nenhum lead esperando"
-      : `Faltam ${a} STT para publicar, ${b} ${b === 1 ? "fonte pede" : "fontes pedem"} atenção e ${novos} ${novos === 1 ? "lead espera" : "leads esperam"}`;
+      : partes.length === 1
+        ? partes[0].charAt(0).toUpperCase() + partes[0].slice(1)
+        : `${partes.slice(0, -1).join(", ")} e ${partes[partes.length - 1]}`.replace(/^./, c => c.toUpperCase());
 
   return (
     <MesaLayout titulo={titulo}>
