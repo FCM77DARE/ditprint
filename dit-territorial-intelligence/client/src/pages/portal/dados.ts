@@ -4,31 +4,30 @@ import { adaptarLeitura, type LeituraAdaptada } from "@/lib/leitura-adapter";
 import { faixaDeTensao } from "@/components/dit";
 
 /**
- * Dados do portal, compostos com as procedures que existem hoje.
- *
- * TODO backend B2: todas as listas abaixo trazem TODOS os territorios ativos, nao
- * so os do assinante (falta a tabela subscriber_territories).
- * TODO backend B1: publicData.territories le index_history, nao stt_scores.published;
- * ate o gate de publicacao, "publicado" aqui e aproximado.
- * TODO backend B3: portal.hoje e portal.territorio devolveriam delta 7d/30d,
- * dimensao que mais moveu e sinais do assinante. Hoje o delta e o de publicData
- * (contra a leitura anterior do mesmo territorio, em geral mensal).
+ * Dados do portal: portal.hoje traz so os territorios do contrato do assinante,
+ * com delta de 7 e 30 dias, serie publicada e nota executiva inteira.
+ * O id numerico (usado por alertPreferences e alertLog) vem de publicData.territories, por slug.
  */
 
 export interface TerritorioPortal {
+  /** Id do territorio no banco; 0 quando o servidor roda sem MySQL (alertas nao existem nesse modo). */
   id: number;
   slug: string;
   nome: string;
   uf: string | null;
   periodo: string | null;
   leitura: LeituraAdaptada;
-  /** Variacao em pontos contra a leitura anterior; null quando nao ha base. */
+  /** Variacao em pontos nos ultimos 7 dias; null quando nao ha publicacao com 7 dias ou mais. */
   delta: number | null;
+  delta7: number | null;
+  delta30: number | null;
   mudouDeFaixa: boolean;
   /** Serie publicada em ordem cronologica. */
   serie: number[];
   nota: string | null;
   notaPeriodo: string | null;
+  publicadoEm: string | null;
+  publicadoPor: string | null;
 }
 
 export interface AlertaPortal {
@@ -47,39 +46,37 @@ export interface AlertaPortal {
 }
 
 export function useTerritoriosPortal() {
-  const lista = trpc.publicData.territories.useQuery(undefined, {
+  const lista = trpc.portal.hoje.useQuery(undefined, {
     refetchInterval: 5 * 60 * 1000,
     staleTime: 60 * 1000,
+    retry: 1,
   });
-  const base = lista.data ?? [];
-  const historicos = trpc.useQueries(t =>
-    base.map(b => t.territories.history({ slug: b.slug, limit: 12 }, { staleTime: 5 * 60 * 1000 }))
-  );
-
-  const historicoErro = historicos.some(h => h.isError);
-  const historicoCarregando = historicos.some(h => h.isLoading);
-  const chaveHist = historicos.map(h => h.dataUpdatedAt).join(",");
+  const ids = trpc.publicData.territories.useQuery(undefined, { staleTime: 10 * 60 * 1000, retry: 1 });
 
   const itens = useMemo<TerritorioPortal[]>(() => {
-    const out = base.map((b, i) => {
-      const rows = historicos[i]?.data ?? [];
+    const idPorSlug = new Map((ids.data ?? []).map(t => [t.slug, t.id ?? 0]));
+    const out = (lista.data ?? []).map(b => {
       const leitura = adaptarLeitura({ stt: b.stt, leitura: b.leitura });
-      const delta = typeof b.sttDelta === "number" ? b.sttDelta : null;
+      const delta = typeof b.delta7 === "number" ? b.delta7 : null;
       const mudouDeFaixa =
         b.stt !== null && delta !== null && faixaDeTensao(b.stt).id !== faixaDeTensao(b.stt - delta).id;
-      const comNota = rows.find(r => r.executiveNote && r.executiveNote.trim().length > 0);
+      const nota = b.notaExecutiva?.trim();
       return {
-        id: b.id,
+        id: idPorSlug.get(b.slug) ?? 0,
         slug: b.slug,
-        nome: b.name,
-        uf: b.state,
-        periodo: b.period,
+        nome: b.nome,
+        uf: b.estado ?? null,
+        periodo: b.period ?? null,
         leitura,
         delta,
+        delta7: delta,
+        delta30: typeof b.delta30 === "number" ? b.delta30 : null,
         mudouDeFaixa,
-        serie: [...rows].reverse().map(r => r.stt),
-        nota: comNota?.executiveNote?.trim() ?? null,
-        notaPeriodo: comNota?.period ?? null,
+        serie: (b.serie ?? []).map(p => p.valor),
+        nota: nota ? nota : null,
+        notaPeriodo: b.period ?? null,
+        publicadoEm: b.publishedAt ? String(b.publishedAt) : null,
+        publicadoPor: b.publishedBy ?? null,
       };
     });
     return out.sort((a, b) => {
@@ -88,14 +85,14 @@ export function useTerritoriosPortal() {
       return db - da || a.nome.localeCompare(b.nome, "pt-BR");
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lista.dataUpdatedAt, chaveHist]);
+  }, [lista.dataUpdatedAt, ids.dataUpdatedAt]);
 
   return {
     itens,
     carregando: lista.isLoading,
-    carregandoHistorico: historicoCarregando,
+    carregandoHistorico: false,
     erro: lista.isError,
-    erroHistorico: historicoErro,
+    erroHistorico: false,
     recarregar: () => {
       void lista.refetch();
     },
@@ -105,7 +102,9 @@ export function useTerritoriosPortal() {
 
 export function useAlertasPortal(territorios: TerritorioPortal[], limite = 50) {
   const consultas = trpc.useQueries(t =>
-    territorios.map(x => t.alertLog.recent({ territoryId: x.id, limit: limite }, { staleTime: 60 * 1000 }))
+    territorios.map(x =>
+      t.alertLog.recent({ territoryId: x.id, limit: limite }, { staleTime: 60 * 1000, enabled: x.id > 0, retry: 1 })
+    )
   );
   const chave = consultas.map(c => c.dataUpdatedAt).join(",");
 

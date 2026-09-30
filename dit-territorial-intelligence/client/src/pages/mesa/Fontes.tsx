@@ -2,54 +2,44 @@ import { Fragment, useMemo, useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button, EmptyState, ErrorState, KpiTile, LoadingBlock, Secao, StatusDot, fmtInt } from "@/components/dit";
 import { MesaLayout, Seletor, Tabela, TD, TDR, TH, THR, fmtHa, fmtQuando } from "./comum";
-import { avaliarFonte, ordenarFontes, HORAS_MUDA, type CausaFonte, type EstadoFonte } from "./dados";
-import { DIMENSAO_DA_FONTE } from "./fontes-dimensao";
+import { nomeLegivel, type EstadoFonte, type MotivoFonte } from "./dados";
 
-const ROTULO_CAUSA: Record<Exclude<CausaFonte, null>, string> = {
-  cota: "Mudo por cota da busca (SerpAPI)",
+const ROTULO_MOTIVO: Record<Exclude<MotivoFonte, "ok">, string> = {
+  cota_serpapi: "Cota da busca (SerpAPI) esgotada",
   defeito: "Defeito próprio da fonte",
-  "sem-execucao": "Sem execução desde o reinício do servidor",
 };
 
-function fmtLatencia(ms: number): string {
-  if (!ms) return "sem medida";
-  return ms < 1000 ? `${fmtInt(ms)} ms` : `${(ms / 1000).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} s`;
-}
+const ROTULO_ESTADO: Record<EstadoFonte, string> = { ok: "Ok", muda: "Muda", falhando: "Falhando" };
+const STATUS_DOT: Record<EstadoFonte, "ok" | "atencao" | "mudo"> = { ok: "ok", muda: "mudo", falhando: "atencao" };
 
 export default function MesaFontes() {
-  const saude = trpc.agentHealth.list.useQuery(undefined, { refetchInterval: 60_000 });
+  const saude = trpc.dashboard.saudeFontes.useQuery(undefined, { refetchInterval: 60_000 });
   const rodar = trpc.scheduler.runNow.useMutation();
   const [estado, setEstado] = useState("todos");
   const [dimensao, setDimensao] = useState("todas");
-  const [causa, setCausa] = useState("todas");
+  const [motivo, setMotivo] = useState("todos");
   const [aberta, setAberta] = useState<string | null>(null);
   const [confirma, setConfirma] = useState(false);
 
-  const fontes = useMemo(
-    () => ordenarFontes((saude.data ?? []).map(f => avaliarFonte(f, DIMENSAO_DA_FONTE))),
-    [saude.data]
+  // O servidor ja entrega ordenado por gravidade (falhando e mudas primeiro).
+  const fontes = saude.data?.fontes ?? [];
+  const resumo = saude.data?.resumo;
+  const dimensoes = useMemo(
+    () => Array.from(new Set(fontes.map(f => f.dimensao).filter((d): d is string => Boolean(d)))).sort(),
+    [fontes]
   );
-  const cont = useMemo(() => {
-    const c: Record<EstadoFonte, number> = { mudo: 0, atencao: 0, ok: 0 };
-    for (const f of fontes) c[f.estado]++;
-    return c;
-  }, [fontes]);
-  const porCausa = useMemo(() => {
-    const c = { cota: 0, defeito: 0, "sem-execucao": 0 };
-    for (const f of fontes) if (f.estado === "mudo" && f.causa) c[f.causa]++;
-    return c;
-  }, [fontes]);
 
   const visiveis = fontes.filter(
     f =>
       (estado === "todos" || f.estado === estado) &&
       (dimensao === "todas" || f.dimensao === dimensao) &&
-      (causa === "todas" || f.causa === causa)
+      (motivo === "todos" || f.motivo === motivo)
   );
 
-  const titulo = saude.isLoading
-    ? "Saúde das fontes"
-    : `${cont.mudo} ${cont.mudo === 1 ? "fonte está muda" : "fontes estão mudas"} há mais de ${HORAS_MUDA} h; ${cont.atencao} em atenção; ${cont.ok} ok`;
+  const titulo =
+    saude.isLoading || !resumo
+      ? "Saúde das fontes"
+      : `${resumo.mudas} ${resumo.mudas === 1 ? "fonte está muda" : "fontes estão mudas"} e ${resumo.falhando} ${resumo.falhando === 1 ? "falha" : "falham"}; ${resumo.ok} ${resumo.ok === 1 ? "está" : "estão"} ok`;
 
   async function coletar() {
     setConfirma(false);
@@ -75,7 +65,6 @@ export default function MesaFontes() {
           <p className="text-sm text-tinta">
             A coleta roda todas as fontes de todos os territórios e consome a cota da busca paga. Rodar agora?
           </p>
-          {/* TODO backend B4: scheduler.runNow escopado a uma fonte ("Reexecutar fonte"). Hoje so existe a rodada inteira. */}
           <div className="flex gap-2">
             <Button size="sm" onClick={coletar}>
               Confirmar coleta
@@ -99,7 +88,7 @@ export default function MesaFontes() {
 
       {saude.isLoading ? (
         <LoadingBlock linhas={8} rotulo="Carregando a saúde das fontes" />
-      ) : saude.isError ? (
+      ) : saude.isError || !resumo ? (
         <ErrorState
           motivo="Não lemos o estado das fontes."
           proximoPasso="Tente de novo; se repetir, confira se o servidor está no ar."
@@ -107,24 +96,31 @@ export default function MesaFontes() {
         />
       ) : fontes.length === 0 ? (
         <EmptyState
-          titulo="Nenhuma fonte registrada"
-          descricao="O motor não devolveu nenhuma fonte. Confira o orquestrador no servidor."
+          titulo="Nenhuma rodada registrada ainda"
+          descricao="A saúde das fontes nasce da primeira rodada do motor depois desta versão. Rode a coleta para preencher a tabela."
         />
       ) : (
         <div className="space-y-6">
+          {saude.data?.cotaSerpapiEsgotada && (
+            <p role="status" className="border-l-2 border-acento pl-3 text-sm text-tinta">
+              A cota da busca paga (SerpAPI) está esgotada: as fontes que dependem dela ficam mudas até a cota voltar. Isso
+              não é defeito das fontes.
+            </p>
+          )}
           <div className="grid gap-3 sm:grid-cols-3">
-            <KpiTile rotulo="Fontes mudas" valor={cont.mudo} unidade={`de ${fontes.length}`} />
-            <KpiTile rotulo="Fontes em atenção" valor={cont.atencao} unidade={`de ${fontes.length}`} />
-            <KpiTile rotulo="Fontes ok" valor={cont.ok} unidade={`de ${fontes.length}`} />
+            <KpiTile rotulo="Fontes mudas" valor={resumo.mudas} unidade={`de ${resumo.total}`} />
+            <KpiTile rotulo="Fontes falhando" valor={resumo.falhando} unidade={`de ${resumo.total}`} />
+            <KpiTile rotulo="Fontes ok" valor={resumo.ok} unidade={`de ${resumo.total}`} />
           </div>
-          {/* TODO backend B4: saude persistida por dia. Sem ela, nao ha comparacao com ontem. */}
           <p className="nota">
-            Sem comparação com ontem: o servidor guarda a saúde só na memória e zera quando reinicia. Entre as
-            mudas: {porCausa.cota} por cota da busca, {porCausa.defeito} por defeito próprio e{" "}
-            {porCausa["sem-execucao"]} sem execução desde o reinício.
+            Entre as que não estão ok: {resumo.porCota} por cota da busca e {resumo.porDefeito} por defeito próprio. A
+            saúde é gravada a cada rodada e guarda os últimos 7 dias; o histórico aparece nas colunas de 7 dias.
           </p>
 
-          <Secao titulo="Da mais grave para a menos grave" nota="Muda é a fonte sem execução há mais de 24 h. O último sucesso ainda não é separado da última execução no servidor.">
+          <Secao
+            titulo="Da mais grave para a menos grave"
+            nota="Falhando: o último erro é posterior ao último sucesso. Muda: rodou nos últimos 7 dias e não trouxe nenhum sinal."
+          >
             <div className="flex flex-wrap items-end gap-3">
               <Seletor
                 id="f-estado"
@@ -133,33 +129,31 @@ export default function MesaFontes() {
                 onChange={setEstado}
                 opcoes={[
                   { valor: "todos", rotulo: "Todos" },
-                  { valor: "mudo", rotulo: "Mudas" },
-                  { valor: "atencao", rotulo: "Em atenção" },
+                  { valor: "muda", rotulo: "Mudas" },
+                  { valor: "falhando", rotulo: "Falhando" },
                   { valor: "ok", rotulo: "Ok" },
                 ]}
               />
               <Seletor
                 id="f-causa"
                 rotulo="Causa"
-                valor={causa}
-                onChange={setCausa}
+                valor={motivo}
+                onChange={setMotivo}
                 opcoes={[
-                  { valor: "todas", rotulo: "Todas" },
-                  { valor: "cota", rotulo: ROTULO_CAUSA.cota },
-                  { valor: "defeito", rotulo: ROTULO_CAUSA.defeito },
-                  { valor: "sem-execucao", rotulo: ROTULO_CAUSA["sem-execucao"] },
+                  { valor: "todos", rotulo: "Todas" },
+                  { valor: "cota_serpapi", rotulo: ROTULO_MOTIVO.cota_serpapi },
+                  { valor: "defeito", rotulo: ROTULO_MOTIVO.defeito },
                 ]}
               />
-              <Seletor
-                id="f-dim"
-                rotulo="Dimensão"
-                valor={dimensao}
-                onChange={setDimensao}
-                opcoes={[
-                  { valor: "todas", rotulo: "Todas" },
-                  ...["D1", "D2", "D3", "D4", "D5", "D6"].map(d => ({ valor: d, rotulo: d })),
-                ]}
-              />
+              {dimensoes.length > 0 && (
+                <Seletor
+                  id="f-dim"
+                  rotulo="Dimensão"
+                  valor={dimensao}
+                  onChange={setDimensao}
+                  opcoes={[{ valor: "todas", rotulo: "Todas" }, ...dimensoes.map(d => ({ valor: d, rotulo: d }))]}
+                />
+              )}
             </div>
 
             {visiveis.length === 0 ? (
@@ -175,9 +169,10 @@ export default function MesaFontes() {
                     <th className={TH}>Dim.</th>
                     <th className={TH}>Estado</th>
                     <th className={TH}>Causa</th>
-                    <th className={TH}>Última execução</th>
-                    <th className={THR}>Sucesso</th>
-                    <th className={THR}>Latência</th>
+                    <th className={TH}>Última rodada</th>
+                    <th className={TH}>Último sinal</th>
+                    <th className={THR}>Rodadas 7 dias</th>
+                    <th className={THR}>Sinais 7 dias</th>
                     <th className={TH}>
                       <span className="sr-only">Detalhe</span>
                     </th>
@@ -186,31 +181,34 @@ export default function MesaFontes() {
                 <tbody>
                   {visiveis.map(f => {
                     const exp = aberta === f.id;
-                    const total = f.successCount + f.errorCount;
                     return (
                       <Fragment key={f.id}>
                         <tr className="border-t">
                           <th scope="row" className="px-3 py-2 text-left font-medium">
-                            {f.nome}
+                            {f.nome || nomeLegivel(f.id)}
                             <span className="nota block font-mono">{f.id}</span>
                           </th>
                           <td className={TD}>{f.dimensao ?? "sem dimensão"}</td>
                           <td className={TD}>
-                            <StatusDot
-                              status={f.estado}
-                              rotulo={f.estado === "mudo" ? "Muda" : f.estado === "atencao" ? "Atenção" : "Ok"}
-                            />
+                            <StatusDot status={STATUS_DOT[f.estado]} rotulo={ROTULO_ESTADO[f.estado]} />
                           </td>
-                          <td className={`${TD} text-xs text-tinta-2`}>{f.causa ? ROTULO_CAUSA[f.causa] : ""}</td>
-                          <td className={TD} title={fmtQuando(f.lastRunAt)}>
-                            {fmtHa(f.lastRunAt)}
+                          <td className={`${TD} text-xs text-tinta-2`}>
+                            {f.motivo === "ok" ? "" : ROTULO_MOTIVO[f.motivo]}
+                          </td>
+                          <td className={TD} title={f.ultimaRodada ? fmtQuando(f.ultimaRodada) : undefined}>
+                            {fmtHa(f.ultimaRodada)}
+                          </td>
+                          <td className={TD} title={f.ultimoSinal ? fmtQuando(f.ultimoSinal) : undefined}>
+                            {f.ultimoSinal ? fmtHa(f.ultimoSinal) : "nunca trouxe"}
                           </td>
                           <td className={TDR}>
-                            {total === 0 ? "sem execução" : `${fmtInt(f.successRate * 100)}% de ${fmtInt(total)}`}
+                            {f.rodadas7d === 0
+                              ? "sem rodada"
+                              : `${fmtInt(f.sucessos7d)} ok, ${fmtInt(f.erros7d)} ${f.erros7d === 1 ? "erro" : "erros"}`}
                           </td>
-                          <td className={TDR}>{fmtLatencia(f.avgLatencyMs)}</td>
+                          <td className={TDR}>{fmtInt(f.sinais7d)}</td>
                           <td className={TD}>
-                            {f.lastError && (
+                            {f.ultimoErroMsg && (
                               <Button
                                 variant="fantasma"
                                 size="sm"
@@ -223,14 +221,15 @@ export default function MesaFontes() {
                             )}
                           </td>
                         </tr>
-                        {exp && f.lastError && (
+                        {exp && f.ultimoErroMsg && (
                           <tr id={`erro-${f.id}`} className="border-t bg-muted">
-                            <td colSpan={8} className="px-3 py-3">
-                              <p className="text-xs font-medium text-tinta-2">Último erro, texto completo</p>
-                              <p className="mt-1 whitespace-pre-wrap break-words font-mono text-xs text-tinta">
-                                {f.lastError}
+                            <td colSpan={9} className="px-3 py-3">
+                              <p className="text-xs font-medium text-tinta-2">
+                                Último erro{f.ultimoErro ? `, ${fmtQuando(f.ultimoErro)}` : ""}
                               </p>
-                              {/* TODO backend B4: territorios afetados e peso da dimensao no STT para esta fonte. */}
+                              <p className="mt-1 whitespace-pre-wrap break-words font-mono text-xs text-tinta">
+                                {f.ultimoErroMsg}
+                              </p>
                             </td>
                           </tr>
                         )}
@@ -240,9 +239,10 @@ export default function MesaFontes() {
                 </tbody>
               </Tabela>
             )}
+            {/* TODO backend B4: scheduler.runNow escopado a uma fonte, territorios afetados e peso da dimensao no STT por fonte. */}
             <p className="nota">
-              A dimensão de cada fonte vem da pasta dela no código. A linha do tempo de coleta das últimas 24 h
-              depende do histórico persistido.
+              Uma fonte só aparece aqui depois da primeira rodada em que foi observada. A saúde é por fonte, não por fonte
+              e território.
             </p>
           </Secao>
         </div>

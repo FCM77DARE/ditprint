@@ -27,7 +27,7 @@ export function fraseHoje(itens: TerritorioPortal[]): string {
   const total = itens.length;
   const medidos = itens.filter(t => t.delta !== null);
   if (medidos.length === 0) {
-    return `Ainda não há leitura anterior para comparar nos seus ${total} territórios.`;
+    return `Ainda não há publicação de 7 dias atrás para comparar nos seus ${total} ${total === 1 ? "território" : "territórios"}.`;
   }
   const maior = [...medidos].sort((a, b) => Math.abs(b.delta as number) - Math.abs(a.delta as number))[0];
   const maiorAbs = Math.abs(maior.delta as number);
@@ -35,12 +35,12 @@ export function fraseHoje(itens: TerritorioPortal[]): string {
   const seus = total === 1 ? "do seu território" : `dos seus ${total} territórios`;
   if (mudaram > 0) {
     const verbo = mudaram === 1 ? "mudou" : "mudaram";
-    return `${mudaram} ${seus} ${verbo} de faixa desde a leitura anterior; o maior movimento é ${maior.nome} (${fmtDelta1(maior.delta)} pontos).`;
+    return `${mudaram} ${seus} ${verbo} de faixa em 7 dias; o maior movimento é ${maior.nome} (${fmtDelta1(maior.delta)} pontos).`;
   }
   if (maiorAbs >= 1) {
-    return `Nenhum ${total === 1 ? "território" : `dos seus ${total} territórios`} mudou de faixa desde a leitura anterior; o maior movimento é ${maior.nome} (${fmtDelta1(maior.delta)} pontos).`;
+    return `Nenhum ${total === 1 ? "território" : `dos seus ${total} territórios`} mudou de faixa em 7 dias; o maior movimento é ${maior.nome} (${fmtDelta1(maior.delta)} pontos).`;
   }
-  return `Nada relevante mudou ${total === 1 ? "no seu território" : `nos seus ${total} territórios`} desde a leitura anterior.`;
+  return `Nada relevante mudou ${total === 1 ? "no seu território" : `nos seus ${total} territórios`} em 7 dias.`;
 }
 
 function CabecalhoOrdenacao() {
@@ -48,7 +48,8 @@ function CabecalhoOrdenacao() {
     <tr className="text-left text-xs text-tinta-2">
       <th scope="col" className="pb-2 pr-4 font-medium">Território</th>
       <th scope="col" className="pb-2 pr-4 font-medium">Tensão (0 a 100)</th>
-      <th scope="col" className="pb-2 pr-4 text-right font-medium">Variação</th>
+      <th scope="col" className="pb-2 pr-4 text-right font-medium">7 dias</th>
+      <th scope="col" className="pb-2 pr-4 text-right font-medium">30 dias</th>
       <th scope="col" className="pb-2 pr-4 font-medium">Tendência</th>
       <th scope="col" className="pb-2 pr-4 text-right font-medium">Confiança</th>
       <th scope="col" className="pb-2 font-medium">Último alerta</th>
@@ -90,7 +91,10 @@ function TabelaTerritorios({ itens, alertas }: { itens: TerritorioPortal[]; aler
                     <TensaoLinha leitura={t.leitura} />
                   </td>
                   <td className="py-2 pr-4 text-right">
-                    <DeltaTexto valor={t.delta} />
+                    <DeltaTexto valor={t.delta7} />
+                  </td>
+                  <td className="py-2 pr-4 text-right">
+                    <DeltaTexto valor={t.delta30} />
                   </td>
                   <td className="py-2 pr-4">
                     <Sparkline valores={t.serie} largura={96} altura={28} rotulo={`Tensão de ${t.nome}`} />
@@ -122,7 +126,7 @@ function TabelaTerritorios({ itens, alertas }: { itens: TerritorioPortal[]; aler
                 <div className="flex items-baseline justify-between gap-3">
                   <span className="font-medium text-tinta">{t.nome}</span>
                   <span className="flex items-baseline gap-2">
-                    <DeltaTexto valor={t.delta} />
+                    <DeltaTexto valor={t.delta7} />
                     <ChevronRight size={14} aria-hidden className="self-center text-tinta-2" />
                   </span>
                 </div>
@@ -131,6 +135,8 @@ function TabelaTerritorios({ itens, alertas }: { itens: TerritorioPortal[]; aler
                   <Sparkline valores={t.serie} largura={64} altura={24} rotulo={`Tensão de ${t.nome}`} />
                 </div>
                 <p className="nota">
+                  30 dias <DeltaTexto valor={t.delta30} />
+                  {" · "}
                   Confiança <ConfiancaTexto leitura={t.leitura} />
                   {" · "}
                   Último alerta {ult ? fmtDataHora(ult.enviadoEm) : "nenhum"}
@@ -191,7 +197,7 @@ function ConteudoHoje() {
     () => (filtro === "mudaram" ? itens.filter(t => t.mudouDeFaixa) : itens),
     [itens, filtro]
   );
-  const destaque = itens.find(t => t.delta !== null && t.nota);
+  const destaque = itens.find(t => t.nota);
 
   if (carregando) {
     return (
@@ -235,8 +241,7 @@ function ConteudoHoje() {
           {atualizadoEm
             ? `Atualizado às ${atualizadoEm.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}. `
             : ""}
-          Variação contra a leitura anterior de cada território.
-          {/* TODO backend B3: portal.hoje devolve delta 7d/30d e "publicado por"; hoje e o delta da leitura anterior. */}
+          Variação contra a última publicação de 7 e 30 dias atrás; sem publicação tão antiga, mostramos "sem base".
         </p>
       </div>
 
@@ -290,7 +295,14 @@ function ConteudoHoje() {
       {destaque && (
         <Secao
           titulo={`Nota executiva: ${destaque.nome}`}
-          nota={destaque.notaPeriodo ? `Período ${destaque.notaPeriodo}` : undefined}
+          nota={
+            [
+              destaque.notaPeriodo ? `Período ${destaque.notaPeriodo}` : null,
+              destaque.publicadoPor ? `publicada por ${destaque.publicadoPor}` : null,
+            ]
+              .filter(Boolean)
+              .join(", ") || undefined
+          }
         >
           <p className="line-clamp-3 max-w-[70ch] text-sm text-tinta">{destaque.nota}</p>
           <LinkBotao href={`/portal/territorio/${destaque.slug}`}>Ler nota completa</LinkBotao>

@@ -1,4 +1,6 @@
+import { useMemo } from "react";
 import { useLocation, useParams } from "wouter";
+import { adaptarLeitura } from "@/lib/leitura-adapter";
 import {
   DimensoesTable,
   EmptyState,
@@ -14,7 +16,6 @@ import {
   NOME_DIMENSAO,
   fmtDataHora,
   useAlertasPortal,
-  useTerritoriosPortal,
   type TerritorioPortal,
 } from "./dados";
 import { ImpactoBarra, fmtDelta1 } from "./pecas";
@@ -31,7 +32,10 @@ function fraseTerritorio(t: TerritorioPortal): string {
     return `${t.nome}: a tensão ainda não foi medida.`;
   }
   const tensao = Math.round(t.leitura.tensao);
-  const var_ = t.delta === null ? "sem leitura anterior para comparar" : `${fmtDelta1(t.delta)} pontos contra a leitura anterior`;
+  const var_ =
+    t.delta7 === null
+      ? "sem publicação de 7 dias atrás para comparar"
+      : `${fmtDelta1(t.delta7)} pontos em 7 dias${t.delta30 !== null ? ` e ${fmtDelta1(t.delta30)} em 30` : ""}`;
   const pesa = dimensaoQuePesa(t);
   return `${t.nome}: tensão ${tensao}, ${var_}${pesa ? `; o que mais pesa é ${pesa}` : ""}.`;
 }
@@ -56,12 +60,41 @@ export default function PortalTerritorio() {
 function ConteudoTerritorio() {
   const { slug } = useParams<{ slug: string }>();
   const [, navegar] = useLocation();
-  const { itens, carregando, erro, recarregar } = useTerritoriosPortal();
-  const territorio = itens.find(t => t.slug === slug);
+  const q = trpc.portal.territorio.useQuery({ slug: slug ?? "", limit: 12 }, { enabled: !!slug, retry: false });
+  const hist = trpc.portal.historico.useQuery({ slug: slug ?? "", limit: 12 }, { enabled: !!slug, retry: false });
+  const carregando = q.isLoading;
+  const foraDoContrato = q.error?.data?.code === "FORBIDDEN" || q.error?.data?.code === "NOT_FOUND";
+  const erro = q.isError && !foraDoContrato;
+  const recarregar = () => void q.refetch();
+
+  const territorio = useMemo<TerritorioPortal | null>(() => {
+    const d = q.data;
+    if (!d) return null;
+    const leitura = adaptarLeitura({ ...d.atual, stt: d.atual.stt });
+    const delta7 = typeof d.delta7 === "number" ? d.delta7 : null;
+    const nota = d.notaExecutiva?.trim();
+    return {
+      id: d.atual.territoryId ?? 0,
+      slug: d.slug,
+      nome: d.nome,
+      uf: d.estado ?? null,
+      periodo: d.atual.period ?? null,
+      leitura,
+      delta: delta7,
+      delta7,
+      delta30: typeof d.delta30 === "number" ? d.delta30 : null,
+      mudouDeFaixa: false,
+      serie: (d.serie ?? []).map(p => p.valor),
+      nota: nota ? nota : null,
+      notaPeriodo: d.atual.period ?? null,
+      publicadoEm: d.publishedAt ? String(d.publishedAt) : null,
+      publicadoPor: d.publishedBy ?? null,
+    };
+  }, [q.data]);
   const { alertas } = useAlertasPortal(territorio ? [territorio] : [], 10);
 
-  // TODO backend B3: portal.territorio({slug}) devolve sinais verificados do territorio com fonte,
-  // data e impacto. Ate la, a unica fonte e a amostra publica (poucos sinais, sem URL).
+  // TODO backend B3: portal.territorio nao devolve sinais verificados com fonte, data e impacto.
+  // Ate la, a unica fonte e a amostra publica (poucos sinais, sem URL).
   const sinais = trpc.publicData.sampleSignals.useQuery({ limit: 6 }, { staleTime: 5 * 60 * 1000 });
   const sinaisDoTerritorio = (sinais.data ?? []).filter(s => territorio && s.territory === territorio.nome);
 
@@ -95,8 +128,8 @@ function ConteudoTerritorio() {
 
   const { leitura } = territorio;
   const comparacao =
-    territorio.delta !== null && leitura.tensao !== null
-      ? { valor: leitura.tensao - territorio.delta, rotulo: "contra a leitura anterior" }
+    territorio.delta7 !== null && leitura.tensao !== null
+      ? { valor: leitura.tensao - territorio.delta7, rotulo: "há 7 dias" }
       : undefined;
 
   return (
@@ -135,14 +168,16 @@ function ConteudoTerritorio() {
         {territorio.nota ? (
           <div className="space-y-2">
             <p className="max-w-[70ch] whitespace-pre-line text-sm text-tinta">{territorio.nota}</p>
-            {territorio.notaPeriodo && <p className="nota">Publicada para o período {territorio.notaPeriodo}.</p>}
+            <p className="nota">
+              {territorio.notaPeriodo ? `Publicada para o período ${territorio.notaPeriodo}` : "Publicada"}
+              {territorio.publicadoPor ? ` por ${territorio.publicadoPor}` : ""}.
+            </p>
           </div>
         ) : (
           <EmptyState
             titulo="A nota do dia ainda não foi publicada"
             descricao="Quando o analista publicar a nota executiva, ela aparece aqui. Nunca mostramos rascunho."
           />
-          // TODO backend B3: portal.territorio expoe a nota executiva publicada do dia.
         )}
       </Secao>
 
@@ -151,7 +186,7 @@ function ConteudoTerritorio() {
         nota="Dimensão sem dado aparece como não medida e fica fora do cálculo."
       >
         <DimensoesTable dimensoes={leitura.dimensoes} />
-        {/* TODO backend B3: variação de 30 dias por dimensão em portal.territorio. */}
+        {/* TODO backend B3: portal.territorio nao traz variacao de 30 dias por dimensao. */}
       </Secao>
 
       <Secao titulo={tituloHistorico(territorio.serie)}>
@@ -175,6 +210,48 @@ function ConteudoTerritorio() {
             titulo="Sem histórico suficiente"
             descricao="São necessárias ao menos duas leituras publicadas para desenhar a tendência."
           />
+        )}
+      </Secao>
+
+      <Secao titulo="Publicações anteriores" nota="Cada linha é uma leitura publicada por um analista da PRINT.">
+        {hist.isLoading ? (
+          <LoadingBlock linhas={3} rotulo="Carregando publicações anteriores" />
+        ) : hist.isError ? (
+          <ErrorState
+            motivo="Não carregamos as publicações anteriores."
+            proximoPasso="Tente de novo em instantes."
+            onAcao={() => void hist.refetch()}
+          />
+        ) : (hist.data ?? []).length === 0 ? (
+          <EmptyState titulo="Sem publicações anteriores" descricao="A primeira publicação deste território é a leitura atual." />
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <caption className="sr-only">Publicações anteriores do território</caption>
+              <thead>
+                <tr className="text-left text-xs text-tinta-2">
+                  <th scope="col" className="pb-2 pr-4 font-medium">Período</th>
+                  <th scope="col" className="pb-2 pr-4 text-right font-medium">Tensão</th>
+                  <th scope="col" className="pb-2 pr-4 font-medium">Publicada em</th>
+                  <th scope="col" className="pb-2 font-medium">Por</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(hist.data ?? []).map(h => (
+                  <tr key={`${h.period}-${String(h.publishedAt)}`} className="border-t text-sm">
+                    <td className="num py-2 pr-4 text-tinta">{h.period}</td>
+                    <td className="num py-2 pr-4 text-right text-tinta">
+                      {h.leitura?.tensao != null ? Math.round(h.leitura.tensao) : Math.round(h.stt)}
+                    </td>
+                    <td className="num py-2 pr-4 text-tinta-2">
+                      {h.publishedAt ? new Date(h.publishedAt).toLocaleDateString("pt-BR") : "sem data"}
+                    </td>
+                    <td className="py-2 text-tinta-2">{h.publishedBy ?? "não informado"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </Secao>
 

@@ -4,13 +4,14 @@ import { AppShell, LoadingBlock, type ItemNav } from "@/components/dit";
 import { useDashboardAuth } from "@/hooks/useDashboardAuth";
 import { cn } from "@/lib/utils";
 
-/** Menu da mesa. Contadores entram quando o backend B5 (mesa.resumo) existir. */
+/** Menu da mesa. */
 export const ITENS_MESA: ItemNav[] = [
   { href: "/mesa", rotulo: "Resumo" },
   { href: "/mesa/publicacao", rotulo: "Publicação" },
   { href: "/mesa/territorios", rotulo: "Territórios" },
   { href: "/mesa/sinais", rotulo: "Sinais" },
   { href: "/mesa/fontes", rotulo: "Fontes" },
+  { href: "/mesa/leads", rotulo: "Leads" },
   { href: "/mesa/assinantes", rotulo: "Assinantes" },
 ];
 

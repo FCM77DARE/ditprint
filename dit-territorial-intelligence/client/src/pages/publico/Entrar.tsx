@@ -1,46 +1,103 @@
-import { useState, type FormEvent } from "react";
-import { Link } from "wouter";
-import { Button, PageShell, botaoVariants } from "@/components/dit";
+import { useEffect, useRef, useState, type FormEvent } from "react";
+import { Link, useLocation } from "wouter";
+import { Button, LoadingBlock, PageShell, botaoVariants } from "@/components/dit";
+import { trpc } from "@/lib/trpc";
 import { cn } from "@/lib/utils";
+import { definirSessaoPortal, type SessaoPortal } from "../portal/usePortalSessao";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /**
- * Acesso do assinante por link enviado ao e-mail.
- * TODO backend B2: portalAuth.requestLink e portalAuth.verify ainda nao existem.
- * Enquanto nao existirem, esta tela NAO chama nada e diz isso. Quando o endpoint
- * entrar, chamar requestLink(email) e trocar o estado "pendente" por:
- * "Enviamos o link se este e-mail tiver assinatura ativa."
+ * Acesso do assinante.
+ * 1) Sem token: o assinante pede acesso (portal.solicitarAcesso). Nao ha e-mail automatico ainda:
+ *    a PRINT recebe o pedido e envia o link. A resposta do servidor e a mesma para e-mail conhecido ou nao.
+ * 2) Com ?token=: portal.sessao valida e grava o cookie httpOnly; depois vai para /portal.
  */
 export default function PublicoEntrar() {
+  const [, navegar] = useLocation();
   const [email, setEmail] = useState("");
   const [erro, setErro] = useState<string | null>(null);
   const [pendente, setPendente] = useState(false);
+  const solicitar = trpc.portal.solicitarAcesso.useMutation();
+  const sessao = trpc.portal.sessao.useMutation();
 
-  function onSubmit(ev: FormEvent) {
+  const token = useRef<string | null>(
+    typeof window === "undefined" ? null : new URLSearchParams(window.location.search).get("token")
+  );
+  const [validando, setValidando] = useState(Boolean(token.current));
+  const [linkInvalido, setLinkInvalido] = useState(false);
+
+  useEffect(() => {
+    const t = token.current;
+    if (!t) return;
+    // Tira o token da barra de endereco e do historico assim que ele e lido.
+    window.history.replaceState(null, "", "/entrar");
+    sessao
+      .mutateAsync({ token: t })
+      .then(s => {
+        if (s) {
+          definirSessaoPortal(s as SessaoPortal);
+          navegar("/portal");
+        } else {
+          setLinkInvalido(true);
+          setValidando(false);
+        }
+      })
+      .catch(() => {
+        setLinkInvalido(true);
+        setValidando(false);
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function onSubmit(ev: FormEvent) {
     ev.preventDefault();
+    if (solicitar.isPending) return;
     if (!EMAIL_RE.test(email.trim())) {
       setErro("Use um e-mail completo, como nome@empresa.com.br.");
       document.getElementById("entrar-email")?.focus();
       return;
     }
     setErro(null);
-    setPendente(true);
+    try {
+      await solicitar.mutateAsync({ email: email.trim() });
+      setPendente(true);
+    } catch {
+      setErro("Não conseguimos registrar o pedido agora. Tente de novo em instantes.");
+    }
+  }
+
+  if (validando) {
+    return (
+      <PageShell>
+        <section className="container max-w-xl space-y-6 py-14 md:py-20">
+          <h1 className="text-3xl md:text-4xl">Conferindo seu link de acesso.</h1>
+          <LoadingBlock linhas={2} rotulo="Conferindo seu link de acesso" />
+        </section>
+      </PageShell>
+    );
   }
 
   return (
     <PageShell>
       <section className="container max-w-xl space-y-6 py-14 md:py-20">
-        <h1 className="text-3xl md:text-4xl">Digite seu e-mail e receba o link de acesso.</h1>
+        <h1 className="text-3xl md:text-4xl">Peça o link de acesso ao seu Radar.</h1>
+
+        {linkInvalido && (
+          <p role="alert" className="text-sm" style={{ color: "var(--tensao-5)" }}>
+            Este link expirou ou já foi substituído. Peça um novo abaixo e a PRINT envia.
+          </p>
+        )}
 
         {pendente ? (
           <div className="space-y-4" role="status">
             <p className="text-tinta">
-              O envio automático do link ainda não está ativo, então nada foi enviado para {email.trim()}.
+              Pedido registrado. Se {email.trim()} tem assinatura ativa, a equipe da PRINT envia o link de acesso a esse
+              e-mail.
             </p>
             <p className="text-sm text-tinta-2">
-              Se você assina o Radar, peça o acesso à PRINT respondendo ao e-mail da sua assinatura. Se ainda não assina,
-              peça acesso abaixo.
+              O envio é feito por uma pessoa da PRINT, não por um robô; pode levar algumas horas úteis. Ainda não assina?
+              Peça acesso abaixo.
             </p>
             <div className="flex flex-wrap gap-3">
               <Link
@@ -81,12 +138,12 @@ export default function PublicoEntrar() {
                 </p>
               ) : (
                 <p id="entrar-dica" className="nota">
-                  Sem senha. Usamos o e-mail só para liberar o acesso.
+                  Sem senha. A PRINT envia o link para o e-mail da assinatura.
                 </p>
               )}
             </div>
-            <Button type="submit" size="lg">
-              Enviar link de acesso
+            <Button type="submit" size="lg" disabled={solicitar.isPending}>
+              {solicitar.isPending ? "Registrando..." : "Pedir link de acesso"}
             </Button>
           </form>
         )}

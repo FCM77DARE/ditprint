@@ -1,61 +1,81 @@
 import { useCallback, useEffect, useState } from "react";
 import { useLocation } from "wouter";
+import { trpc } from "@/lib/trpc";
 
 /**
- * Contexto unico da sessao do assinante no portal.
- *
- * TODO backend B2: hoje o e-mail vem de ?email= ou do localStorage. Isso NAO e
- * autenticacao: qualquer pessoa digita um e-mail. Quando existir link magico
- * (portalAuth), este hook passa a ler a sessao do servidor e as procedures
- * alertPreferences.* e alertLog.* ignoram o e-mail enviado pelo cliente.
- * Nenhuma tela do portal deve ler e-mail de outro lugar que nao este hook.
+ * Sessao do assinante no portal, lida do servidor (portal.sessao).
+ * O token vive no cookie httpOnly dit_portal_token, gravado quando o assinante abre o
+ * link /entrar?token=. Nenhuma tela do portal le e-mail de outro lugar que nao este hook.
  */
-const CHAVE = "dit.portal.email";
-const EMAIL_OK = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-function lerArmazenado(): string | null {
-  try {
-    return window.localStorage.getItem(CHAVE);
-  } catch {
-    return null;
-  }
+export interface SessaoPortal {
+  email: string;
+  nome: string | null;
+  territorios: string[];
+  expiraEm: string | number | Date | null;
 }
 
-function gravar(email: string | null) {
-  try {
-    if (email) window.localStorage.setItem(CHAVE, email);
-    else window.localStorage.removeItem(CHAVE);
-  } catch {
-    /* navegador sem storage: a sessao vale so para esta aba */
-  }
+type Estado = { carregando: boolean; sessao: SessaoPortal | null; erro: boolean };
+
+// Cache de modulo: as quatro telas do portal compartilham a mesma resposta e nao piscam ao navegar.
+let cache: Estado = { carregando: true, sessao: null, erro: false };
+let consultaAtiva: Promise<void> | null = null;
+const ouvintes = new Set<(e: Estado) => void>();
+
+function publicar(e: Estado) {
+  cache = e;
+  ouvintes.forEach(fn => fn(e));
 }
 
-function lerDaUrl(): string | null {
-  try {
-    const v = new URLSearchParams(window.location.search).get("email");
-    return v && EMAIL_OK.test(v.trim()) ? v.trim().toLowerCase() : null;
-  } catch {
-    return null;
-  }
+/** Usado por /entrar depois de validar o token, para o portal abrir ja autenticado. */
+export function definirSessaoPortal(sessao: SessaoPortal | null) {
+  publicar({ carregando: false, sessao, erro: false });
 }
 
 export function usePortalSessao() {
   const [, navegar] = useLocation();
-  const [email, setEmail] = useState<string | null>(() => lerDaUrl() ?? lerArmazenado());
+  const [estado, setEstado] = useState<Estado>(cache);
+  const consultar = trpc.portal.sessao.useMutation();
+  const sairMut = trpc.portal.sair.useMutation();
 
   useEffect(() => {
-    const daUrl = lerDaUrl();
-    if (daUrl) {
-      gravar(daUrl);
-      setEmail(daUrl);
-    }
+    ouvintes.add(setEstado);
+    setEstado(cache);
+    return () => {
+      ouvintes.delete(setEstado);
+    };
   }, []);
 
-  const sair = useCallback(() => {
-    gravar(null);
-    setEmail(null);
+  useEffect(() => {
+    if (!cache.carregando || consultaAtiva) return;
+    consultaAtiva = consultar
+      .mutateAsync({})
+      .then(s => publicar({ carregando: false, sessao: (s as SessaoPortal | null) ?? null, erro: false }))
+      .catch(() => publicar({ carregando: false, sessao: null, erro: true }))
+      .finally(() => {
+        consultaAtiva = null;
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const sair = useCallback(async () => {
+    try {
+      await sairMut.mutateAsync();
+    } catch {
+      /* o cookie expira sozinho em 7 dias; a tela sai de qualquer forma */
+    }
+    publicar({ carregando: false, sessao: null, erro: false });
     navegar("/entrar");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navegar]);
 
-  return { email, autenticado: Boolean(email), sair };
+  const { sessao } = estado;
+  return {
+    email: sessao?.email ?? null,
+    nome: sessao?.nome ?? null,
+    territorios: sessao?.territorios ?? [],
+    carregando: estado.carregando,
+    erro: estado.erro,
+    autenticado: Boolean(sessao),
+    sair,
+  };
 }

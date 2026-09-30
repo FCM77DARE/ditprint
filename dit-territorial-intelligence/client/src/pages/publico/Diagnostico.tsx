@@ -80,27 +80,23 @@ const inputCls =
   "min-h-11 w-full rounded-[2px] border border-input bg-superficie px-3 text-base text-tinta placeholder:text-tinta-2";
 
 /**
- * Envio do pedido. O endpoint atual (server/routes/ditLanding.ts, POST /api/dit/lead)
- * so le { email, territory } e grava como subscriber free_alert.
- * TODO backend B6: aceitar nome, empresa, momento, decisao e interesse (tabela leads).
- * Ate la, os extras seguem como campos proprios (ignorados hoje) e tambem
- * empacotados em `territory` (ate 120 caracteres) para nao se perderem.
+ * Envio do pedido para POST /api/dit/lead (schema zod no servidor: nome, empresa, email,
+ * territorio, momento, decisao, observacao). O interesse (radar ou diagnostico) vai em
+ * observacao, porque o schema nao tem campo proprio.
  */
 async function enviarPedido(f: Form, interesse: string | null): Promise<void> {
-  const territory = [f.territorio.trim(), f.momento, f.empresa.trim(), f.nome.trim()].join(" | ").slice(0, 120);
+  const momento = f.momento ? (f.momento.toLowerCase() as "entrar" | "operar" | "responder") : undefined;
   const r = await fetch("/api/dit/lead", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       email: f.email.trim(),
-      territory,
-      nome: f.nome.trim(),
-      empresa: f.empresa.trim(),
-      territorio: f.territorio.trim(),
-      momento: f.momento,
-      decisao: f.decisao.trim(),
-      interesse: interesse ?? "diagnostico",
-      observacao: `Momento: ${f.momento}. Empresa: ${f.empresa.trim()}. Decisão: ${f.decisao.trim() || "não informada"}.`,
+      nome: f.nome.trim() || undefined,
+      empresa: f.empresa.trim() || undefined,
+      territorio: f.territorio.trim() || undefined,
+      momento,
+      decisao: f.decisao.trim() || undefined,
+      observacao: `Interesse: ${interesse === "radar" ? "Radar" : "Diagnóstico"}.`,
     }),
   });
   if (r.status === 429) throw new Error("Muitas tentativas em sequência. Aguarde 1 minuto e envie de novo.");

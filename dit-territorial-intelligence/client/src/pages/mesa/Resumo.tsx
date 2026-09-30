@@ -1,102 +1,144 @@
 import { useMemo } from "react";
 import { Link, useLocation } from "wouter";
-import { adaptarLeitura } from "@/lib/leitura-adapter";
+import { useQuery } from "@tanstack/react-query";
 import { trpc } from "@/lib/trpc";
-import { EmptyState, ErrorState, KpiTile, LoadingBlock, Secao, fmtDelta } from "@/components/dit";
+import { EmptyState, ErrorState, KpiTile, LoadingBlock, Secao, fmtDelta, fmtInt } from "@/components/dit";
 import { MesaLayout, diasDesde, fmtHa, fmtQuando } from "./comum";
-import {
-  DIAS_SEM_PUBLICAR,
-  LIMITE_DELTA_REVISAO,
-  PISO_CONFIANCA,
-  avaliarFonte,
-  montarFila,
-  ultimosPublicados,
-} from "./dados";
-import { DIMENSAO_DA_FONTE } from "./fontes-dimensao";
+import { DIAS_SEM_PUBLICAR, LIMITE_DELTA_REVISAO, PISO_CONFIANCA, montarFila } from "./dados";
 import { buttonLinkClass } from "./estilos";
 
 interface Pendencia {
   chave: string;
-  tipo: "STT pendente" | "Fonte muda" | "Sem publicação";
+  tipo: "STT pendente" | "Fonte" | "Sem publicação" | "Confiança" | "Lead";
   texto: string;
   href: string;
 }
 
+interface OpsBudget {
+  budget?: {
+    resources?: Array<{ resource: string; monthlyUsed: number; monthlyLimit: number; dailyUsed: number; dailyLimit: number }>;
+  };
+}
+
+/** GET /api/dit/ops: orcamento consumido da busca paga. Falha silenciosa: o KPI mostra "sem dado". */
+function useOps() {
+  return useQuery<OpsBudget>({
+    queryKey: ["dit-ops"],
+    queryFn: async () => {
+      const r = await fetch("/api/dit/ops", { credentials: "include" });
+      if (!r.ok) throw new Error(`ops ${r.status}`);
+      return (await r.json()) as OpsBudget;
+    },
+    refetchInterval: 5 * 60_000,
+    retry: 1,
+  });
+}
+
 export default function MesaResumo() {
   const [, navegar] = useLocation();
-  const scores = trpc.stt.all.useQuery();
-  const fontes = trpc.agentHealth.list.useQuery(undefined, { refetchInterval: 60_000 });
+  const fila0 = trpc.dashboard.filaPublicacao.useQuery({});
+  const saude = trpc.dashboard.saudeFontes.useQuery(undefined, { refetchInterval: 60_000 });
+  const leads = trpc.dashboard.leads.list.useQuery({ status: "novo" });
   const territorios = trpc.territories.listAll.useQuery();
+  const publicados = trpc.publicData.territoriosPublicados.useQuery();
   const rodada = trpc.scheduler.status.useQuery(undefined, { refetchInterval: 60_000 });
+  const ops = useOps();
 
-  const carregando = scores.isLoading || fontes.isLoading || territorios.isLoading;
-  const erro = scores.isError || fontes.isError || territorios.isError;
+  const carregando = fila0.isLoading || saude.isLoading || leads.isLoading;
+  const erro = fila0.isError || saude.isError || leads.isError;
 
   const calc = useMemo(() => {
-    if (!scores.data || !fontes.data || !territorios.data) return null;
+    if (!fila0.data || !saude.data || !leads.data) return null;
     const agora = Date.now();
-    const fila = montarFila(scores.data);
-    const avaliadas = fontes.data.map(f => avaliarFonte(f, DIMENSAO_DA_FONTE, agora));
-    const mudas = avaliadas.filter(f => f.estado === "mudo");
-    const nomes = new Map(territorios.data.map(t => [t.id, t]));
-    const ativos = territorios.data.filter(t => t.active);
-    const pub = ultimosPublicados(scores.data);
-    const abaixoDoPiso = ativos.filter(t => {
-      const p = pub.get(t.id);
-      if (!p) return false; // sem leitura publicada entra em "sem publicacao", nao aqui
-      const l = adaptarLeitura(p);
-      return !l.derivada && l.confianca < PISO_CONFIANCA;
-    });
+    const fila = montarFila(fila0.data);
+    const fontes = saude.data.fontes;
+    const mudas = fontes.filter(f => f.estado === "muda");
+    const falhando = fontes.filter(f => f.estado === "falhando");
+    const pub = new Map((publicados.data ?? []).map(p => [p.slug, p]));
+    const ativos = (territorios.data ?? []).filter(t => t.active);
+    const abaixoDoPiso = (publicados.data ?? []).filter(
+      p => typeof p.confianca === "number" && p.confianca < PISO_CONFIANCA
+    );
     const semPublicar = ativos.filter(t => {
-      const p = pub.get(t.id);
-      const d = p ? diasDesde(p.publishedAt ?? p.updatedAt, agora) : null;
+      const p = pub.get(t.slug);
+      const d = p ? diasDesde(p.publishedAt, agora) : null;
       return d === null || d > DIAS_SEM_PUBLICAR;
     });
 
     const pendencias: Pendencia[] = [];
     for (const i of fila.filter(x => x.alertas.length > 0)) {
-      const t = nomes.get(i.pendente.territoryId);
       pendencias.push({
-        chave: `stt-${i.pendente.id}`,
+        chave: `stt-${i.chave}`,
         tipo: "STT pendente",
-        texto: `${t?.name ?? "Território"}: ${i.delta !== null ? `${fmtDelta(i.delta)} ${Math.abs(i.delta) === 1 ? "ponto" : "pontos"}. ` : ""}${i.alertas.join("; ")}.`,
+        texto: `${i.nome}: ${i.delta !== null ? `${fmtDelta(i.delta)} ${Math.abs(i.delta) === 1 ? "ponto" : "pontos"}. ` : ""}${i.alertas.join("; ")}.`,
         href: "/mesa/publicacao",
       });
     }
-    for (const f of mudas.filter(f => !f.lastRunAt || agora - f.lastRunAt.getTime() > 48 * 3_600_000)) {
+    for (const f of falhando) {
       pendencias.push({
-        chave: `fonte-${f.id}`,
-        tipo: "Fonte muda",
-        texto: `${f.nome}${f.dimensao ? ` (${f.dimensao})` : ""}: ${f.lastRunAt ? `última execução ${fmtHa(f.lastRunAt)}` : "sem execução desde o reinício do servidor"}.`,
+        chave: `falha-${f.id}`,
+        tipo: "Fonte",
+        texto: `${f.nome || f.id} está falhando${f.motivo === "cota_serpapi" ? " por cota da busca" : ""}: último erro ${fmtHa(f.ultimoErro)}.`,
         href: "/mesa/fontes",
       });
     }
+    for (const f of mudas.filter(f => f.horasSemSinal === null || f.horasSemSinal > 48)) {
+      pendencias.push({
+        chave: `muda-${f.id}`,
+        tipo: "Fonte",
+        texto: `${f.nome || f.id} está muda${f.motivo === "cota_serpapi" ? " por cota da busca" : ""}: ${f.ultimoSinal ? `último sinal ${fmtHa(f.ultimoSinal)}` : "nunca trouxe sinal"}.`,
+        href: "/mesa/fontes",
+      });
+    }
+    for (const p of abaixoDoPiso) {
+      pendencias.push({
+        chave: `conf-${p.slug}`,
+        tipo: "Confiança",
+        texto: `${p.nome}: confiança ${fmtInt(p.confianca as number)}%, abaixo de ${PISO_CONFIANCA}%.`,
+        href: `/mesa/analise/${p.slug}`,
+      });
+    }
     for (const t of semPublicar) {
-      const p = pub.get(t.id);
+      const p = pub.get(t.slug);
       pendencias.push({
         chave: `terr-${t.id}`,
         tipo: "Sem publicação",
-        texto: `${t.name}: ${p ? `última publicação ${fmtHa(p.publishedAt ?? p.updatedAt)}` : "nunca teve STT publicado"}.`,
+        texto: `${t.name}: ${p ? `última publicação ${fmtHa(p.publishedAt)}` : "nunca teve STT publicado"}.`,
         href: `/mesa/analise/${t.slug}`,
       });
     }
-    return { fila, mudas, avaliadas, abaixoDoPiso, semPublicar, pendencias };
-  }, [scores.data, fontes.data, territorios.data]);
+    if (leads.data.length > 0) {
+      pendencias.push({
+        chave: "leads",
+        tipo: "Lead",
+        texto: `${leads.data.length} ${leads.data.length === 1 ? "lead novo espera" : "leads novos esperam"} resposta.`,
+        href: "/mesa/leads",
+      });
+    }
+    return { fila, mudas, falhando, abaixoDoPiso, semPublicar, pendencias, total: fontes.length };
+  }, [fila0.data, saude.data, leads.data, territorios.data, publicados.data]);
+
+  const orcamento = useMemo(() => {
+    const r = ops.data?.budget?.resources?.find(x => x.resource === "serpapi");
+    if (!r || !r.monthlyLimit) return null;
+    return { pct: Math.round((r.monthlyUsed / r.monthlyLimit) * 100), usado: r.monthlyUsed, limite: r.monthlyLimit };
+  }, [ops.data]);
 
   const a = calc?.fila.length ?? 0;
-  const b = calc?.mudas.length ?? 0;
+  const b = (calc?.mudas.length ?? 0) + (calc?.falhando.length ?? 0);
+  const novos = leads.data?.length ?? 0;
   const titulo = !calc
     ? "Hoje na mesa"
-    : a === 0 && b === 0
-      ? "Tudo publicado e as fontes estão em dia"
-      : `Faltam ${a} STT para publicar e ${b} ${b === 1 ? "fonte muda" : "fontes mudas"}; o resto está em dia`;
+    : a === 0 && b === 0 && novos === 0
+      ? "Tudo publicado, fontes em dia e nenhum lead esperando"
+      : `Faltam ${a} STT para publicar, ${b} ${b === 1 ? "fonte pede" : "fontes pedem"} atenção e ${novos} ${novos === 1 ? "lead espera" : "leads esperam"}`;
 
   return (
     <MesaLayout titulo={titulo}>
       {carregando ? (
         <div className="space-y-6">
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            {["Aguardando publicação", "Fontes mudas", "Abaixo do piso de confiança", "Orçamento consumido"].map(r => (
+            {["Aguardando publicação", "Fontes mudas ou falhando", "Leads novos", "Orçamento de busca do mês"].map(r => (
               <KpiTile key={r} rotulo={r} valor={null} carregando />
             ))}
           </div>
@@ -107,38 +149,37 @@ export default function MesaResumo() {
           motivo="Não carregamos a mesa."
           proximoPasso="Tente de novo; se repetir, confira se o servidor está no ar e se a sessão da equipe ainda vale."
           onAcao={() => {
-            scores.refetch();
-            fontes.refetch();
-            territorios.refetch();
+            fila0.refetch();
+            saude.refetch();
+            leads.refetch();
           }}
         />
       ) : (
         <div className="space-y-8">
-          {/* TODO backend B5: mesa.resumo com os mesmos numeros de ontem para a comparacao de cada KPI. */}
+          {/* TODO backend B5: mesa.resumo com as contagens de ontem para a comparacao de cada KPI. */}
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <Link href="/mesa/publicacao" className="block">
               <KpiTile rotulo="Aguardando publicação" valor={a} unidade="STT" />
             </Link>
             <Link href="/mesa/fontes" className="block">
-              <KpiTile
-                rotulo="Fontes mudas há mais de 24 h"
-                valor={b}
-                unidade={`de ${calc.avaliadas.length}`}
-              />
+              <KpiTile rotulo="Fontes mudas ou falhando" valor={b} unidade={`de ${calc.total}`} />
             </Link>
-            <Link href="/mesa/territorios" className="block">
-              <KpiTile
-                rotulo={`Territórios abaixo de ${PISO_CONFIANCA}% de confiança`}
-                valor={calc.abaixoDoPiso.length}
-                unidade={`de ${territorios.data?.filter(t => t.active).length ?? 0} ativos`}
-              />
+            <Link href="/mesa/leads" className="block">
+              <KpiTile rotulo="Leads novos" valor={novos} />
             </Link>
-            {/* TODO backend: GET /api/dit/ops (orcamento de busca consumido) nao existe em server/routes. */}
-            <KpiTile rotulo="Orçamento de busca consumido" valor={null} />
+            <KpiTile
+              rotulo="Orçamento de busca do mês"
+              valor={orcamento ? `${orcamento.pct}%` : null}
+              unidade={orcamento ? `${fmtInt(orcamento.usado)} de ${fmtInt(orcamento.limite)} consultas` : undefined}
+              carregando={ops.isLoading}
+            />
           </div>
           <p className="nota">
-            Sem comparação com ontem: o servidor ainda não guarda o histórico dessas contagens. O orçamento
-            consumido aparece quando o servidor expuser o consumo da busca paga.
+            Sem comparação com ontem: o servidor ainda não guarda o histórico dessas contagens.
+            {ops.isError ? " Não lemos o consumo da busca paga agora." : ""}
+            {calc.abaixoDoPiso.length > 0
+              ? ` ${calc.abaixoDoPiso.length} ${calc.abaixoDoPiso.length === 1 ? "território publicado está" : "territórios publicados estão"} abaixo de ${PISO_CONFIANCA}% de confiança.`
+              : ""}
           </p>
 
           <Secao
@@ -167,14 +208,14 @@ export default function MesaResumo() {
 
           <Secao
             titulo={calc.pendencias.length === 0 ? "Nada exige você agora" : "Exige você"}
-            nota={`STT com alerta de revisão (variação acima de ${LIMITE_DELTA_REVISAO} pontos, troca de faixa, confiança baixa ou dimensão sem medida), fontes mudas há mais de 48 h e territórios sem publicação há mais de ${DIAS_SEM_PUBLICAR} dias.`}
+            nota={`STT com alerta de revisão (variação acima de ${LIMITE_DELTA_REVISAO} pontos, troca de faixa, confiança baixa ou dimensão sem medida), fontes falhando ou mudas há mais de 48 h, confiança publicada abaixo de ${PISO_CONFIANCA}%, territórios sem publicação há mais de ${DIAS_SEM_PUBLICAR} dias e leads novos.`}
           >
             {calc.pendencias.length === 0 ? (
               <EmptyState
                 titulo="Tudo em dia"
                 descricao={
                   a === 0
-                    ? "Nenhum STT aguarda, nenhuma fonte está muda há dois dias e todos os territórios ativos foram publicados há pouco. Acompanhe a próxima rodada acima."
+                    ? "Nenhum STT aguarda, nenhuma fonte falha ou está muda há dois dias e todos os territórios ativos foram publicados há pouco. Acompanhe a próxima rodada acima."
                     : `Há ${a} STT na fila, mas nenhum com alerta: dá para publicar em lote.`
                 }
                 acao={a > 0 ? "Abrir a fila" : undefined}

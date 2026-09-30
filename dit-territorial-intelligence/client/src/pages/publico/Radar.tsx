@@ -8,7 +8,7 @@ import { TerritoriosPublicados } from "./TerritoriosPublicados";
 const ENTREGAS = [
   {
     nome: "Leitura do dia",
-    texto: "A tensão e a confiança de cada território que você acompanha, com a faixa e o que mudou desde ontem.",
+    texto: "A tensão e a confiança de cada território que você acompanha, com a faixa e a variação em 7 e 30 dias.",
   },
   {
     nome: "Nota executiva",

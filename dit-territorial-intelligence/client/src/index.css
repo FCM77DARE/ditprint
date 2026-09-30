@@ -307,29 +307,6 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
-
-  /* Aliases legados para as telas antigas nao quebrarem. Sem efeito decorativo:
-     glass, glow, sombra de texto e padroes de fundo saem do sistema. */
-  .glass {
-    background: var(--superficie);
-    border: 1px solid var(--linha);
-  }
-  .glow,
-  .glow-gold,
-  .glow-cyan {
-    box-shadow: none;
-  }
-  .text-glow,
-  .text-glow-gold {
-    text-shadow: none;
-  }
-  .bg-topo-pattern,
-  .bg-neural-pattern {
-    background-color: var(--papel);
-  }
-  .scanline {
-    display: none;
-  }
 }
 
 /* Movimento reduzido: sem transicao nem animacao */

@@ -10,8 +10,11 @@ import {
   TensaoBar,
   botaoVariants,
   faixaDeTensao,
+  Sparkline,
+  fmtDelta,
   fmtInt,
 } from "@/components/dit";
+import { camposPublicados } from "@/lib/publicados";
 import { cn } from "@/lib/utils";
 
 function CtaDiagnostico({ nome, rotulo }: { nome?: string; rotulo: string }) {
@@ -90,9 +93,11 @@ export default function PublicoTerritorio() {
   }
 
   const faixa = faixaDeTensao(leitura.tensao);
-  // TODO backend B3: delta de 7 e 30 dias, historico (sparkline) e nota executiva publicada
-  // ainda nao vem de publicData.territoryDetail. Quando vier, trocar a frase e mostrar a nota.
-  // TODO backend B1: territoryDetail ainda nao filtra por published=true.
+  const extra = camposPublicados(t);
+  const serie = (extra.serie ?? []).map(p => p.valor);
+  const nota = extra.notaExecutiva?.trim();
+  const movimento = (rotulo: string, v: number | null | undefined) =>
+    typeof v === "number" ? `${fmtDelta(v)} em ${rotulo}` : `sem base de ${rotulo}`;
 
   return (
     <PageShell>
@@ -105,6 +110,23 @@ export default function PublicoTerritorio() {
         </header>
 
         <TensaoBar tensao={leitura.tensao} faixa={leitura.faixa} confianca={leitura.confianca} />
+
+        <Secao
+          titulo={`Variação: ${movimento("7 dias", extra.delta7)}; ${movimento("30 dias", extra.delta30)}.`}
+          nota="Comparação com a última publicação de 7 e 30 dias atrás. Sem publicação tão antiga, não há base e não inventamos uma."
+        >
+          {serie.length >= 2 ? (
+            <Sparkline valores={serie} largura={320} altura={56} rotulo={`Tensão de ${nomeCompleto}`} className="max-w-full" />
+          ) : (
+            <p className="text-sm text-tinta-2">Ainda não há publicações suficientes para desenhar a tendência.</p>
+          )}
+        </Secao>
+
+        {nota ? (
+          <Secao titulo="O que o analista escreveu" nota="Primeiro parágrafo da nota executiva. A nota completa é do Radar.">
+            <p className="max-w-prose whitespace-pre-line text-tinta">{nota}</p>
+          </Secao>
+        ) : null}
 
         <Secao
           titulo="As dimensões que mais pesam vêm primeiro."

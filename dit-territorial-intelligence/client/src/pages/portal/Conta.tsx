@@ -36,8 +36,8 @@ export default function PortalConta() {
 function ConteudoConta({ email }: { email: string }) {
   const { sair } = usePortalSessao();
   const territorios = useTerritoriosPortal();
-  // TODO backend B2: alertPreferences.* passa a usar a sessao do assinante e ignora este e-mail.
-  const prefs = trpc.alertPreferences.list.useQuery({ subscriberEmail: email });
+  // alertPreferences.* usa o e-mail da SESSAO; o servidor ignora qualquer e-mail enviado daqui.
+  const prefs = trpc.alertPreferences.list.useQuery({});
   const upsert = trpc.alertPreferences.upsert.useMutation();
   const desativar = trpc.alertPreferences.deactivate.useMutation();
 
@@ -110,10 +110,9 @@ function ConteudoConta({ email }: { email: string }) {
         territorios.itens.map(t => {
           const l = linhaDe(t.id);
           if (!l.ativo) {
-            return l.existe ? desativar.mutateAsync({ subscriberEmail: email, territoryId: t.id }) : null;
+            return l.existe ? desativar.mutateAsync({ territoryId: t.id }) : null;
           }
           return upsert.mutateAsync({
-            subscriberEmail: email,
             territoryId: t.id,
             channels: l.canais,
             minImpactThreshold: l.limite,

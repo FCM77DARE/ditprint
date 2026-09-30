@@ -84,15 +84,14 @@ function ConteudoAlertas() {
   }
 
   const naoAbertos = dos7dias.filter(a => !a.aberto).length;
-  // TODO backend B2: alertLog.recent devolve alertas de todos os assinantes do territorio; a versao
-  // portal.alertas filtra pela sessao do assinante. Ate la esta lista nao e garantidamente so sua.
+  // alertLog.recent exige sessao e so responde para territorios do contrato; o registro e por territorio.
 
   return (
     <div className="space-y-6">
       <p className="max-w-[60ch] font-display text-xl font-semibold leading-snug text-tinta md:text-2xl">
         {dos7dias.length === 0
           ? "Nenhum alerta nos últimos 7 dias."
-          : `Você recebeu ${dos7dias.length} ${dos7dias.length === 1 ? "alerta" : "alertas"} nos últimos 7 dias; ${naoAbertos} ${naoAbertos === 1 ? "ainda não foi aberto" : "ainda não foram abertos"}.`}
+          : `Seus territórios dispararam ${dos7dias.length} ${dos7dias.length === 1 ? "alerta" : "alertas"} nos últimos 7 dias; ${naoAbertos} ${naoAbertos === 1 ? "ainda não foi aberto" : "ainda não foram abertos"}.`}
       </p>
 
       {dos7dias.length === 0 ? (

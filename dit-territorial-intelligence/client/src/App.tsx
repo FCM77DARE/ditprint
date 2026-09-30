@@ -30,6 +30,7 @@ import MesaSinais from "./pages/mesa/Sinais";
 import MesaTerritorios from "./pages/mesa/Territorios";
 import MesaAnalise from "./pages/mesa/Analise";
 import MesaAssinantes from "./pages/mesa/Assinantes";
+import MesaLeads from "./pages/mesa/Leads";
 
 function Router() {
   return (
@@ -56,6 +57,7 @@ function Router() {
       <Route path="/mesa/sinais" component={MesaSinais} />
       <Route path="/mesa/territorios" component={MesaTerritorios} />
       <Route path="/mesa/analise/:slug" component={MesaAnalise} />
+      <Route path="/mesa/leads" component={MesaLeads} />
       <Route path="/mesa/assinantes" component={MesaAssinantes} />
 
       {/* Interno */}

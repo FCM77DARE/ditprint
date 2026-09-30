@@ -19,10 +19,17 @@ import { buttonLinkClass } from "./estilos";
 export default function MesaTerritorios() {
   const territorios = trpc.territories.listAll.useQuery();
   const scores = trpc.stt.all.useQuery();
-  // Uma consulta leve por territorio: ultima coleta. TODO backend B5: incluir no mesa.resumo.
+  const assinantes = trpc.dashboard.assinantes.list.useQuery();
+  // Uma consulta leve por territorio: ultima coleta. TODO backend B5: incluir no resumo da mesa.
   const coletas = trpc.useQueries(t =>
     (territorios.data ?? []).map(x => t.analytics.collectionSnapshots({ territoryId: x.id, limit: 1 }))
   );
+
+  const porSlug = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const a of assinantes.data?.assinantes ?? []) for (const slug of a.territorios) m.set(slug, (m.get(slug) ?? 0) + 1);
+    return m;
+  }, [assinantes.data]);
 
   const publicados = useMemo(() => ultimosPublicados(scores.data ?? []), [scores.data]);
 
@@ -76,7 +83,6 @@ export default function MesaTerritorios() {
           titulo="Do mais antigo sem publicar para o mais recente"
           nota={`Cobertura é o número de dimensões medidas na última leitura publicada, de 6. Confiança abaixo de ${PISO_CONFIANCA}% pede atenção.`}
         >
-          {/* TODO backend B2: coluna "Assinantes" (vinculo assinante x territorio). */}
           <Tabela legenda="Territórios monitorados">
             <thead>
               <tr>
@@ -86,6 +92,7 @@ export default function MesaTerritorios() {
                 <th className={THR}>Tensão publicada</th>
                 <th className={THR}>Confiança</th>
                 <th className={THR}>Cobertura</th>
+                <th className={THR}>Assinantes</th>
                 <th className={TH}>Última publicação</th>
                 <th className={TH}>Última coleta</th>
                 <th className={TH}>
@@ -129,6 +136,7 @@ export default function MesaTerritorios() {
                       )}
                     </td>
                     <td className={TDR}>{medidas === null ? "sem leitura" : `${medidas} de 6`}</td>
+                    <td className={TDR}>{assinantes.isError ? "sem dado" : assinantes.isLoading ? "carregando" : porSlug.get(t.slug) ?? 0}</td>
                     <td className={TD}>
                       {pub === null ? (
                         "nunca"

@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { Bell, CalendarDays, LogOut, UserRound } from "lucide-react";
-import { AppShell, Button, EmptyState, botaoVariants, type ItemNav } from "@/components/dit";
+import { AppShell, Button, EmptyState, LoadingBlock, botaoVariants, type ItemNav } from "@/components/dit";
 import { cn } from "@/lib/utils";
 import { usePortalSessao } from "./usePortalSessao";
 
@@ -21,13 +21,13 @@ export function PortalFrame({
   acoes?: ReactNode;
   children: (email: string) => ReactNode;
 }) {
-  const { email, sair } = usePortalSessao();
+  const { email, sair, carregando, erro } = usePortalSessao();
   const [, navegar] = useLocation();
 
   return (
     <AppShell
       itens={ITENS}
-      titulo={email ? titulo : "Entre com o link de acesso"}
+      titulo={email || carregando ? titulo : "Entre com o link de acesso"}
       acoes={
         email ? (
           <>
@@ -43,12 +43,18 @@ export function PortalFrame({
         ) : undefined
       }
     >
-      {email ? (
+      {carregando ? (
+        <LoadingBlock linhas={3} rotulo="Verificando seu acesso" />
+      ) : email ? (
         children(email)
       ) : (
         <EmptyState
-          titulo="Entre com o link de acesso"
-          descricao="O Radar mostra só os territórios do seu contrato. Peça o link de acesso por e-mail para abrir o portal."
+          titulo={erro ? "Não conseguimos verificar seu acesso" : "Entre com o link de acesso"}
+          descricao={
+            erro
+              ? "O servidor não respondeu. Tente de novo em instantes; se continuar, peça um novo link à PRINT."
+              : "O Radar mostra só os territórios do seu contrato. Peça o link de acesso à PRINT para abrir o portal."
+          }
           acao="Pedir link de acesso"
           onAcao={() => navegar("/entrar")}
         />
