@@ -34,17 +34,10 @@ export class SrcGeniUff extends BaseSourceAgent {
     const signals: RawSignal[] = [];
     const uf = (territory.state || "").toUpperCase();
 
-    // Fora das UFs cobertas, sinal baseline explicando ausência
+    // Fora das UFs cobertas (RJ, SP, BA, PE, PA, CE) a fonte não se aplica:
+    // não emite sinal. Antes emitia "cobertura fora do escopo", que é lacuna
+    // da fonte e chegava ao relatório do cliente como se fosse fato do território.
     if (uf && !GENI_COVERED_UFS.has(uf)) {
-      signals.push({
-        title: `GENI/UFF · Cobertura territorial fora do escopo (${uf})`,
-        summary: `Observatório GENI/UFF concentra estudos em RJ, SP, BA, PE, PA, CE. ${territory.name}/${uf} não está no escopo atual do observatório — ausência de sinais aqui não indica ausência de fenômeno no território.`,
-        url: "https://geni.uff.br/",
-        sourceAgentId: this.id,
-        publishedAt: new Date(),
-        rawValue: 0,
-        metadata: { uf, source: "geni-baseline-fora-escopo" },
-      });
       return signals;
     }
 
