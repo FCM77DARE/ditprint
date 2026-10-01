@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { trackCta } from "@/lib/analytics";
 import BuscaLeitura from "./BuscaLeitura";
 import { LendoAgora } from "./LendoAgora";
 import { Acao, Rodape, Rotulo, Seta, Topo, Vertice, reduzirMotion as reduzir, useMagnetico } from "./MarcoShell";
@@ -301,7 +302,7 @@ export default function Inicio() {
                   <li key={t}><Vertice fixo />{t}</li>
                 ))}
               </ul>
-              <Acao href="#leitura" clara>Ler o meu território</Acao>
+              <Acao href="#leitura" clara onClick={() => trackCta("ler_meu_territorio", "antes_depois")}>Ler o meu território</Acao>
             </div>
           </div>
         </section>

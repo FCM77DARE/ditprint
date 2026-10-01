@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState, type FormEvent, type KeyboardEvent 
 import { useLocation } from "wouter";
 import { Search } from "lucide-react";
 import { Button } from "@/components/dit";
+import { trackCta } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 import { buscarEstrutural, buscarSugestoes } from "@/lib/leitura-ao-vivo";
 import type { Municipio } from "@/lib/leitura-estado";
@@ -78,6 +79,7 @@ export default function BuscaLeitura({ variante = "hero" }: { variante?: Variant
       campo.current?.focus();
       return;
     }
+    trackCta("ler_este_territorio", hero ? "hero" : "compacta");
     if (ativa >= 0 && sugestoes[ativa]) {
       ir(sugestoes[ativa]);
       return;
