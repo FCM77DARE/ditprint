@@ -55,10 +55,10 @@ export default function MesaLeads() {
     <MesaLayout titulo={titulo}>
       <div className="space-y-6">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <KpiTile rotulo="Leads novos" valor={todos.isLoading ? null : novos} carregando={todos.isLoading} />
+          <KpiTile rotulo="Contatos novos" valor={todos.isLoading ? null : novos} carregando={todos.isLoading} />
           <KpiTile rotulo="Em contato ou proposta" valor={todos.isLoading ? null : emAndamento} carregando={todos.isLoading} />
           <KpiTile rotulo="Da primeira leitura" valor={todos.isLoading ? null : daLeitura} carregando={todos.isLoading} />
-          <KpiTile rotulo="Total de leads" valor={todos.isLoading ? null : total} carregando={todos.isLoading} />
+          <KpiTile rotulo="Total de contatos" valor={todos.isLoading ? null : total} carregando={todos.isLoading} />
         </div>
 
         <Seletor
@@ -87,7 +87,7 @@ export default function MesaLeads() {
             }
           />
         ) : (
-          <Tabela legenda="Leads do diagnóstico, da primeira leitura e do Marco Radar">
+          <Tabela legenda="Contatos do diagnóstico, da primeira leitura e do Marco Radar">
             <thead>
               <tr>
                 <th className={TH}>Quem</th>

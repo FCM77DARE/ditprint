@@ -37,7 +37,7 @@ const CAMPO =
 
 export default function PortalAlertas() {
   return (
-    <PortalFrame titulo="Alertas">
+    <PortalFrame titulo="O que pediu a sua atenção">
       {() => <ConteudoAlertas />}
     </PortalFrame>
   );

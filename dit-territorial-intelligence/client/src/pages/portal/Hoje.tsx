@@ -182,7 +182,7 @@ function AlertasDoDia({ alertas }: { alertas: AlertaPortal[] }) {
 
 export default function PortalHoje() {
   return (
-    <PortalFrame titulo="Hoje">
+    <PortalFrame titulo="O que mudou hoje nos seus territórios">
       {() => <ConteudoHoje />}
     </PortalFrame>
   );

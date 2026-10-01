@@ -145,7 +145,7 @@ export default function MesaResumo() {
       {carregando ? (
         <div className="space-y-6">
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            {["Aguardando publicação", "Fontes mudas ou falhando", "Leads novos", "Orçamento de busca do mês"].map(r => (
+            {["Aguardando publicação", "Fontes mudas ou falhando", "Contatos novos", "Orçamento de busca do mês"].map(r => (
               <KpiTile key={r} rotulo={r} valor={null} carregando />
             ))}
           </div>
@@ -172,7 +172,7 @@ export default function MesaResumo() {
               <KpiTile rotulo="Fontes mudas ou falhando" valor={b} unidade={`de ${calc.total}`} />
             </Link>
             <Link href="/mesa/leads" className="block">
-              <KpiTile rotulo="Leads novos" valor={novos} />
+              <KpiTile rotulo="Contatos novos" valor={novos} />
             </Link>
             <KpiTile
               rotulo="Orçamento de busca do mês"

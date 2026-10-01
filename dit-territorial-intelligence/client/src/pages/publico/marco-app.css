@@ -1,0 +1,97 @@
+/* Portal do assinante e Mesa do operador no sistema Marco.
+   Lateral escura com o vértice, topo escuro com a frase do dia, área de trabalho em papel,
+   tabelas densas com algarismo tabular e o mesmo gesto do ponto que se fixa. Preso a .mapp. */
+
+.mh.mapp { display: grid; grid-template-columns: 248px minmax(0, 1fr); min-height: 100vh; background: var(--papel); }
+
+/* ── Lateral ───────────────────────────────────────────────────────── */
+.mapp .mapp-lado { position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; background: var(--tinta); color: var(--papel); border-right: 1px solid #222A24; }
+.mapp .mapp-marca { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 26px 22px 22px; border-bottom: 1px solid #222A24; }
+.mapp .mapp-marca .marca { font-size: 23px; color: var(--papel); }
+.mapp .mapp-area { padding: 5px 9px; border: 1px solid #39413B; border-radius: 999px; font: 500 11px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: #F6B89E; }
+.mapp .mapp-nav { display: grid; gap: 2px; padding: 18px 12px; }
+.mapp .mapp-nav a { position: relative; display: flex; align-items: center; gap: 12px; min-height: 46px; padding: 0 12px; border-radius: var(--raio); text-decoration: none; font: 500 15px/1 var(--texto); color: #A9B0A8; transition: background .25s, color .25s; }
+.mapp .mapp-nav a .vx { width: 15px; height: 15px; color: #56605A; transition: color .25s; }
+.mapp .mapp-nav a:hover { background: rgb(255 255 255 / .04); color: var(--papel); }
+.mapp .mapp-nav a:hover .vx { color: var(--papel); }
+.mapp .mapp-nav a.ativo { background: rgb(255 255 255 / .07); color: var(--papel); }
+.mapp .mapp-nav a.ativo::before { content: ""; position: absolute; left: -12px; top: 10px; bottom: 10px; width: 2px; background: var(--baliza); border-radius: 2px; animation: mapp-cresce .4s var(--curva) both; }
+.mapp .mapp-nav a.ativo .vx { color: var(--papel); }
+@keyframes mapp-cresce { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+.mapp .mapp-pe { margin-top: auto; padding: 22px; border-top: 1px solid #222A24; }
+.mapp .mapp-pe .origem .preta { display: none; }
+.mapp .mapp-pe .origem .clara { display: block; }
+
+/* ── Topo com a frase do dia ───────────────────────────────────────── */
+.mapp .mapp-corpo { display: flex; flex-direction: column; min-width: 0; }
+.mapp .mapp-topo { position: relative; overflow: hidden; background: var(--tinta); color: var(--papel); }
+.mapp .mapp-topo .fundo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .5; pointer-events: none; }
+.mapp .mapp-topo-in { position: relative; display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 18px 32px; padding: clamp(34px, 4.5vw, 56px) clamp(20px, 3.4vw, 48px) clamp(26px, 3vw, 38px); }
+.mapp .mapp-topo h1 { margin: 0; max-width: 30ch; font: 700 clamp(26px, 3vw, 46px)/1.05 var(--display); font-variation-settings: "wdth" 108; letter-spacing: -.035em; animation: mh-cai .6s var(--curva) both; }
+.mapp .mapp-acoes { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.mapp .mapp-acoes, .mapp .mapp-acoes * { color: var(--papel); }
+.mapp .mapp-acoes button, .mapp .mapp-acoes a { border-color: rgb(255 255 255 / .25) !important; background: transparent !important; transition: background .2s, border-color .2s, transform .2s var(--curva); }
+.mapp .mapp-acoes button:hover, .mapp .mapp-acoes a:hover { background: rgb(255 255 255 / .08) !important; border-color: var(--baliza) !important; }
+.mapp .mapp-acoes [class*="bg-acento"] { background: var(--baliza) !important; border-color: var(--baliza) !important; }
+.mapp .mapp-acoes .text-tinta-2 { color: #A9B0A8 !important; }
+
+/* ── Área de trabalho ──────────────────────────────────────────────── */
+.mapp .mapp-main { flex: 1; padding: clamp(24px, 3vw, 44px) clamp(20px, 3.4vw, 48px) 72px; }
+.mapp .mapp-main > * + * { margin-top: 32px; }
+.mapp .mapp-main h2 { font: 700 clamp(20px, 1.8vw, 26px)/1.15 var(--display); font-variation-settings: "wdth" 106; letter-spacing: -.02em; }
+.mapp .mapp-main h3 { font-family: var(--display); letter-spacing: -.01em; }
+.mapp .mapp-main .nota { font-size: 13.5px; }
+
+/* cartões e números */
+.mapp .kpi { border-radius: var(--raio-lg) !important; border-color: var(--linha) !important; background: var(--superficie) !important; padding: 22px !important; transition: border-color .3s, transform .3s var(--curva), box-shadow .3s; }
+.mapp .kpi:hover { border-color: var(--tinta) !important; transform: translateY(-2px); box-shadow: 0 18px 40px -28px rgb(18 24 20 / .45); }
+.mapp .kpi-rot { font: 500 12px/1.2 var(--mono) !important; letter-spacing: .06em; text-transform: uppercase; color: var(--apoio) !important; }
+.mapp .kpi-num { font: 700 clamp(40px, 3.6vw, 56px)/.9 var(--display) !important; font-variation-settings: "wdth" 72; letter-spacing: -.04em; }
+.mapp .bg-card { background: var(--superficie); }
+.mapp .rounded-\[6px\] { border-radius: var(--raio-lg); }
+
+/* tabelas densas */
+.mapp table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+.mapp thead th { padding: 12px 12px; border-bottom: 1px solid var(--tinta) !important; font: 500 11.5px/1.2 var(--mono); letter-spacing: .07em; text-transform: uppercase; color: var(--apoio); text-align: left; white-space: nowrap; }
+.mapp tbody td, .mapp tbody th { padding: 14px 12px; border-bottom: 1px solid var(--linha); vertical-align: middle; }
+.mapp tbody tr { transition: background .2s; }
+.mapp tbody tr:hover { background: rgb(18 24 20 / .035); }
+.mapp tbody tr[aria-selected="true"], .mapp tbody tr.selecionada { background: rgb(255 90 31 / .07); box-shadow: inset 2px 0 0 var(--baliza); }
+.mapp .num, .mapp td.text-right { font-variant-numeric: tabular-nums; }
+
+/* botões e campos */
+.mapp .mapp-main [class*="bg-acento"] { background: var(--tinta) !important; color: #fff !important; border-radius: var(--raio) !important; transition: background .2s, transform .2s var(--curva); }
+.mapp .mapp-main [class*="bg-acento"]:hover { background: var(--baliza) !important; opacity: 1 !important; }
+.mapp .mapp-main button:active, .mapp .mapp-main a[class*="inline-flex"]:active { transform: scale(.98); }
+.mapp .mapp-main input, .mapp .mapp-main select, .mapp .mapp-main textarea { border-radius: var(--raio) !important; background: var(--superficie); transition: border-color .2s, box-shadow .2s; }
+.mapp .mapp-main input:focus, .mapp .mapp-main select:focus, .mapp .mapp-main textarea:focus { outline: none; border-color: var(--tinta) !important; box-shadow: 0 0 0 3px rgb(255 90 31 / .2); }
+.mapp aside:not(.mapp-lado) { border-radius: var(--raio-lg); }
+
+/* barra da tensão compacta e chips no tom da casa */
+.mapp [class*="rounded-full"][class*="border"] { border-color: var(--linha); }
+
+/* ── Celular: lateral vira faixa no topo ───────────────────────────── */
+@media (max-width: 900px) {
+  .mh.mapp { grid-template-columns: 1fr; }
+  .mapp .mapp-lado { position: sticky; top: 0; z-index: 30; height: auto; flex-direction: row; align-items: center; border-right: 0; border-bottom: 1px solid #222A24; }
+  .mapp .mapp-marca { border-bottom: 0; padding: 14px 16px; gap: 8px; }
+  .mapp .mapp-marca .marca { font-size: 19px; }
+  .mapp .mapp-nav { display: flex; overflow-x: auto; padding: 8px; gap: 4px; scrollbar-width: none; }
+  .mapp .mapp-nav a { min-height: 40px; white-space: nowrap; font-size: 14px; }
+  .mapp .mapp-nav a.ativo::before { left: 12px; right: 12px; top: auto; bottom: 2px; width: auto; height: 2px; }
+  .mapp .mapp-pe { display: none; }
+  .mapp .mapp-topo h1 { font-size: 24px; }
+  .mapp .mapp-main { padding: 20px 16px 56px; }
+  .mapp table { font-size: 13.5px; }
+}
+@media (prefers-reduced-motion: reduce) { .mapp * { animation: none !important; transition-duration: .01ms !important; } }
+
+/* a área de trabalho usa a tela inteira (painel denso, nada de faixa vazia) */
+.mapp .mapp-main .container, .mapp .mapp-main [class*="max-w-"] { max-width: none !important; margin-left: 0; margin-right: 0; }
+.mapp .mapp-main p[class*="max-w-"], .mapp .mapp-main .max-w-prose { max-width: 72ch !important; }
+
+/* conteúdo largo (tabela) rola dentro da área de trabalho, sem esticar a página */
+.mapp .mapp-main { min-width: 0; }
+.mapp .mapp-main table { min-width: max-content; }
+.mapp .mapp-main :where(div, section):has(> table) { overflow-x: auto; }
+@media (max-width: 900px) { .mh.mapp { grid-template-columns: minmax(0, 1fr); } .mapp .mapp-topo-in { display: block; } .mapp .mapp-acoes { margin-top: 14px; } }

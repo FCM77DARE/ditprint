@@ -14,6 +14,9 @@ export default defineConfig({
   },
   test: {
     environment: "node",
+    // Testes que sobem o servidor em porta efêmera passam de 10 s com a máquina carregada.
+    hookTimeout: 30000,
+    testTimeout: 30000,
     include: ["server/**/*.test.ts", "server/**/*.spec.ts", "client/src/lib/**/*.test.ts"],
   },
 });

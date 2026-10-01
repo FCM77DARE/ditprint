@@ -14,7 +14,7 @@ export interface KpiTileProps {
 }
 
 export function KpiTile({ rotulo, valor, unidade, comparacao, carregando, className }: KpiTileProps) {
-  const caixa = cn("rounded-[6px] border bg-card p-4", className);
+  const caixa = cn("kpi rounded-[6px] border bg-card p-4", className);
   if (carregando) {
     return (
       <div className={caixa}>
@@ -24,7 +24,7 @@ export function KpiTile({ rotulo, valor, unidade, comparacao, carregando, classN
   }
   return (
     <div className={caixa}>
-      <p className="text-xs font-medium text-tinta-2">{rotulo}</p>
+      <p className="kpi-rot text-xs font-medium text-tinta-2">{rotulo}</p>
       <p className="mt-2 flex items-baseline gap-1.5">
         {valor === null ? (
           <span className="text-2xl font-semibold text-tinta-2">sem dado</span>
@@ -32,7 +32,7 @@ export function KpiTile({ rotulo, valor, unidade, comparacao, carregando, classN
           <>
             <span
               data-mo={typeof valor === "number" ? "count" : undefined}
-              className="num text-4xl font-medium leading-none text-tinta"
+              className="kpi-num num text-4xl font-medium leading-none text-tinta"
             >
               {typeof valor === "number" ? valor.toLocaleString("pt-BR") : valor}
             </span>

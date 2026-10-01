@@ -27,7 +27,7 @@ const CHECK =
 
 export default function PortalConta() {
   return (
-    <PortalFrame titulo="Preferências">
+    <PortalFrame titulo="Como e quando você quer ser avisado">
       {email => <ConteudoConta email={email} />}
     </PortalFrame>
   );

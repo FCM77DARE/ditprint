@@ -1,4 +1,5 @@
-import { Rodape, Topo, useMagnetico } from "@/pages/publico/MarcoShell";
+import { PoweredBy, Rodape, Topo, Vertice, useMagnetico } from "@/pages/publico/MarcoShell";
+import "@/pages/publico/marco-app.css";
 import { useEffect, useRef, type ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { Moon, Sun } from "lucide-react";
@@ -141,49 +142,40 @@ export function AppShell({
     .map(i => i.href)
     .filter(casa)
     .sort((a, b) => b.length - a.length)[0];
+  const mesa = itens.some(i => i.href.startsWith("/mesa"));
   return (
-    <div className="flex min-h-screen flex-col bg-background text-foreground md:flex-row">
-      <aside
-        className="border-b bg-sidebar md:w-[208px] md:shrink-0 md:border-b-0 md:border-r"
-        aria-label="Navegação da área de trabalho"
-      >
-        <div className="flex items-center justify-between gap-3 px-4 py-3 md:block md:py-6">
-          <Link href="/">
-            <MarcoLogo size={22} />
+    // Portal e Mesa vestem a identidade do Marco: lateral escura com o vértice, topo escuro com a frase do dia.
+    <div className={cn("mh mapp", mesa ? "mapp-mesa" : "mapp-portal")}>
+      <aside className="mapp-lado" aria-label="Navegação da área de trabalho">
+        <div className="mapp-marca">
+          <Link href={mesa ? "/mesa" : "/portal"} className="marca" aria-label="Marco">
+            <Vertice fixo />
+            <span>marco</span>
           </Link>
+          <span className="mapp-area">{mesa ? "Mesa" : "Radar"}</span>
         </div>
-        <nav className="flex gap-1 overflow-x-auto px-2 pb-2 md:flex-col md:pb-0">
+        <nav className="mapp-nav">
           {itens.map(i => {
             const ativo = i.href === hrefAtivo;
             return (
-              <Link
-                key={i.href}
-                href={i.href}
-                aria-current={ativo ? "page" : undefined}
-                className={cn(
-                  "flex min-h-11 shrink-0 items-center gap-2 whitespace-nowrap border-l-2 border-transparent px-3 text-sm transition-colors duration-300",
-                  ativo ? "mo-lado-ativo font-medium text-tinta" : "text-sidebar-foreground hover:text-tinta"
-                )}
-              >
-                {i.icone}
+              <Link key={i.href} href={i.href} aria-current={ativo ? "page" : undefined} className={ativo ? "ativo" : ""}>
+                <Vertice fixo={ativo} />
                 {i.rotulo}
               </Link>
             );
           })}
         </nav>
-        <div className="hidden px-4 py-6 md:block">
-          <PoweredByPrint />
-        </div>
+        <div className="mapp-pe"><PoweredBy /></div>
       </aside>
-      <div className={cn("flex min-w-0 flex-1 flex-col", className)}>
-        <div className="flex min-h-14 flex-wrap items-center justify-between gap-3 border-b px-4 py-2 md:px-6">
-          <h1 className="text-lg">{titulo}</h1>
-          <div className="flex flex-wrap items-center gap-2">
-            {acoes}
-            <AlternarTema />
+      <div className={cn("mapp-corpo", className)}>
+        <header className="mapp-topo">
+          <img className="fundo" src="/arte/relevo-escuro.jpg" alt="" aria-hidden="true" />
+          <div className="mapp-topo-in">
+            <h1>{titulo}</h1>
+            <div className="mapp-acoes">{acoes}</div>
           </div>
-        </div>
-        <main ref={mainRef} className="mo-rota flex-1 px-4 py-6 md:px-6">
+        </header>
+        <main ref={mainRef} className="mo-rota mapp-main">
           {children}
         </main>
       </div>
