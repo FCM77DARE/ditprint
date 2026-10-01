@@ -17,6 +17,7 @@
  * Pode ser chamado também para alertas de STT (isAnomaly/isEscalation).
  */
 
+import { publicarLendoAgora } from "./_core/feed-publico";
 import { getDb } from "./db";
 import { alertPreferences, alertLog, subscribers, territories } from "../drizzle/schema";
 import { eq, and } from "drizzle-orm";
@@ -129,6 +130,8 @@ export function registerSseClient(
 
 function broadcastSse(payload: AlertPayload): void {
   pushToBuffer(payload);
+  // A parte pública (manchete, território, fonte) vai para o feed da landing.
+  if (payload.alertType === "signal") publicarLendoAgora(payload);
   const data = `data: ${JSON.stringify(payload)}\n\n`;
   let sent = 0;
   for (const client of Array.from(sseClients.values())) {

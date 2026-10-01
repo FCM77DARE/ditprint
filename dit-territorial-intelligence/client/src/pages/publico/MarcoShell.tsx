@@ -84,7 +84,7 @@ export function useMagnetico(raiz: React.RefObject<HTMLElement | null>, dep: unk
 type ItemNav = { href: string; rotulo: string };
 
 const NAV_PADRAO: ItemNav[] = [
-  { href: "/#como-funciona", rotulo: "Como funciona" },
+  { href: "/#como-funciona", rotulo: "Lendo agora" },
   { href: "/#escada", rotulo: "O que você recebe" },
   { href: "/metodologia", rotulo: "Metodologia" },
   { href: "/est", rotulo: "EST" },

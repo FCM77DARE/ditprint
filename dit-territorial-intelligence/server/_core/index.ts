@@ -12,6 +12,7 @@ import { globalApiLimiter, loginLimiter } from "./rateLimit";
 import { logger } from "./logger";
 import { ditLandingRouter } from "../routes/ditLanding";
 import { alertasStreamHandler } from "./alertas-stream";
+import { lendoAgoraHandler } from "./feed-publico";
 
 const log = logger.child({ module: "server" });
 
@@ -69,6 +70,8 @@ async function startServer() {
   // portal) e filtra por território: assinante só recebe os do contrato dele.
   // Sem sessão: 401. DIT_PORTAL_AUTH=false devolve o comportamento antigo.
   app.get("/api/alerts/stream", alertasStreamHandler);
+  // Feed público da landing: manchetes reais lidas agora (só a parte pública).
+  app.get("/api/dit/lendo-agora", lendoAgoraHandler);
   // development mode uses Vite, production mode uses static files
   if (process.env.NODE_ENV === "development") {
     await setupVite(app, server);

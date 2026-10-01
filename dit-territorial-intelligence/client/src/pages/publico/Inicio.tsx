@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import BuscaLeitura from "./BuscaLeitura";
+import { LendoAgora } from "./LendoAgora";
 import { Acao, Rodape, Rotulo, Seta, Topo, Vertice, reduzirMotion as reduzir, useMagnetico } from "./MarcoShell";
 
 /*
@@ -25,26 +26,6 @@ const DIMENSOES = [
   { cod: "D6", nome: "Reputação e visibilidade", olha: "O que a imprensa, as buscas e as redes dizem do lugar." },
 ];
 
-// Leitura real de Macaé, 24/09/2026 (a mesma da landing /marco): números com fonte e ano.
-const MACAE = {
-  nome: "Macaé, RJ", ibge: "3302403", coord: "22°22′S 41°47′W", data: "24/09/2026",
-  tensao: 74, faixa: [47, 84] as const, confianca: 63,
-  estrutural: [
-    { t: "R$ 6.464 de salário médio formal", f: "IBGE CEMPRE, 2021" },
-    { t: "47 vínculos formais por 100 hab.", f: "CEMPRE ÷ Censo 2022" },
-    { t: "202 hab/km²", f: "Censo 2022" },
-  ],
-  sinais: [
-    { fonte: "Fogo Cruzado", t: "Nenhum tiroteio registrado em Macaé nos últimos 30 dias." },
-    { fonte: "Imprensa verificada", t: "Defesa Civil de Macaé emitiu alerta de ressaca com ondas de até 3 metros sobre a orla e o bairro Fronteira." },
-    { fonte: "ANEEL", t: "7 empreendimentos de geração registrados no município." },
-  ],
-  dims: [
-    { nome: "Socioambiental", v: null }, { nome: "Socioeconômica", v: 29 }, { nome: "Infraestrutura", v: 95 },
-    { nome: "Dinâmica territorial", v: 78 }, { nome: "Governança", v: null }, { nome: "Reputação", v: 98 },
-  ] as { nome: string; v: number | null }[],
-};
-
 const ESCADA = [
   { n: "01", t: "Leitura gratuita", d: "Você digita o território e a leitura roda na sua tela: dado oficial na hora e os sinais chegando enquanto as fontes respondem.", cta: "Ler agora", href: "#leitura" },
   { n: "02", t: "Diagnóstico completo", d: "Todas as dimensões abertas, cada sinal com fonte e data, previsão, recomendações por momento e a nota de um analista da PRINT.", cta: "Pedir o completo", href: "#completa" },
@@ -59,67 +40,6 @@ const FAQ = [
   { p: "E quando falta dado?", r: "O Marco diz que falta. A Tensão é calculada só sobre o que foi medido, e a Confiança mostra quanto do território foi de fato lido. O que falta vira faixa, não chute." },
   { p: "Quem publica a nota do território?", r: "Um analista da PRINT. A máquina coleta e calcula; nenhuma leitura de assinante vai ao ar sem revisão humana." },
 ];
-
-// ─── Demonstração do "como funciona" ───────────────────────────────────────
-
-function Demo({ p, tudo }: { p: number; tudo: boolean }) {
-  const lim = (v: number) => Math.max(0, Math.min(1, v));
-  const cena = tudo ? 3 : p < 0.3 ? 0 : p < 0.68 ? 1 : 2;
-  const digitado = MACAE.nome.slice(0, Math.round((tudo ? 1 : lim(p / 0.24)) * MACAE.nome.length));
-  const tSinais = tudo ? 1 : lim((p - 0.3) / 0.34);
-  const tRes = tudo ? 1 : lim((p - 0.68) / 0.24);
-  return (
-    <figure className="tela" aria-hidden="true">
-      <div className="tela-topo">
-        <Vertice fixo={cena >= 2} />
-        <span>Primeira leitura · {MACAE.nome}</span>
-        <i className="tela-prog"><b style={{ width: `${(tudo ? 1 : p) * 100}%` }} /></i>
-      </div>
-      <div className={`cena ${cena === 0 || tudo ? "ativa" : ""}`}>
-        <div className="demo-busca">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.6-3.6" /></svg>
-          <span className="digitado">{digitado}<i className="cursor" /></span>
-          <span className={`demo-botao ${digitado.length === MACAE.nome.length ? "aceso" : ""}`}><Vertice fixo={digitado.length === MACAE.nome.length} />Ler este território</span>
-        </div>
-        <div className="demo-estrutural">
-          {MACAE.estrutural.map((e, i) => (
-            <div key={e.t} className={`fato ${lim((tudo ? 1 : p / 0.3) * 3 - i) > 0.5 ? "fixou" : ""}`}><b>{e.t}</b><span>{e.f}</span></div>
-          ))}
-        </div>
-      </div>
-      <div className={`cena ${cena === 1 || tudo ? "ativa" : ""}`}>
-        <p className="cena-t">Sinais verificados chegando</p>
-        <ol className="feed">
-          {MACAE.sinais.map((s, i) => (
-            <li key={s.t} className={lim(tSinais * 3.2 - i) > 0.4 ? "fixou" : ""}>
-              <Vertice fixo={lim(tSinais * 3.2 - i) > 0.9} />
-              <div><span className="fonte">{s.fonte}</span><p>{s.t}</p></div>
-            </li>
-          ))}
-        </ol>
-      </div>
-      <div className={`cena ${cena === 2 || tudo ? "ativa" : ""}`}>
-        <div className="res">
-          <div className="res-num"><strong>{Math.round(MACAE.tensao * tRes)}</strong><span>Tensão</span></div>
-          <div className="res-barra">
-            <span className="faixa" style={{ left: `${MACAE.faixa[0]}%`, width: `${(MACAE.faixa[1] - MACAE.faixa[0]) * tRes}%` }} />
-            <span className="marco-pt" style={{ left: `${MACAE.tensao * tRes}%` }} />
-          </div>
-          <p className="res-nota">Faixa possível <b>{MACAE.faixa[0]} a {MACAE.faixa[1]}</b>. Confiança <b>{MACAE.confianca}%</b>.</p>
-        </div>
-        <div className="dims">
-          {MACAE.dims.map((d, i) => (
-            <div key={d.nome} className="dim">
-              <span>{d.nome}</span>
-              <span className="trilho">{d.v != null && <i style={{ transform: `scaleX(${(d.v / 100) * lim(tRes * 1.6 - i * 0.1)})` }} />}</span>
-              <span className="v">{d.v ?? "não medida"}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </figure>
-  );
-}
 
 // ─── Pedido do Diagnóstico completo (grava lead) ─────────────────────────────
 
@@ -187,9 +107,6 @@ function DobraCompleta() {
 
 export default function Inicio() {
   const raiz = useRef<HTMLDivElement>(null);
-  const [demo, setDemo] = useState({ p: 0, tudo: false });
-  const [etapa, setEtapa] = useState(0);
-  const irPara = useRef<(i: number) => void>(() => {});
 
   useMagnetico(raiz);
 
@@ -199,14 +116,10 @@ export default function Inicio() {
     if (!r) return;
     const dimsGrade = Array.from(r.querySelectorAll<HTMLLIElement>(".grade6 li"));
     const n6 = r.querySelector<HTMLSpanElement>("#n6");
-    const etapaDe = (p: number) => (p < 0.3 ? 0 : p < 0.68 ? 1 : 2);
 
     if (reduzir()) {
       dimsGrade.forEach(li => li.classList.add("fixou"));
       if (n6) n6.textContent = "6";
-      setDemo({ p: 1, tudo: false });
-      setEtapa(2);
-      irPara.current = i => { const p = [0.25, 0.62, 1][i]; setDemo({ p, tudo: false }); setEtapa(i); };
       return;
     }
 
@@ -257,13 +170,6 @@ export default function Inicio() {
           } }),
         });
 
-        // Demonstração: toca sozinha ao aparecer; clicar num passo vai direto a ele.
-        const est = { p: 0 };
-        const pintar = () => { setDemo({ p: est.p, tudo: false }); setEtapa(etapaDe(est.p)); };
-        const tocar = gsap.to(est, { p: 1, duration: 10, ease: "none", paused: true, onUpdate: pintar });
-        ScrollTrigger.create({ trigger: ".tela", start: "top 75%", once: true, onEnter: () => tocar.play() });
-        irPara.current = i => { tocar.pause(); gsap.to(est, { p: [0.25, 0.62, 1][i], duration: 0.8, ease: "power2.out", onUpdate: pintar }); };
-
         gsap.utils.toArray<HTMLElement>(".sobe").forEach(el => gsap.from(el, { autoAlpha: 0, y: 20, duration: 0.7, ease: "power2.out", scrollTrigger: { trigger: el, start: "top 88%" } }));
         gsap.utils.toArray<HTMLElement>(".lista-sobe").forEach(l => gsap.from(l.children, { autoAlpha: 0, y: 28, duration: 0.8, stagger: 0.09, ease: "power3.out", scrollTrigger: { trigger: l, start: "top 85%" } }));
         gsap.utils.toArray<HTMLElement>("[data-paralaxe]").forEach(img => gsap.fromTo(img, { yPercent: -Number(img.dataset.paralaxe) }, { yPercent: Number(img.dataset.paralaxe), ease: "none", scrollTrigger: { trigger: img.parentElement, start: "top bottom", end: "bottom top", scrub: true } }));
@@ -296,7 +202,7 @@ export default function Inicio() {
   return (
     <div className="mh" ref={raiz}>
       <Topo raiz={raiz} nav={[
-        { href: "#como-funciona", rotulo: "Como funciona" },
+        { href: "#como-funciona", rotulo: "Lendo agora" },
         { href: "#escada", rotulo: "O que você recebe" },
         { href: "/metodologia", rotulo: "Metodologia" },
         { href: "/est", rotulo: "EST" },
@@ -338,29 +244,17 @@ export default function Inicio() {
           </div>
         </section>
 
-        {/* 3 · Como funciona: a leitura de Macaé toca sozinha */}
-        <section className="como" id="como-funciona" aria-labelledby="t-como">
-          <img className="curvas" src="/arte/relevo-papel.jpg" alt="" aria-hidden="true" />
-          <div className="largura como-grade">
+        {/* 3 · O que o Marco está lendo agora: manchetes reais das pesquisas e da coleta do dia */}
+        <section className="escuro lendo-secao" id="como-funciona" aria-labelledby="t-lendo">
+          <img className="fundo" src="/arte/relevo-escuro.jpg" alt="" aria-hidden="true" data-escala />
+          <div className="largura lendo-grade">
             <div>
-              <Rotulo>Como funciona</Rotulo>
-              <h2 id="t-como" className="titulo dividir">Você digita o território. O Marco faz o levantamento.</h2>
-              <ol className="etapas">
-                {[
-                  { t: "Você escolhe o município", d: "Só o nome. A leitura estrutural sai na hora, com a fonte e o ano de cada número." },
-                  { t: "As fontes respondem ao vivo", d: "Cada sinal que cita o território pelo nome é verificado e entra na tela enquanto chega." },
-                  { t: "A Tensão fecha com a Confiança", d: "O número é calculado só sobre o que foi medido. O que falta vira faixa, não chute." },
-                ].map((s, i) => (
-                  <li key={s.t} className={etapa === i ? "ativa" : ""} onClick={() => irPara.current(i)}>
-                    <span className="n">{i + 1}</span><div><h3>{s.t}</h3><p>{s.d}</p></div>
-                  </li>
-                ))}
-              </ol>
+              <Rotulo>Lendo agora</Rotulo>
+              <h2 id="t-lendo" className="titulo dividir">Cada pesquisa põe o Marco para ler o território.</h2>
+              <p className="explica sobe">Estas são as manchetes reais que as fontes estão devolvendo agora, enquanto alguém pesquisa um município ou a leitura do dia roda. Só entra o que cita o território pelo nome.</p>
+              <div className="sobe" style={{ marginTop: 32 }}><Acao href="#leitura" clara>Ler um território</Acao></div>
             </div>
-            <div>
-              <Demo p={demo.p} tudo={demo.tudo} />
-              <p className="legenda">Leitura real de {MACAE.nome} em {MACAE.data}. Cada número aponta a fonte e o ano.</p>
-            </div>
+            <LendoAgora />
           </div>
         </section>
 
