@@ -627,7 +627,7 @@ function SemLeitura({ s, recomecar, pedir }: { s: EstadoLeitura; recomecar: () =
 // ─── Camada 3: captura e escada ──────────────────────────────────────────────
 
 function situacaoDe(s: EstadoLeitura): string {
-  if (s.fase === "pronta") return "teaser entregue";
+  if (s.fase === "pronta") return "resumo entregue";
   if (s.fase === "sem_leitura" && s.semLeitura) {
     if (s.semLeitura.motivo === "teto") return s.semLeitura.extra?.causa === "limite_ip" ? "limite por pessoa" : "teto de leituras do dia";
     return s.semLeitura.motivo.replace(/_/g, " ");
@@ -784,7 +784,7 @@ const DEGRAUS: Array<{ id: string; titulo: string; texto: string; acao: string; 
   {
     id: "diagnostico",
     titulo: "Diagnóstico completo",
-    texto: "Todas as dimensões com insight, recomendações, previsão e a nota do analista.",
+    texto: "Todas as dimensões com leitura, recomendações, previsão e a nota do analista.",
     acao: "Pedir o diagnóstico completo",
     interesse: "Diagnóstico completo",
   },
@@ -969,7 +969,7 @@ export default function PublicoLeitura() {
               <Rotulo>O restante da leitura</Rotulo>
               <h2 id="pedir-titulo" className="titulo-l">O restante fica atrás de um pedido.</h2>
               <ul className="travado">
-                {["Relatório completo, com insight, recomendações e previsão por dimensão", "Nota do analista sobre o território", "Acompanhamento diário, com alerta quando a tensão muda"].map((t) => (
+                {["Relatório completo, com leitura, recomendações e previsão por dimensão", "Nota do analista sobre o território", "Acompanhamento diário, com alerta quando a tensão muda"].map((t) => (
                   <li key={t}><Lock size={16} aria-hidden />{t}</li>
                 ))}
               </ul>

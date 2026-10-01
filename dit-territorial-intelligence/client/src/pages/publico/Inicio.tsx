@@ -299,7 +299,7 @@ export default function Inicio() {
         { href: "#como-funciona", rotulo: "Como funciona" },
         { href: "#escada", rotulo: "O que você recebe" },
         { href: "/metodologia", rotulo: "Metodologia" },
-        { href: "/sse", rotulo: "SSE" },
+        { href: "/est", rotulo: "EST" },
         { href: "/entrar", rotulo: "Entrar" },
       ]} pedir={{ href: "#completa", rotulo: "Diagnóstico completo" }} />
 

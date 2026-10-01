@@ -111,7 +111,7 @@ export default function MesaResumo() {
       pendencias.push({
         chave: "leads",
         tipo: "Lead",
-        texto: `${leads.data.length} ${leads.data.length === 1 ? "lead novo espera" : "leads novos esperam"} resposta.`,
+        texto: `${leads.data.length} ${leads.data.length === 1 ? "contato novo espera" : "contatos novos esperam"} resposta.`,
         href: "/mesa/leads",
       });
     }
@@ -130,12 +130,12 @@ export default function MesaResumo() {
   const partes = [
     a > 0 ? `${a} ${a === 1 ? "Tensão espera" : "Tensões esperam"} publicação` : null,
     b > 0 ? `${b} ${b === 1 ? "fonte pede" : "fontes pedem"} atenção` : null,
-    novos > 0 ? `${novos} ${novos === 1 ? "lead espera" : "leads esperam"} resposta` : null,
+    novos > 0 ? `${novos} ${novos === 1 ? "contato espera" : "contatos esperam"} resposta` : null,
   ].filter((x): x is string => x !== null);
   const titulo = !calc
     ? "Hoje na mesa"
     : partes.length === 0
-      ? "Tudo publicado, fontes em dia e nenhum lead esperando"
+      ? "Tudo publicado, fontes em dia e nenhum contato esperando"
       : partes.length === 1
         ? partes[0].charAt(0).toUpperCase() + partes[0].slice(1)
         : `${partes.slice(0, -1).join(", ")} e ${partes[partes.length - 1]}`.replace(/^./, c => c.toUpperCase());

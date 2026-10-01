@@ -30,7 +30,7 @@ export const ITENS_MESA: ItemNav[] = [
   { href: "/mesa/territorios", rotulo: "Territórios" },
   { href: "/mesa/sinais", rotulo: "Sinais" },
   { href: "/mesa/fontes", rotulo: "Fontes" },
-  { href: "/mesa/leads", rotulo: "Leads" },
+  { href: "/mesa/leads", rotulo: "Contatos" },
   { href: "/mesa/assinantes", rotulo: "Assinantes" },
 ];
 

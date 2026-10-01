@@ -165,6 +165,26 @@ function exigirTerritorio(portal: { tipo: string; territorios: string[] | "*" },
   }
 }
 
+
+/**
+ * Publicação gravada sem MySQL guarda o slug no lugar do nome ("macae-3302403").
+ * O slug canônico termina no código IBGE: o nome legível sai da camada estrutural.
+ */
+async function nomeLegivel(slug: string, nome: string | null | undefined): Promise<string> {
+  const m = /-(\d{7})$/.exec(slug);
+  if (nome && nome !== slug && !/-\d{7}$/.test(nome)) return nome;
+  if (m) {
+    try {
+      const { getMunicipalityName } = await import("./structural/store");
+      const n = await getMunicipalityName(m[1]);
+      if (n && n !== m[1]) return n;
+    } catch {
+      /* camada estrutural ausente: cai no slug */
+    }
+  }
+  return nome || slug;
+}
+
 export const appRouter = router({
   system: systemRouter,
 
@@ -867,7 +887,7 @@ Use linguagem executiva, precisa e direta. Evite jargões desnecessários. Foco 
           const campos = camposPublicados(t.pubs, { notaCompleta: false });
           return {
             slug: t.slug,
-            nome: t.nome,
+            nome: await nomeLegivel(t.slug, t.nome),
             estado: t.estado,
             regiao: t.regiao,
             tensao: ultima.tensao ?? leitura?.tensao ?? null,
@@ -894,7 +914,7 @@ Use linguagem executiva, precisa e direta. Evite jargões desnecessários. Foco 
           return {
             id: tp.territoryId,
             slug: tp.slug,
-            name: tp.nome,
+            name: await nomeLegivel(tp.slug, tp.nome),
             region: tp.regiao,
             state: tp.estado,
             stt: ultima?.stt ?? null,
@@ -1247,7 +1267,7 @@ Use linguagem executiva, precisa e direta. Evite jargões desnecessários. Foco 
           const ultima = ultimaPublicacao(t.pubs)!;
           return {
             slug: t.slug,
-            nome: t.nome,
+            nome: await nomeLegivel(t.slug, t.nome),
             estado: t.estado,
             stt: ultima.stt,
             scenario: ultima.scenario,

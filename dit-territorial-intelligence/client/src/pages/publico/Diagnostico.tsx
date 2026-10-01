@@ -1,3 +1,4 @@
+import { TopoPagina } from "./MarcoShell";
 import { useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { Link, useSearch } from "wouter";
 import { Button, ErrorState, PageShell, botaoVariants } from "@/components/dit";
@@ -97,7 +98,7 @@ async function enviarPedido(f: Form, interesse: string | null): Promise<void> {
       territorio: f.territorio.trim() || undefined,
       momento,
       decisao: f.decisao.trim() || undefined,
-      observacao: `Interesse: ${interesse === "radar" ? "Marco Radar" : "Marco Diagnóstico"}.`,
+      observacao: `Interesse: ${interesse === "radar" ? "Marco Radar" : interesse === "est" ? "EST, Exposição Setorial no Território" : "Marco Diagnóstico"}.`,
     }),
   });
   if (r.status === 429) throw new Error("Muitas tentativas em sequência. Aguarde 1 minuto e envie de novo.");
@@ -184,18 +185,14 @@ export default function PublicoDiagnostico() {
 
   return (
     <PageShell>
+      <TopoPagina
+        rotulo={interesse === "radar" ? "Marco Radar" : interesse === "est" ? "EST · Exposição Setorial no Território" : "Diagnóstico completo"}
+        titulo={ehRadar ? "Diga o território que você acompanha." : "Diga o território e a decisão que você precisa tomar."}
+      >
+        <p>Um analista da PRINT lê o seu pedido e responde por e-mail.</p>
+      </TopoPagina>
       <div className="container grid gap-10 py-12 md:grid-cols-[1fr_minmax(0,24rem)] md:py-16">
         <section data-mo="up" className="space-y-6">
-          <div className="space-y-3">
-            <h1 className="text-3xl md:text-4xl">
-              {ehRadar
-                ? "Diga o território que você acompanha e peça acesso ao Marco Radar."
-                : "Diga o território e a decisão que você precisa tomar."}
-            </h1>
-            <p className="max-w-prose text-tinta-2">
-              Decidir sem ler o território custa caro depois. Um analista da PRINT lê seu pedido e responde por e-mail.
-            </p>
-          </div>
 
           <form onSubmit={onSubmit} noValidate className="space-y-5" aria-label="Pedido de diagnóstico">
             <div className="grid gap-5 sm:grid-cols-2">

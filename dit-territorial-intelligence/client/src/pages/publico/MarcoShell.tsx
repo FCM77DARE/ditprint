@@ -87,7 +87,7 @@ const NAV_PADRAO: ItemNav[] = [
   { href: "/#como-funciona", rotulo: "Como funciona" },
   { href: "/#escada", rotulo: "O que você recebe" },
   { href: "/metodologia", rotulo: "Metodologia" },
-  { href: "/sse", rotulo: "SSE" },
+  { href: "/est", rotulo: "EST" },
   { href: "/entrar", rotulo: "Entrar" },
 ];
 
@@ -138,7 +138,7 @@ export function Rodape() {
         <Marca />
         <nav aria-label="Rodapé">
           <Link href="/metodologia">Metodologia</Link>
-          <Link href="/sse">SSE</Link>
+          <Link href="/est">EST</Link>
           <Link href="/radar">Marco Radar</Link>
           <Link href="/entrar">Entrar</Link>
         </nav>

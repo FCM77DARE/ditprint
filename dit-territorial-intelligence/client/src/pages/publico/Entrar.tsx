@@ -1,3 +1,4 @@
+import { TopoPagina } from "./MarcoShell";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, useLocation } from "wouter";
 import { Button, LoadingBlock, PageShell, botaoVariants } from "@/components/dit";
@@ -81,8 +82,10 @@ export default function PublicoEntrar() {
 
   return (
     <PageShell>
+      <TopoPagina rotulo="Marco Radar" titulo="Entre no seu Marco Radar.">
+        <p>Peça o link de acesso com o e-mail da sua assinatura.</p>
+      </TopoPagina>
       <section className="container max-w-xl space-y-6 py-14 md:py-20">
-        <Palavras as="h1" className="text-3xl md:text-4xl" texto="Peça o link de acesso ao seu Marco Radar." />
 
         {linkInvalido && (
           <p role="alert" className="text-sm" style={{ color: "var(--tensao-5)" }}>

@@ -155,7 +155,7 @@ function ConteudoAlertas() {
                       <th scope="col" className="pb-2 pr-4 font-medium">Dimensão</th>
                       <th scope="col" className="pb-2 pr-4 font-medium">Impacto</th>
                       <th scope="col" className="pb-2 pr-4 font-medium">Canal</th>
-                      <th scope="col" className="pb-2 pr-4 font-medium">Status</th>
+                      <th scope="col" className="pb-2 pr-4 font-medium">Situação</th>
                       <th scope="col" className="pb-2 font-medium">Enviado</th>
                     </tr>
                   </thead>

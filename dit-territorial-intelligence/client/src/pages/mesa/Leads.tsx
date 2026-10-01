@@ -34,12 +34,12 @@ export default function MesaLeads() {
   const daLeitura = (todos.data ?? []).filter(l => ehPrimeiraLeitura(l.observacao)).length;
 
   const titulo = todos.isLoading
-    ? "Leads"
+    ? "Contatos"
     : total === 0
-      ? "Nenhum lead ainda"
+      ? "Nenhum contato ainda"
       : novos > 0
-        ? `${novos} ${novos === 1 ? "lead novo espera" : "leads novos esperam"} resposta`
-        : `${total} ${total === 1 ? "lead" : "leads"}, nenhum novo`;
+        ? `${novos} ${novos === 1 ? "contato novo espera" : "contatos novos esperam"} resposta`
+        : `${total} ${total === 1 ? "contato" : "contatos"}, nenhum novo`;
 
   async function salvar(id: string, status: Status, notaInterna?: string) {
     try {
@@ -47,7 +47,7 @@ export default function MesaLeads() {
       await Promise.all([utils.dashboard.leads.list.invalidate()]);
       toast.success("Lead atualizado.");
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Não atualizamos o lead. Tente de novo.");
+      toast.error(e instanceof Error ? e.message : "Não atualizamos o contato. Tente de novo.");
     }
   }
 
@@ -79,7 +79,7 @@ export default function MesaLeads() {
           />
         ) : (q.data ?? []).length === 0 ? (
           <EmptyState
-            titulo={filtro === "todos" ? "Nenhum lead ainda" : "Nenhum lead com este status"}
+            titulo={filtro === "todos" ? "Nenhum contato ainda" : "Nenhum contato nesta situação"}
             descricao={
               filtro === "todos"
                 ? "Pedidos feitos em /diagnostico e na primeira leitura aparecem aqui, com território, origem e decisão."
@@ -95,7 +95,7 @@ export default function MesaLeads() {
                 <th className={TH}>Momento</th>
                 <th className={TH}>Decisão e observação</th>
                 <th className={TH}>Chegou</th>
-                <th className={TH}>Status</th>
+                <th className={TH}>Situação</th>
                 <th className={TH}>Nota interna</th>
               </tr>
             </thead>
