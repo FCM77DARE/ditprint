@@ -419,7 +419,7 @@ export async function analyzeSignalsWithLLM(territorySlug: string): Promise<{
         .join("\n")
     : "Nenhum.";
 
-  const prompt = `Você é o sistema de inteligência artificial da Print Territorial Intelligence™, responsável por calcular automaticamente o Score de Tensão Territorial (STT) com base em evidências concretas.
+  const prompt = `Você é o sistema de inteligência artificial do Marco, a inteligência territorial da PRINT, responsável por calcular automaticamente o Score de Tensão Territorial (STT) com base em evidências concretas.
 
 ${territoryContextPrompt}
 
@@ -469,7 +469,7 @@ IMPORTANTE:
   const response = await invokeLLM({
     role: "stt",
     messages: [
-      { role: "system" as const, content: "Você é o sistema de IA da Print Territorial Intelligence™. Calcule scores STT com rigor metodológico. Responda sempre em JSON válido." },
+      { role: "system" as const, content: "Você é o sistema de IA do Marco, a inteligência territorial da PRINT. Calcule scores STT com rigor metodológico. Responda sempre em JSON válido." },
       { role: "user" as const, content: prompt },
     ],
     response_format: {

@@ -1225,20 +1225,20 @@ export function buildReportPrompt(
     geo.microregion ? `Microrregião IBGE: ${geo.microregion}` : null,
   ].filter(Boolean).join(" · ");
 
-  return `Você é o sistema de relatórios do DIT PRINT Territorial Intelligence™.
+  return `Você é o sistema de relatórios do Marco, a inteligência territorial da PRINT.
 
 Os dados abaixo foram coletados pelo orquestrador com até 32 agentes reais rodando sobre o território "${territoryName}" (${region}).
 ${geoLine ? `\nLocalização precisa: ${geoLine}` : ""}
 
-═══ DADOS REAIS DO ORQUESTRADOR DIT ═══
-STT Global calculado: ${stt}/100 → Cenário: ${scenarioLabel}
+═══ DADOS REAIS DO ORQUESTRADOR DO MARCO ═══
+Tensão calculada: ${stt}/100 → Cenário: ${scenarioLabel}
 Total sinais coletados: ${totalSignals} | Alertas críticos (impacto ≥ 0.7): ${alertCount}
 
 ${dimBlocks}
 
 ═══ REGRAS DO RELATÓRIO ═══
 1. Os scores numéricos de dimensão (ex: D1=75) são CONFIDENCIAIS — NÃO os mencione como números. Use apenas rótulos qualitativos: "Alta Complexidade", "Vácuo Institucional", etc.
-2. O STT global (${stt}) PODE e DEVE ser mencionado — é o produto que o usuário pagou para ver.
+2. A Tensão (${stt}) PODE e DEVE ser mencionada, sempre com a palavra "Tensão" (nunca "STT", nunca "DIT"): é o número que o leitor veio ver. O produto se chama Marco.
 3. PROCEDÊNCIA — regra inegociável. Toda afirmação factual sobre o território
    (número, evento, autuação, obra, conflito, indicador) tem que sair dos sinais
    REAIS listados acima. É PROIBIDO completar com conhecimento geral, com
@@ -1251,7 +1251,7 @@ ${dimBlocks}
 O que vem abaixo serve para ancorar o texto no lugar concreto — marco cultural,
 vocação produtiva, geografia. Isso é CONTEXTO e pode vir do seu conhecimento.
 O que NÃO pode vir do seu conhecimento é qualquer dado, número, data, valor ou
-ocorrência apresentado como levantado pelo DIT. Contexto se escreve como
+ocorrência apresentado como levantado pelo Marco. Contexto se escreve como
 contexto; dado só existe se estiver nos sinais coletados.
 
 Você está analisando "${territoryName}" — um lugar concreto, com história, cultura,
@@ -1289,7 +1289,7 @@ O objeto "identidade" do JSON dá rosto ao lugar: quem é o município e o que e
 acontecendo nele. Os itens localizacao, conhecidoPor, problemaCaracteristico,
 forcas e fragilidades são CONTEXTO e podem vir do seu conhecimento (mesma regra
 de contexto, nunca dado: sem número, data ou ocorrência apresentados como
-levantados pelo DIT; se não souber, diga menos).
+levantados pelo Marco; se não souber, diga menos).
   • localizacao: região, proximidade de centros importantes, posição em
     corredores logísticos (rodovia, porto, ferrovia). 1 frase.
   • conhecidoPor: aquilo que faz a pessoa pensar "ah, entendi qual é dessa
@@ -1303,7 +1303,7 @@ levantados pelo DIT; se não souber, diga menos).
   • forcas: exatamente 2, concretas e próprias do lugar.
   • fragilidades: exatamente 2, concretas e próprias do lugar. Fragilidade é do
     TERRITÓRIO, nunca da coleta: é proibido citar falta de sinal, dimensão sem
-    cobertura, fonte consultada ou qualquer limitação do DIT como fragilidade.
+    cobertura, fonte consultada ou qualquer limitação do Marco como fragilidade.
     Lacuna de dado já aparece na dimensão marcada SEM COBERTURA.
   • semana: é DADO. Só pode sair da lista "SINAIS RECENTES" abaixo, copiando
     fato, fonte e data como estão. Não acrescente fato de conhecimento geral.
@@ -1332,7 +1332,7 @@ Responda APENAS com JSON válido, sem texto fora do JSON:
     "semana": [ { "fato": "<título do sinal recente>", "fonte": "<fonte>", "data": "<AAAA-MM-DD>" } ]
   },
   "executiveSummary": [
-    "<parágrafo 1: ABRA pela identidade do lugar (quem é o município, pelo que é conhecido, onde fica), sem começar pelo score; só no fim cite o STT ${stt} e o cenário ${scenarioLabel}, 2-3 frases concretas>",
+    "<parágrafo 1: ABRA pela identidade do lugar (quem é o município, pelo que é conhecido, onde fica), sem começar pelo score; só no fim cite a Tensão ${stt} e o cenário ${scenarioLabel}, 2-3 frases concretas>",
     "<parágrafo 2: dimensões mais críticas (sem mencionar números de score), 2-3 frases específicas com sinais reais>",
     "<parágrafo 3: implicação direta para decisor/investidor que atua nesse território, 2-3 frases acionáveis>"
   ],
@@ -1433,7 +1433,7 @@ export async function callLLM(prompt: string): Promise<unknown> {
       {
         role: "system",
         content: comContexto("dit_relatorio",
-          "Você é o sistema de relatórios do DIT, da PRINT. Responda SEMPRE com JSON " +
+          "Você é o sistema de relatórios do Marco, da PRINT. Escreva Tensão, nunca STT nem DIT. Responda SEMPRE com JSON " +
           "válido e completo, sem nenhum texto fora do JSON. Seja específico, concreto " +
           "e útil para decisores de negócios no Brasil. Nunca afirme dado que não esteja " +
           "nos sinais fornecidos."),
@@ -1674,7 +1674,7 @@ ditLandingRouter.post("/isca", async (req: Request, res: Response) => {
       error: "Território ambíguo",
       detail:
         `Existe mais de um município chamado "${territoryClean}" no Brasil. ` +
-        "Informe o estado para o DIT saber de qual você fala.",
+        "Informe o estado para o Marco saber de qual você fala.",
       status: "ambiguo",
       territory: territoryClean,
       options: iscaAmbiguidade,
@@ -1800,7 +1800,7 @@ ditLandingRouter.post("/analyze", async (req: Request, res: Response) => {
         error: "Território ambíguo",
         detail:
           `Existe mais de um município chamado "${territoryClean}" no Brasil. ` +
-          "Informe o estado para o DIT saber de qual você fala.",
+          "Informe o estado para o Marco saber de qual você fala.",
         status: "ambiguo",
         territory: territoryClean,
         options: ambiguidade,
@@ -1862,7 +1862,7 @@ ditLandingRouter.post("/analyze", async (req: Request, res: Response) => {
             ibgeId: loc.ibgeId,
           },
           message:
-            `${loc.name} ainda não está no Radar. O DIT deste território é ` +
+            `${loc.name} ainda não está no Marco Radar. A leitura completa deste território é ` +
             "produzido sob demanda, com coleta dedicada e publicação analisada.",
           cta: "solicitar_diagnostico",
         });
@@ -1877,7 +1877,7 @@ ditLandingRouter.post("/analyze", async (req: Request, res: Response) => {
       res.status(429).json({
         error: "Limite de análises atingido",
         detail:
-          "O DIT atingiu o teto de análises do período. " +
+          "O Marco atingiu o teto de leituras do período. " +
           "Territórios já publicados continuam disponíveis.",
         status: "orcamento_esgotado",
         retryAfter: "24h",
@@ -1948,7 +1948,7 @@ ditLandingRouter.post("/analyze", async (req: Request, res: Response) => {
         error: "Coleta indisponível",
         detail:
           "A malha de fontes não respondeu a tempo para este território. " +
-          "O DIT não emite diagnóstico sem dado coletado. Tente novamente em alguns minutos.",
+          "O Marco não emite leitura sem dado coletado. Tente novamente em alguns minutos.",
         territory: resolvedName,
         status: "coleta_falhou",
       });
@@ -2012,7 +2012,7 @@ ditLandingRouter.post("/analyze", async (req: Request, res: Response) => {
         coverageDetail: detail ?? null,
         sourceBreakdown: orchestratorResult.sourceBreakdown ?? null,
         message:
-          `A malha do DIT ainda não tem cobertura suficiente sobre ${resolvedName} ` +
+          `O Marco ainda não tem cobertura suficiente sobre ${resolvedName} ` +
           `para emitir diagnóstico (${Math.round(coverage * 100)}% das fontes responderam, ` +
           `mínimo de ${Math.round(MIN_COVERAGE * 100)}%). ` +
           "O território entrou na fila de coleta.",

@@ -273,7 +273,7 @@ export const appRouter = router({
         const { DIT_METHODOLOGY } = await import("./territoryContext");
 
         const llmPrompt = `
-Você é um analista sênior de inteligência territorial da Print Territorial Intelligence.
+Você é um analista sênior de inteligência territorial do Marco, a inteligência territorial da PRINT.
 Sua tarefa é aplicar a metodologia DIT (Diagnóstico de Inteligência Territorial) ao território descrito abaixo.
 
 IMPORTANTE:
@@ -675,7 +675,7 @@ IMPORTANTE: Retorne APENAS o JSON válido, sem markdown, sem explicações adici
           ? `STT atual: ${sttScore.stt} (variação: ${sttScore.variation ?? 0 > 0 ? "+" : ""}${sttScore.variation ?? 0})`
           : "STT: dados não disponíveis para este período";
 
-        const prompt = `Você é um analista sênior de inteligência territorial da Print Territorial Intelligence™.
+        const prompt = `Você é um analista sênior de inteligência territorial do Marco, a inteligência territorial da PRINT.
 
 Gere um relatório executivo ONE-PAGER em formato Markdown para o seguinte território:
 
@@ -715,7 +715,7 @@ Gere um one-pager executivo completo com as seguintes seções em Markdown:
 [1-2 parágrafos com recomendações para tomadores de decisão]
 
 ---
-*Relatório gerado pela Print Territorial Intelligence™ | ${period} | Confidencial*
+*Relatório gerado pelo Marco, inteligência territorial da PRINT · ${period} · Confidencial*
 
 Use linguagem executiva, precisa e direta. Evite jargões desnecessários. Foco em implicações estratégicas para infraestrutura, energia e recursos naturais.`;
 

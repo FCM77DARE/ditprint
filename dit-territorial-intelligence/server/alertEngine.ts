@@ -347,7 +347,7 @@ function buildEmailHtml(recipientName: string, payload: AlertPayload): string {
 <body style="font-family:Arial,sans-serif;background:#f5f5f5;margin:0;padding:20px;">
   <div style="max-width:600px;margin:0 auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.1);">
     <div style="background:#1a1a2e;padding:20px;">
-      <h1 style="color:#e94560;margin:0;font-size:20px;">Print Territorial Intelligence™</h1>
+      <h1 style="color:#FF5A1F;margin:0;font-size:20px;">Marco · inteligência territorial da PRINT</h1>
       <p style="color:#ccc;margin:4px 0 0;font-size:13px;">Alerta de Monitoramento Territorial</p>
     </div>
     <div style="padding:24px;">
@@ -367,7 +367,7 @@ function buildEmailHtml(recipientName: string, payload: AlertPayload): string {
       </div>
     </div>
     <div style="background:#f5f5f5;padding:12px 24px;font-size:11px;color:#999;border-top:1px solid #eee;">
-      Print Territorial Intelligence™ — Para gerenciar seus alertas, acesse ${APP_URL}/configuracoes.
+      Marco Radar. Para ajustar seus alertas, acesse ${APP_URL}/portal/conta.
     </div>
   </div>
 </body>
@@ -522,7 +522,7 @@ function buildDigestHtml(
 <body style="font-family:Arial,sans-serif;background:#f5f5f5;margin:0;padding:20px;">
   <div style="max-width:600px;margin:0 auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.1);">
     <div style="background:#1a1a2e;padding:20px;">
-      <h1 style="color:#e94560;margin:0;font-size:20px;">Print Territorial Intelligence™</h1>
+      <h1 style="color:#FF5A1F;margin:0;font-size:20px;">Marco · inteligência territorial da PRINT</h1>
       <p style="color:#ccc;margin:4px 0 0;font-size:13px;">Briefing Diário — ${period}</p>
     </div>
     <div style="padding:24px;">
@@ -546,7 +546,7 @@ function buildDigestHtml(
       </div>
     </div>
     <div style="background:#f5f5f5;padding:12px 24px;font-size:11px;color:#999;border-top:1px solid #eee;">
-      Print Territorial Intelligence™ — Gerenciar alertas: ${APP_URL}/configuracoes
+      Marco Radar. Ajustar alertas: ${APP_URL}/portal/conta
     </div>
   </div>
 </body>

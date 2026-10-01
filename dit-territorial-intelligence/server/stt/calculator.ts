@@ -203,7 +203,7 @@ async function callLLM(prompt: string, territorySlug: string): Promise<LLMOutput
       {
         role: "system" as const,
         content:
-          "Você é o sistema de IA da Print Territorial Intelligence™. " +
+          "Você é o sistema de IA do Marco, a inteligência territorial da PRINT. " +
           "Calcule e valide o STT com rigor metodológico PRINT. " +
           "Responda sempre em JSON válido, sem texto fora do JSON, com exatamente " +
           "estas chaves: d1Score, d2Score, d3Score, d4Score, d5Score, d6Score " +
@@ -274,7 +274,7 @@ function buildPrompt(
     .map((e) => `  ${e.period}: STT ${e.stt} | ${e.activatedIndex} | ${e.scenario} — ${e.note}`)
     .join("\n") ?? "  Sem histórico disponível.";
 
-  return `Você é o analista de inteligência territorial da Print Territorial Intelligence™.
+  return `Você é o analista de inteligência territorial do Marco, a inteligência territorial da PRINT.
 
 === TERRITÓRIO: ${territory.name} (${territory.slug}) ===
 Período: ${period}

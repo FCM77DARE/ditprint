@@ -287,7 +287,7 @@ async function calculateHistoricalStt(
         .join("\n\n")
     : "Nenhum sinal coletado para este período.";
 
-  const prompt = `Você é o sistema de inteligência artificial da Print Territorial Intelligence™.
+  const prompt = `Você é o sistema de inteligência artificial do Marco, a inteligência territorial da PRINT.
 
 Calcule o STT histórico para o período: ${monthName}/${year} (${period})
 
@@ -311,7 +311,7 @@ Aplique a fórmula: STT = (ITT × 0.25) + (ICS × 0.20) + (IVS × 0.20) + (IVE �
   const response = await invokeLLM({
     role: "stt",
     messages: [
-      { role: "system" as const, content: "Você é o sistema de IA da Print Territorial Intelligence™. Calcule scores STT históricos com rigor metodológico. Responda em JSON válido." },
+      { role: "system" as const, content: "Você é o sistema de IA do Marco, a inteligência territorial da PRINT. Calcule scores STT históricos com rigor metodológico. Responda em JSON válido." },
       { role: "user" as const, content: prompt },
     ],
     response_format: {

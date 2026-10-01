@@ -93,7 +93,7 @@ export class ReporterAgent {
     }
 
     let markdown = "\n## 4. Metodologia e Inteligência Conectada\n\n";
-    markdown += "O Diagnóstico de Inteligência Territorial (DIT) é gerado através do monitoramento contínuo de uma rede de fontes governamentais, acadêmicas e de imprensa. Abaixo, detalhamos o status das fontes para este ciclo:\n\n";
+    markdown += "A leitura do Marco é gerada através do monitoramento contínuo de uma rede de fontes governamentais, acadêmicas e de imprensa. Abaixo, detalhamos o status das fontes para este ciclo:\n\n";
 
     const dimensions = ["D1", "D2", "D3", "D4", "D5", "D6", "D7"];
     const dimNames: Record<string, string> = {
@@ -212,7 +212,7 @@ ${relevantSignals.slice(0, 100).map(s => s.title).join("\n")}`;
         (s.summary && s.summary.toLowerCase().includes(h.toLowerCase()))
       )
     );
-    const prompt = `Você é o Estrategista-Chefe da Print Territorial Intelligence™.
+    const prompt = `Você é o Estrategista-Chefe do Marco, a inteligência territorial da PRINT.
 Gere um DIT (Diagnóstico de Inteligência Territorial) PROFUNDO e CIRÚRGICO para ${territory.name.toUpperCase()}.
 ESTE TERRITÓRIO É ${territory.name.toUpperCase()} (ESTADO: ${territory.contextData && (territory.contextData as any).estado ? (territory.contextData as any).estado : 'RJ'}).
 NÃO CONFUNDA COM OUTROS TERRITÓRIOS. NÃO MENCIONE MACAÉ, CABIÚNAS OU SANTANA.
@@ -271,7 +271,7 @@ ${hotspots.length > 0
     });
     const sourcesSection = await this.generateSourcesSection(territoryId, period);
 
-    return reportContent + "\n\n" + sourcesSection + "\n---\n*Confidencial - Gerado pela Inteligência DIT PRINT*\n";
+    return reportContent + "\n\n" + sourcesSection + "\n---\n*Confidencial · Marco, inteligência territorial da PRINT*\n";
   }
 
   private _synthesizeSignals(signals: any[]): string {
