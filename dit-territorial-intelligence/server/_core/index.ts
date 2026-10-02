@@ -13,6 +13,7 @@ import { logger } from "./logger";
 import { ditLandingRouter } from "../routes/ditLanding";
 import { alertasStreamHandler } from "./alertas-stream";
 import { lendoAgoraHandler } from "./feed-publico";
+import { escudoMiddleware } from "./escudo";
 
 const log = logger.child({ module: "server" });
 
@@ -41,6 +42,10 @@ async function startServer() {
   // Behind a reverse proxy (e.g., Render/Railway/Fly), trust X-Forwarded-For
   // so express-rate-limit sees real client IPs instead of the proxy IP.
   app.set("trust proxy", 1);
+  // Escudo contra varredura: primeiro de tudo, antes do parser, das rotas, do static e do
+  // fallback do SPA. /.env, /.git/config, /wp-login.php levam 404 seco; 5 em 10 min bloqueiam
+  // o IP por 1h. Também põe HSTS, nosniff, X-Frame-Options, Referrer-Policy e Permissions-Policy.
+  app.use(escudoMiddleware());
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
